@@ -4,32 +4,32 @@ import { useEffect, useState } from "react";
 
 const testimonials = [
   {
-    quote: "Optimus transformed our deployment pipeline. What used to take hours now happens in seconds.",
-    author: "Sarah Chen",
-    role: "CTO",
-    company: "Meridian Labs",
-    metric: "10x faster deployments",
+    quote: "Optimus's quantum-native architecture cut our model training time from weeks to days. The automatic differentiation pipeline alone saved us months of optimization work.",
+    author: "Dr. Sarah Chen",
+    role: "Principal ML Researcher",
+    company: "Quantum Dynamics Labs",
+    metric: "95% faster quantum circuits",
   },
   {
-    quote: "The developer experience is unmatched. Our team's productivity has never been higher.",
+    quote: "Managing NISQ hardware variability used to be our biggest bottleneck. Optimus's error mitigation strategies now ensure 3x more reliable results on real quantum processors.",
     author: "Marcus Webb",
-    role: "Engineering Lead",
-    company: "Flux Systems",
-    metric: "40% more features shipped",
+    role: "Quantum Systems Director",
+    company: "Coherence Computing",
+    metric: "300% improvement in fidelity",
   },
   {
-    quote: "Finally, infrastructure that scales with our ambition. Zero downtime since we switched.",
+    quote: "We deployed hybrid quantum-classical workflows to production in 6 weeks. Optimus's seamless integration between quantum and classical resources is unprecedented.",
     author: "Elena Rodriguez",
-    role: "VP Engineering",
-    company: "Beacon AI",
-    metric: "99.99% uptime",
+    role: "VP Research & Development",
+    company: "Vesuvian AI Research",
+    metric: "Deployed 42 quantum apps",
   },
   {
-    quote: "The integrations are seamless. We connected our entire stack in a single afternoon.",
-    author: "James Liu",
-    role: "Founder",
-    company: "Prism Analytics",
-    metric: "50+ integrations used",
+    quote: "Optimus handles our VQE and QAOA simulations with remarkable efficiency. The noise simulation features are indispensable for testing algorithm resilience.",
+    author: "Dr. James Liu",
+    role: "Quantum Algorithm Engineer",
+    company: "Nexus Quantum Inc",
+    metric: "50+ quantum algorithms optimized",
   },
 ];
 
@@ -148,7 +148,7 @@ export function TestimonialsSection() {
         <div className="flex gap-16 items-center marquee">
           {[...Array(2)].map((_, setIdx) => (
             <div key={setIdx} className="flex gap-16 items-center shrink-0">
-              {["Meridian Labs", "Flux Systems", "Beacon AI", "Prism Analytics", "Nova Tech", "Quantum Corp", "Atlas Digital", "Vertex Labs"].map(
+              {["Quantum Dynamics Labs", "Coherence Computing", "Vesuvian AI", "Nexus Quantum", "IonQ", "Rigetti Systems", "D-Wave", "IBM Quantum"].map(
                 (company) => (
                   <span
                     key={`${setIdx}-${company}`}
