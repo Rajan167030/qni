@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 const events = [
   {
@@ -105,12 +106,12 @@ function EventCard({ event, index }: { event: typeof events[0]; index: number })
         </div>
 
         {/* CTA */}
-        <button
-          type="button"
-          className="w-full py-3 px-6 bg-foreground text-background rounded-lg font-medium hover:bg-foreground/90 transition-all duration-300 group-hover:translate-y-[-2px]"
+        <Link
+          href={`/events/${event.id}`}
+          className="block w-full py-3 px-6 bg-foreground text-background rounded-lg font-medium hover:bg-foreground/90 transition-all duration-300 group-hover:translate-y-[-2px] text-center"
         >
           Learn More
-        </button>
+        </Link>
       </div>
     </div>
   );

@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mail, Linkedin, Twitter } from "lucide-react";
+import { Mail, Linkedin, Twitter, X } from "lucide-react";
+import Image from "next/image";
 
 const speakers = [
   {
+    id: "1",
     name: "Alex Chen",
     role: "AI Infrastructure Lead",
     company: "Optimus Core",
     bio: "Pioneering scalable AI systems",
-    image: "AC",
+    image: "/speakers/alex-chen.png",
+    fullBio: "With 10+ years in distributed systems and ML infrastructure, Alex leads the technical architecture at Optimus, ensuring scalability and reliability for enterprise deployments.",
     expertise: ["ML Ops", "Distributed Systems", "DevOps"],
     social: {
       twitter: "#",
@@ -18,11 +21,13 @@ const speakers = [
     },
   },
   {
+    id: "2",
     name: "Jordan Williams",
     role: "Security Architect",
     company: "Optimus Security",
     bio: "Enterprise security at scale",
-    image: "JW",
+    image: "/speakers/jordan-williams.png",
+    fullBio: "Jordan brings 15+ years of cybersecurity expertise, specializing in zero-trust architectures and compliance frameworks for global enterprises at scale.",
     expertise: ["Cloud Security", "Zero Trust", "Compliance"],
     social: {
       twitter: "#",
@@ -31,11 +36,13 @@ const speakers = [
     },
   },
   {
+    id: "3",
     name: "Priya Patel",
     role: "Developer Relations",
     company: "Optimus DevX",
     bio: "Crafting exceptional developer experiences",
-    image: "PP",
+    image: "/speakers/priya-patel.png",
+    fullBio: "Priya has built developer communities from the ground up, focusing on creating intuitive APIs and tools that empower developers to build faster and smarter.",
     expertise: ["API Design", "Developer Tools", "Community"],
     social: {
       twitter: "#",
@@ -44,11 +51,13 @@ const speakers = [
     },
   },
   {
+    id: "4",
     name: "Marcus Rodriguez",
     role: "Performance Engineer",
     company: "Optimus Performance",
     bio: "Optimizing for speed and efficiency",
-    image: "MR",
+    image: "/speakers/marcus-rodriguez.png",
+    fullBio: "Marcus specializes in performance optimization and benchmarking, helping teams squeeze every millisecond out of their infrastructure and applications.",
     expertise: ["Performance", "Benchmarking", "Optimization"],
     social: {
       twitter: "#",
@@ -68,33 +77,47 @@ const speakerAnimationStyles = `
     transform: translateY(-8px);
   }
   
-  .speaker-image {
+  .speaker-image-container {
+    position: relative;
     width: 100%;
     aspect-ratio: 3/4;
-    background: linear-gradient(135deg, rgba(18, 18, 18, 0.8), rgba(45, 45, 45, 0.6));
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    font-weight: bold;
-    color: rgba(255, 255, 255, 0.2);
-    position: relative;
     overflow: hidden;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
   }
   
-  .speaker-image::before {
-    content: '';
+  .speaker-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  
+  .speaker-card:hover .speaker-image {
+    transform: scale(1.05);
+  }
+  
+  .speaker-image-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.05) 100%);
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
     opacity: 0;
     transition: opacity 0.4s ease;
+    display: flex;
+    align-items: flex-end;
+    padding: 1.5rem;
   }
   
-  .speaker-card:hover .speaker-image::before {
+  .speaker-card:hover .speaker-image-overlay {
     opacity: 1;
+  }
+  
+  .speaker-overlay-content {
+    width: 100%;
+    color: white;
+    font-size: 0.875rem;
+    line-height: 1.5;
   }
   
   .expertise-badge {
@@ -179,7 +202,7 @@ export function SpeakersSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {speakers.map((speaker, index) => (
             <div
-              key={speaker.name}
+              key={speaker.id}
               className={`speaker-card transition-all duration-700 ${
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
@@ -187,9 +210,20 @@ export function SpeakersSection() {
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
-              {/* Speaker Image */}
-              <div className="speaker-image mb-6">
-                {speaker.image}
+              {/* Speaker Image with Hover Overlay */}
+              <div className="speaker-image-container">
+                <Image
+                  src={speaker.image}
+                  alt={speaker.name}
+                  fill
+                  className="speaker-image"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                />
+                <div className="speaker-image-overlay">
+                  <div className="speaker-overlay-content">
+                    <p className="font-medium mb-2">{speaker.fullBio}</p>
+                  </div>
+                </div>
               </div>
 
               {/* Speaker Info */}
@@ -237,7 +271,7 @@ export function SpeakersSection() {
                     className="social-icon hover:text-foreground"
                     aria-label="Twitter"
                   >
-                    <Twitter className="w-5 h-5" />
+                    <X className="w-5 h-5" />
                   </a>
                 </div>
               </div>
