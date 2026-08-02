@@ -100,8 +100,8 @@ export default function TeamPage() {
   const teamPageStyles = `
     .team-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 2rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
       animation: fadeInUp 0.6s ease;
     }
 
@@ -159,7 +159,7 @@ export default function TeamPage() {
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      padding: 1.5rem;
+      padding: 1rem;
     }
 
     .team-card:hover .team-card-overlay {
@@ -168,29 +168,29 @@ export default function TeamPage() {
 
     .team-card-info {
       position: relative;
-      padding: 1rem;
+      padding: 0.75rem;
       background: rgba(18, 18, 18, 0.6);
       backdrop-filter: blur(4px);
     }
 
     .team-card-title {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: rgba(255, 255, 255, 0.95);
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.2rem;
     }
 
     .team-card-role {
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       color: rgba(255, 255, 255, 0.6);
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.5rem;
     }
 
     .team-card-bio {
-      font-size: 0.8125rem;
+      font-size: 0.75rem;
       color: rgba(255, 255, 255, 0.5);
-      line-height: 1.4;
-      margin-bottom: 0.75rem;
+      line-height: 1.3;
+      margin-bottom: 0.5rem;
     }
 
     .team-card-overlay-text {
