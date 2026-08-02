@@ -101,7 +101,7 @@ export default function TeamPage() {
     .team-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+      gap: 0.75rem;
       animation: fadeInUp 0.6s ease;
     }
 
