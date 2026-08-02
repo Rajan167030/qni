@@ -136,7 +136,7 @@ export default function TeamPage() {
       width: 100%;
       aspect-ratio: 1;
       overflow: hidden;
-      background: linear-gradient(135deg, rgba(18, 18, 18, 0.8), rgba(45, 45, 45, 0.6));
+      background: transparent;
     }
 
     .team-card-image img {
@@ -169,8 +169,8 @@ export default function TeamPage() {
     .team-card-info {
       position: relative;
       padding: 0.75rem;
-      background: rgba(18, 18, 18, 0.6);
-      backdrop-filter: blur(4px);
+      background: transparent;
+      backdrop-filter: none;
     }
 
     .team-card-title {
