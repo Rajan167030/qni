@@ -52,9 +52,9 @@ export function AnimatedWave() {
           const normalized = (combined + 1) / 2;
           
           const charIndex = Math.floor(normalized * (chars.length - 1));
-          const alpha = 0.15 + normalized * 0.5;
+          const alpha = 0.3 + normalized * 0.6;
 
-          ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
           ctx.fillText(chars[charIndex], px, py);
         }
       }

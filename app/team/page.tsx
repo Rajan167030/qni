@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Mail, Linkedin, Twitter, ArrowRight } from 'lucide-react';
+import { Mail, Linkedin, Twitter, ArrowLeft } from 'lucide-react';
 
 const teamMembers = [
   {
@@ -11,374 +11,377 @@ const teamMembers = [
     name: 'Sharvan Kumar Sharma',
     role: 'CEO & Co-Founder',
     image: '/team/sharvan-kumar-sharma.png',
-    bio: 'Quantum computing visionary',
-    fullBio: 'Strategic leader with 15+ years building quantum solutions for enterprises. Published 40+ papers on quantum algorithms.',
+    category: 'Leadership',
+    bio: 'Quantum computing visionary with 15+ years of enterprise experience',
     expertise: ['Quantum Circuits', 'Enterprise Strategy', 'Research'],
-    email: 'sharvan@qni.com',
-    linkedin: '#',
-    twitter: '#',
   },
   {
     id: '2',
     name: 'Rajan Jha',
     role: 'CTO & Co-Founder',
     image: '/team/rajan-jha.png',
-    bio: 'Quantum ML systems architect',
-    fullBio: 'Technical architect specializing in hybrid quantum-classical systems. Expert in error mitigation on NISQ devices.',
+    category: 'Leadership',
+    bio: 'Technical architect specializing in hybrid quantum-classical systems',
     expertise: ['Quantum ML', 'System Architecture', 'Error Mitigation'],
-    email: 'rajan@qni.com',
-    linkedin: '#',
-    twitter: '#',
   },
   {
     id: '3',
     name: 'Subham',
     role: 'Lead Quantum Algorithm Engineer',
     image: '/team/subham.png',
-    bio: 'VQE & QAOA specialist',
-    fullBio: 'Expert in variational quantum algorithms. Improved circuit depth reduction by 40% on NISQ devices.',
+    category: 'Engineering',
+    bio: 'Expert in variational quantum algorithms and circuit optimization',
     expertise: ['VQE', 'QAOA', 'Circuit Optimization'],
-    email: 'subham@qni.com',
-    linkedin: '#',
-    twitter: '#',
   },
   {
     id: '4',
     name: 'Myank',
     role: 'Head of Product & Design',
     image: '/team/myank.png',
-    bio: 'UX architect for quantum tools',
-    fullBio: 'Product strategist making quantum computing intuitive. Led design of enterprise dashboard serving 500+ users.',
+    category: 'Product',
+    bio: 'Product strategist making quantum computing intuitive',
     expertise: ['Product Strategy', 'UX Design', 'User Research'],
-    email: 'myank@qni.com',
-    linkedin: '#',
-    twitter: '#',
   },
   {
     id: '5',
     name: 'Aisha Patel',
     role: 'Senior Quantum Researcher',
     image: '/team/aisha-patel.png',
-    bio: 'Quantum simulation expert',
-    fullBio: 'Research lead focusing on quantum simulation algorithms. Specializes in noise modeling and error analysis.',
+    category: 'Research',
+    bio: 'Research lead focusing on quantum simulation algorithms',
     expertise: ['Simulation', 'Noise Modeling', 'Algorithm Design'],
-    email: 'aisha@qni.com',
-    linkedin: '#',
-    twitter: '#',
   },
   {
     id: '6',
     name: 'Rajesh Kumar',
     role: 'Backend Systems Engineer',
     image: '/team/rajesh-kumar.png',
-    bio: 'Distributed systems engineer',
-    fullBio: 'Builds scalable backend infrastructure for quantum workloads. Handles petabyte-scale data processing.',
+    category: 'Engineering',
+    bio: 'Builds scalable backend infrastructure for quantum workloads',
     expertise: ['Distributed Systems', 'Backend', 'Cloud Infra'],
-    email: 'rajesh@qni.com',
-    linkedin: '#',
-    twitter: '#',
   },
   {
     id: '7',
     name: 'Priya Singh',
     role: 'ML Operations Manager',
     image: '/team/priya-singh.png',
-    bio: 'MLOps and deployment specialist',
-    fullBio: 'Manages quantum ML pipeline infrastructure. Ensures 99.99% uptime for production quantum services.',
-    expertise: ['MLOps', 'Pipeline', 'Deployment'],
-    email: 'priya@qni.com',
-    linkedin: '#',
-    twitter: '#',
+    category: 'Operations',
+    bio: 'Optimizes machine learning pipelines and deployment workflows',
+    expertise: ['ML Ops', 'DevOps', 'Cloud Architecture'],
   },
   {
     id: '8',
     name: 'Vikram Singh',
     role: 'DevOps & Cloud Architect',
     image: '/team/vikram-singh.png',
-    bio: 'Cloud infrastructure expert',
-    fullBio: 'Architected multi-region quantum computing infrastructure. Expert in quantum hardware integration.',
-    expertise: ['DevOps', 'Cloud Architecture', 'Hardware Integration'],
-    email: 'vikram@qni.com',
-    linkedin: '#',
-    twitter: '#',
+    category: 'Infrastructure',
+    bio: 'Designs and maintains scalable cloud infrastructure',
+    expertise: ['Cloud Architecture', 'Infrastructure', 'DevOps'],
   },
 ];
 
-const teamStyles = `
-  .team-card {
-    position: relative;
-    overflow: hidden;
-    border-radius: 0.5rem;
-    aspect-ratio: 1;
-    cursor: pointer;
-  }
-
-  .team-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .team-card:hover .team-image {
-    transform: scale(1.08);
-  }
-
-  .team-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 100%);
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 1.5rem;
-  }
-
-  .team-card:hover .team-overlay {
-    opacity: 1;
-  }
-
-  .team-info {
-    color: white;
-    text-align: left;
-  }
-
-  .team-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.5px;
-  }
-
-  .team-role {
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 0.75rem;
-  }
-
-  .team-bio {
-    font-size: 0.8125rem;
-    line-height: 1.4;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 1rem;
-  }
-
-  .team-expertise {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .expertise-tag {
-    display: inline-block;
-    font-size: 0.7rem;
-    padding: 0.25rem 0.5rem;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 0.25rem;
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .team-socials {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: 1rem;
-  }
-
-  .social-icon {
-    width: 1.5rem;
-    height: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 0.375rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-  }
-
-  .social-icon:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.4);
-  }
-
-  .team-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.5rem;
-    animation: fadeIn 0.6s ease-out;
-  }
-
-  @media (max-width: 768px) {
-    .team-grid {
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1rem;
-    }
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
+const categories = ['All', 'Leadership', 'Engineering', 'Research', 'Product', 'Operations', 'Infrastructure'];
 
 export default function TeamPage() {
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
+    setIsVisible(true);
   }, []);
 
+  const filteredMembers =
+    selectedCategory === 'All'
+      ? teamMembers
+      : teamMembers.filter((member) => member.category === selectedCategory);
+
+  const teamPageStyles = `
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      animation: fadeInUp 0.6s ease;
+    }
+
+    @media (max-width: 1024px) {
+      .team-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .team-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .team-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .team-card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-4px);
+    }
+
+    .team-card-image {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .team-card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .team-card:hover .team-card-image img {
+      transform: scale(1.08);
+    }
+
+    .team-card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 1rem;
+    }
+
+    .team-card:hover .team-card-overlay {
+      opacity: 1;
+    }
+
+    .team-card-info {
+      position: relative;
+      padding: 0.75rem;
+      background: transparent;
+      backdrop-filter: none;
+    }
+
+    .team-card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.95);
+      margin-bottom: 0.2rem;
+    }
+
+    .team-card-role {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 0.5rem;
+    }
+
+    .team-card-bio {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.3;
+      margin-bottom: 0.5rem;
+    }
+
+    .team-card-overlay-text {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.5;
+    }
+
+    .category-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .category-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: transparent;
+      color: rgba(255, 255, 255, 0.6);
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+    }
+
+    .category-btn:hover,
+    .category-btn.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.95);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  `;
+
   return (
-    <div className="min-h-screen bg-background noise-overlay">
-      <style>{teamStyles}</style>
+    <div className="min-h-screen bg-background">
+      <style>{teamPageStyles}</style>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-foreground/5 bg-background/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-            <span className="font-display text-2xl font-bold text-foreground">QNI</span>
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-filter border-b border-foreground/10">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 group">
+            <span className="font-display text-xl tracking-tight">QNI</span>
+            <span className="text-muted-foreground font-mono text-xs">Quantum</span>
           </Link>
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-sm text-foreground/60 hover:text-foreground transition-colors"
           >
-            <ArrowRight className="w-4 h-4" />
-            Back to Home
+            <ArrowLeft className="w-4 h-4" />
+            Back to home
           </Link>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-24">
-        <div className="space-y-6">
-          <div>
-            <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-              Our Team
-            </span>
-          </div>
-          <div className="space-y-4 max-w-2xl">
-            <h1 className="text-5xl md:text-6xl font-display font-bold text-foreground leading-tight">
-              Meet the Minds Building Quantum Nexus India
-            </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              A diverse team of quantum researchers, engineers, and designers pushing the boundaries of quantum computing technology.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Team Grid */}
-      <section ref={sectionRef} className="max-w-7xl mx-auto px-4 md:px-8 pb-24">
-        <div className={`team-grid transition-all duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-          {teamMembers.map((member, index) => (
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-16">
+        <div className="flex flex-col lg:flex-row gap-12">
+          {/* Sidebar */}
+          <div className="lg:w-80 flex-shrink-0">
             <div
-              key={member.id}
-              className="team-card border border-foreground/10 hover:border-foreground/30 transition-colors"
-              style={{
-                animation: isVisible ? `fadeIn 0.6s ease-out ${index * 50}ms forwards` : 'none',
-                opacity: 0,
-              }}
+              className={`transition-all duration-700 ${
+                isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
+              }`}
             >
-              <Image
-                src={member.image}
-                alt={member.name}
-                fill
-                className="team-image"
-                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
-              
-              <div className="team-overlay">
-                <div className="team-info">
-                  <div className="team-name">{member.name}</div>
-                  <div className="team-role">{member.role}</div>
-                  <div className="team-bio">{member.bio}</div>
-                  <div className="team-expertise">
-                    {member.expertise.map((skill) => (
-                      <span key={skill} className="expertise-tag">{skill}</span>
+              <h1 className="font-display text-4xl tracking-tight mb-2">Meet Our Team</h1>
+              <p className="text-foreground/60 text-sm mb-8">
+                Brilliant minds advancing quantum computing and artificial intelligence
+              </p>
+
+              <div className="sticky top-24 space-y-6">
+                <div>
+                  <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-3">
+                    Filter by role
+                  </p>
+                  <div className="space-y-2">
+                    {categories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        className={`category-btn w-full text-left ${
+                          selectedCategory === category ? 'active' : ''
+                        }`}
+                      >
+                        {category}
+                      </button>
                     ))}
                   </div>
-                  <div className="team-socials">
-                    <a
-                      href={`mailto:${member.email}`}
-                      className="social-icon hover:opacity-100"
-                      title="Email"
-                    >
-                      <Mail className="w-3.5 h-3.5" />
-                    </a>
-                    <a
-                      href={member.linkedin}
-                      className="social-icon hover:opacity-100"
-                      title="LinkedIn"
-                    >
-                      <Linkedin className="w-3.5 h-3.5" />
-                    </a>
-                    <a
-                      href={member.twitter}
-                      className="social-icon hover:opacity-100"
-                      title="Twitter"
-                    >
-                      <Twitter className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-foreground/10">
+                  <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-3">
+                    Team count
+                  </p>
+                  <p className="text-2xl font-display font-bold">{filteredMembers.length}</p>
+                  <p className="text-xs text-foreground/50">members</p>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
 
-      {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 pb-16">
-        <div className="border-t border-foreground/10 pt-16">
-          <div className="space-y-6">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
-              Join Our Mission
-            </h2>
-            <p className="text-muted-foreground max-w-2xl leading-relaxed">
-              We're always looking for talented individuals passionate about quantum computing. Whether you're a researcher, engineer, or designer, there's a place for you at QNI.
-            </p>
-            <div className="flex gap-4 flex-wrap">
-              <Link
-                href="/contact"
-                className="px-6 py-3 bg-foreground text-background rounded-lg font-medium hover:bg-foreground/90 transition-colors"
-              >
-                Get In Touch
-              </Link>
-              <Link
-                href="/"
-                className="px-6 py-3 border border-foreground/20 text-foreground rounded-lg font-medium hover:border-foreground/40 transition-colors"
-              >
-                Learn More
-              </Link>
+          {/* Team Grid */}
+          <div className="flex-1 min-w-0">
+            <div
+              ref={containerRef}
+              className={`transition-all duration-700 ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+            >
+              <div className="team-grid">
+                {filteredMembers.map((member, index) => (
+                  <div
+                    key={member.id}
+                    className="team-card group"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                    onMouseEnter={() => setHoveredId(member.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                  >
+                    <div className="team-card-image">
+                      <Image
+                        src={member.image}
+                        alt={member.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                      <div className="team-card-overlay">
+                        <div className="mb-2">
+                          <div className="font-semibold text-white mb-1">{member.name}</div>
+                          <div className="text-sm text-white/80">{member.role}</div>
+                        </div>
+                        <div className="team-card-overlay-text mb-3">{member.bio}</div>
+                        <div className="flex gap-2 pt-2 border-t border-white/20">
+                          <a
+                            href={`mailto:${member.name.toLowerCase().replace(' ', '.')}@qni.com`}
+                            className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                            aria-label="Email"
+                          >
+                            <Mail className="w-4 h-4" />
+                          </a>
+                          <a
+                            href="#"
+                            className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                            aria-label="LinkedIn"
+                          >
+                            <Linkedin className="w-4 h-4" />
+                          </a>
+                          <a
+                            href="#"
+                            className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                            aria-label="Twitter"
+                          >
+                            <Twitter className="w-4 h-4" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="team-card-info">
+                      <div className="team-card-title">{member.name}</div>
+                      <div className="team-card-role">{member.role}</div>
+                      <div className="team-card-bio">{member.bio}</div>
+                      <div className="flex flex-wrap gap-1">
+                        {member.expertise.map((skill) => (
+                          <span
+                            key={skill}
+                            className="inline-block px-2 py-0.5 text-xs rounded bg-foreground/5 text-foreground/70 border border-foreground/10"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </section>
+      </main>
     </div>
   );
 }

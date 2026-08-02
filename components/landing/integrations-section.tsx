@@ -3,18 +3,18 @@
 import { useEffect, useState, useRef } from "react";
 
 const integrations = [
-  { name: "GitHub", category: "Version Control" },
-  { name: "Slack", category: "Communication" },
-  { name: "Stripe", category: "Payments" },
-  { name: "PostgreSQL", category: "Database" },
-  { name: "Redis", category: "Cache" },
-  { name: "AWS", category: "Cloud" },
-  { name: "MongoDB", category: "Database" },
-  { name: "Vercel", category: "Hosting" },
-  { name: "Figma", category: "Design" },
-  { name: "Linear", category: "Project Management" },
-  { name: "Notion", category: "Documentation" },
-  { name: "OpenAI", category: "AI/ML" },
+  { name: "IonQ", category: "Quantum Hardware" },
+  { name: "IBM Quantum", category: "Quantum Computing" },
+  { name: "Rigetti Computing", category: "Quantum Hardware" },
+  { name: "AWS Braket", category: "Quantum Cloud" },
+  { name: "Google Cirq", category: "Quantum Framework" },
+  { name: "Microsoft Azure Quantum", category: "Quantum Cloud" },
+  { name: "Qiskit", category: "Quantum SDK" },
+  { name: "D-Wave Systems", category: "Quantum Annealing" },
+  { name: "Zapata Computing", category: "Quantum Software" },
+  { name: "Xanadu", category: "Photonic Quantum" },
+  { name: "PsiQuantum", category: "Quantum Research" },
+  { name: "Atom Computing", category: "Quantum Hardware" },
 ];
 
 export function IntegrationsSection() {
@@ -44,16 +44,16 @@ export function IntegrationsSection() {
         >
           <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground mb-6">
             <span className="w-8 h-px bg-foreground/30" />
-            Integrations
+            Partnerships
             <span className="w-8 h-px bg-foreground/30" />
           </span>
           <h2 className="text-4xl lg:text-6xl font-display tracking-tight mb-6">
-            Works with everything
+            Industry Collaborations
             <br />
-            you already use.
+            Leading Quantum Platforms.
           </h2>
           <p className="text-xl text-muted-foreground">
-            200+ pre-built integrations. Connect your entire stack in minutes.
+            Partnering with world-leading quantum computing providers and frameworks.
           </p>
         </div>
 

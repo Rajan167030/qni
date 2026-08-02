@@ -66,15 +66,12 @@ export function Navigation() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <a href="#" className={`text-foreground/70 hover:text-foreground transition-all duration-500 ${isScrolled ? "text-xs" : "text-sm"}`}>
-              Sign in
-            </a>
-            <Button
-              size="sm"
-              className={`bg-foreground hover:bg-foreground/90 text-background rounded-full transition-all duration-500 ${isScrolled ? "px-4 h-8 text-xs" : "px-6"}`}
+            <Link
+              href="/join"
+              className={`px-6 py-2 bg-foreground hover:bg-foreground/90 text-background rounded-full font-medium transition-all duration-500 ${isScrolled ? "px-4 h-8 text-xs leading-8 py-0" : "text-sm"}`}
             >
-              Start creating
-            </Button>
+              Join Us
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -122,27 +119,21 @@ export function Navigation() {
             ))}
           </div>
           
-          {/* Bottom CTAs */}
-          <div className={`flex gap-4 pt-8 border-t border-foreground/10 transition-all duration-500 ${
+          {/* Bottom CTA */}
+          <div className={`pt-8 border-t border-foreground/10 transition-all duration-500 ${
             isMobileMenuOpen 
               ? "opacity-100 translate-y-0" 
               : "opacity-0 translate-y-4"
           }`}
           style={{ transitionDelay: isMobileMenuOpen ? "300ms" : "0ms" }}
           >
-            <Button 
-              variant="outline" 
-              className="flex-1 rounded-full h-14 text-base"
+            <Link 
+              href="/join"
+              className="w-full bg-foreground text-background rounded-full h-14 text-base font-medium flex items-center justify-center hover:bg-foreground/90 transition-all"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Sign in
-            </Button>
-            <Button 
-              className="flex-1 bg-foreground text-background rounded-full h-14 text-base"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Start creating
-            </Button>
+              Join Us
+            </Link>
           </div>
         </div>
       </div>

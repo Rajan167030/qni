@@ -46,28 +46,28 @@ function AnimatedCounter({ end, suffix = "", prefix = "" }: { end: number; suffi
 
 const metrics = [
   { 
-    value: 2847392, 
+    value: 156, 
     suffix: "", 
     prefix: "",
-    label: "API requests today",
+    label: "Events Hosted",
   },
   { 
-    value: 99, 
-    suffix: ".99%", 
+    value: 12500, 
+    suffix: "+", 
     prefix: "",
-    label: "Uptime this quarter",
+    label: "Community Members",
   },
   { 
-    value: 23, 
-    suffix: "ms", 
-    prefix: "",
-    label: "Average response time",
-  },
-  { 
-    value: 184, 
+    value: 89, 
     suffix: "", 
     prefix: "",
-    label: "Countries served",
+    label: "Research Projects",
+  },
+  { 
+    value: 18, 
+    suffix: "", 
+    prefix: "",
+    label: "Active Chapters",
   },
 ];
 
