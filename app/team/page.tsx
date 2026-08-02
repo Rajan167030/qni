@@ -329,8 +329,12 @@ export default function TeamPage() {
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                       <div className="team-card-overlay">
-                        <div className="team-card-overlay-text">{member.bio}</div>
-                        <div className="flex gap-2 mt-3 pt-3 border-t border-white/20">
+                        <div className="mb-2">
+                          <div className="font-semibold text-white mb-1">{member.name}</div>
+                          <div className="text-sm text-white/80">{member.role}</div>
+                        </div>
+                        <div className="team-card-overlay-text mb-3">{member.bio}</div>
+                        <div className="flex gap-2 pt-2 border-t border-white/20">
                           <a
                             href={`mailto:${member.name.toLowerCase().replace(' ', '.')}@qni.com`}
                             className="p-1.5 rounded hover:bg-white/10 transition-colors"
