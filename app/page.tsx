@@ -5,11 +5,9 @@ import { EventsSection } from "@/components/landing/events-section";
 import { InfrastructureSection } from "@/components/landing/infrastructure-section";
 import { MetricsSection } from "@/components/landing/metrics-section";
 import { IntegrationsSection } from "@/components/landing/integrations-section";
-import { DevelopersSection } from "@/components/landing/developers-section";
 import { SpeakersSection } from "@/components/landing/speakers-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { CtaSection } from "@/components/landing/cta-section";
-import { FooterSection } from "@/components/landing/footer-section";
 
 export default function Home() {
   return (
@@ -21,11 +19,9 @@ export default function Home() {
       <InfrastructureSection />
       <MetricsSection />
       <IntegrationsSection />
-      <DevelopersSection />
       <SpeakersSection />
       <TestimonialsSection />
       <CtaSection />
-      <FooterSection />
     </main>
   );
 }

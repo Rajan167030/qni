@@ -64,7 +64,7 @@ export function HeroSection() {
         >
           <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground">
             <span className="w-8 h-px bg-foreground/30" />
-            The platform for modern teams
+            Advancing Quantum Computing
           </span>
         </div>
         
@@ -75,9 +75,9 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            <span className="block">The platform</span>
+            <span className="block">Build the Future</span>
             <span className="block">
-              to{" "}
+              of{" "}
               <span className="relative inline-block">
                 <span 
                   key={wordIndex}
@@ -108,8 +108,7 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            Your toolkit to stop configuring and start innovating. 
-            Securely build, deploy, and scale the best experiences.
+            Join us in revolutionizing quantum computing with cutting-edge research, enterprise solutions, and AI-ML innovation. Be part of a global community shaping tomorrow's technology.
           </p>
           
           {/* CTAs */}
@@ -121,16 +120,18 @@ export function HeroSection() {
             <Button 
               size="lg" 
               className="bg-foreground hover:bg-foreground/90 text-background px-8 h-14 text-base rounded-full group"
+              onClick={() => window.location.href = '/join'}
             >
-              Start free trial
+              Join Us
               <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
               className="h-14 px-8 text-base rounded-full border-foreground/20 hover:bg-foreground/5"
+              onClick={() => window.location.href = '/events'}
             >
-              Watch demo
+              Explore Events
             </Button>
           </div>
         </div>
