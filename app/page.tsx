@@ -9,6 +9,7 @@ import { DevelopersSection } from "@/components/landing/developers-section";
 import { SpeakersSection } from "@/components/landing/speakers-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { CtaSection } from "@/components/landing/cta-section";
+import { FooterSection } from "@/components/landing/footer-section";
 
 export default function Home() {
   return (
@@ -24,6 +25,7 @@ export default function Home() {
       <SpeakersSection />
       <TestimonialsSection />
       <CtaSection />
+      <FooterSection />
     </main>
   );
 }
