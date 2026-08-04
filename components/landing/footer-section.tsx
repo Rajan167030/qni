@@ -37,24 +37,27 @@ const socialLinks = [
 
 export function FooterSection() {
   return (
-    <footer className="relative border-t border-foreground/10">
+    <footer className="relative border-t border-foreground/10 bg-gradient-to-b from-background to-background/80">
       {/* Animated wave background */}
-      <div className="absolute inset-0 h-80 opacity-70 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 opacity-100 pointer-events-none overflow-hidden">
         <AnimatedWave />
       </div>
       
+      {/* Overlay for readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/95 to-background pointer-events-none"></div>
+      
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12">
         {/* Main Footer */}
-        <div className="py-16 lg:py-24">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-12 lg:gap-8">
+        <div className="py-20 lg:py-28">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-12 lg:gap-10">
             {/* Brand Column */}
-            <div className="col-span-2">
-              <a href="#" className="inline-flex items-center gap-2 mb-6">
-                <span className="text-2xl font-display">QNI</span>
-                <span className="text-xs text-muted-foreground font-mono">Quantum</span>
+            <div className="col-span-2 space-y-4">
+              <a href="#" className="inline-flex items-center gap-3 group">
+                <span className="text-3xl font-display font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">QNI</span>
+                <span className="text-xs text-muted-foreground font-mono px-2 py-1 border border-foreground/20 rounded-full group-hover:border-foreground/40 transition-colors">Quantum</span>
               </a>
 
-              <p className="text-muted-foreground leading-relaxed mb-8 max-w-xs">
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
                 Advancing quantum computing with cutting-edge research, enterprise solutions, and innovative AI-ML infrastructure.
               </p>
 
@@ -75,21 +78,22 @@ export function FooterSection() {
 
             {/* Link Columns */}
             {Object.entries(footerLinks).map(([title, links]) => (
-              <div key={title}>
-                <h3 className="text-sm font-medium mb-6">{title}</h3>
-                <ul className="space-y-4">
+              <div key={title} className="space-y-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">{title}</h3>
+                <ul className="space-y-3">
                   {links.map((link) => (
                     <li key={link.name}>
                       <a
                         href={link.href}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2"
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-2 group"
                       >
                         {link.name}
                         {"badge" in link && link.badge && (
-                          <span className="text-xs px-2 py-0.5 bg-foreground text-background rounded-full">
+                          <span className="text-xs px-2 py-0.5 bg-foreground/10 text-foreground/80 rounded-full border border-foreground/20">
                             {link.badge}
                           </span>
                         )}
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
                       </a>
                     </li>
                   ))}
