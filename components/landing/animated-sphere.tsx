@@ -39,7 +39,6 @@ export function AnimatedSphere() {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      const step = 12;
       const points: { x: number; y: number; z: number; char: string }[] = [];
 
       // Generate sphere points
@@ -77,7 +76,9 @@ export function AnimatedSphere() {
       // Draw points
       points.forEach((point) => {
         const alpha = 0.2 + (point.z + 1) * 0.4;
-        ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+        // Theme aware fill color (dark mode vs light mode)
+        const isDark = document.documentElement.classList.contains("dark");
+        ctx.fillStyle = isDark ? `rgba(255, 255, 255, ${alpha * 0.85})` : `rgba(0, 0, 0, ${alpha})`;
         ctx.fillText(point.char, point.x, point.y);
       });
 

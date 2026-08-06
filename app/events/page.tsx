@@ -1,308 +1,333 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronRight, Calendar, MapPin, Users } from 'lucide-react';
+import { X, Calendar, MapPin, Clock, ArrowRight, ExternalLink, ArrowLeft, ChevronRight, Users } from 'lucide-react';
 
 const allEvents = [
   {
     id: '1',
-    title: 'Optimus Summit 2024',
-    date: 'Oct 15 - Oct 17',
-    startDate: new Date('2024-10-15'),
-    location: 'San Francisco, CA',
-    description: 'Join industry leaders and innovators for three days of talks, workshops, and networking.',
-    fullDescription: 'The premier event for quantum ML professionals, featuring keynotes from industry leaders, hands-on workshops, and networking opportunities.',
-    status: 'Upcoming',
-    attendees: '2,500+',
-    category: 'Conference',
-    speakers: ['Alex Chen', 'Jordan Williams', 'Priya Patel'],
+    month: 'AUG',
+    day: '02',
+    dayLabel: 'Sat',
+    title: 'Intro to Qiskit — Bengaluru chapter',
+    description: 'Hands-on workshop, no prior quantum background needed.',
+    location: 'IISC Campus, Bengaluru',
+    time: '10:00 AM – 2:00 PM IST',
+    attendees: '120',
+    badge: 'In person',
+    category: 'Workshop',
+    fullDescription: 'An accessible, hands-on introduction to IBM Qiskit. No prior quantum physics background required. You\'ll build your first quantum circuits, run simulations on real QPU hardware, and network with fellow developers from the Bengaluru quantum chapter.',
+    speakers: ['Dr. Ramesh Nair', 'Ankit Verma'],
+    price: 'Free (Registration Required)',
+    schedule: [
+      { time: '10:00 AM', title: 'Introduction to Quantum Bits & Qiskit Setup', speaker: 'Dr. Ramesh Nair' },
+      { time: '11:00 AM', title: 'Hands-on: Your First Quantum Circuit', speaker: 'Ankit Verma' },
+      { time: '12:30 PM', title: 'Networking Lunch', speaker: '' },
+      { time: '1:30 PM', title: 'Real QPU Run Demo & Q&A', speaker: 'Dr. Ramesh Nair' },
+    ],
   },
   {
     id: '2',
-    title: 'Developer Workshop Series',
-    date: 'Every Wednesday',
-    startDate: new Date('2024-09-01'),
-    location: 'Online',
-    description: 'Weekly hands-on workshops covering AI workflows, deployment strategies, and best practices.',
-    fullDescription: 'Weekly online sessions designed for developers wanting to master quantum ML infrastructure and deployment patterns.',
-    status: 'Recurring',
-    attendees: '500+',
-    category: 'Workshop',
-    speakers: ['Marcus Rodriguez'],
+    month: 'AUG',
+    day: '16',
+    dayLabel: 'Sat',
+    title: 'Variational algorithms reading group',
+    description: 'Open to all chapters, hosted online, recording shared after.',
+    location: 'Online (Zoom)',
+    time: '3:00 PM – 5:00 PM IST',
+    attendees: '250+',
+    badge: 'Online',
+    category: 'Seminar',
+    fullDescription: 'A deep-dive reading group session covering the latest advances in Variational Quantum Eigensolvers (VQE) and QAOA. Open to all QNexus chapter members globally. Recording will be shared with all members after the session.',
+    speakers: ['Prof. Shreya Mehta', 'QNexus Research Team'],
+    price: 'Free for Members',
+    schedule: [
+      { time: '3:00 PM', title: 'Paper Review: VQE with Adaptive Circuits', speaker: 'Prof. Shreya Mehta' },
+      { time: '4:00 PM', title: 'Open Discussion', speaker: 'All Members' },
+      { time: '4:45 PM', title: 'Q&A & Next Session Preview', speaker: 'QNexus Team' },
+    ],
   },
   {
     id: '3',
-    title: 'Enterprise Bootcamp',
-    date: 'Nov 1 - Nov 5',
-    startDate: new Date('2024-11-01'),
-    location: 'New York, NY',
-    description: 'Intensive five-day program for enterprise teams looking to scale their AI operations.',
-    fullDescription: 'A comprehensive bootcamp for enterprise teams covering scaling, security, compliance, and production deployment of quantum ML systems.',
-    status: 'Limited Seats',
-    attendees: '100',
-    category: 'Bootcamp',
-    speakers: ['Alex Chen', 'Jordan Williams'],
+    month: 'SEP',
+    day: '05–06',
+    dayLabel: 'Sat–Sun',
+    title: 'QNI National Hackathon 2026',
+    description: '48-hour build sprint with real QPU access, hosted in Hyderabad.',
+    location: 'T-Hub, Hyderabad',
+    time: 'Sep 5 9:00 AM – Sep 6 9:00 PM IST',
+    attendees: '500+',
+    badge: 'Flagship',
+    category: 'Hackathon',
+    fullDescription: 'India\'s premier quantum computing hackathon. Build real-world solutions using QNexus India\'s quantum cloud platform with direct QPU access on IBM Quantum hardware. Win prizes worth ₹5 Lakhs and gain direct mentorship from top researchers.',
+    speakers: ['Sharvan Kumar Sharma', 'Dr. Ananya Sharma', 'Prof. Rajesh Varma'],
+    price: '₹500/team (up to 4 members)',
+    schedule: [
+      { time: 'Sep 5, 9 AM', title: 'Opening Ceremony & Problem Statements', speaker: 'QNI Leadership' },
+      { time: 'Sep 5, 11 AM', title: 'Hackathon Sprint Begins', speaker: '' },
+      { time: 'Sep 6, 12 PM', title: 'Midpoint Mentorship Slots', speaker: 'Expert Panel' },
+      { time: 'Sep 6, 9 PM', title: 'Final Submissions & Prize Ceremony', speaker: 'QNI Team' },
+    ],
   },
   {
     id: '4',
-    title: 'Global Community Meetup',
-    date: 'Monthly',
-    startDate: new Date('2024-09-15'),
-    location: 'Multiple Cities',
-    description: 'Connect with fellow developers and share your experiences using Optimus in production.',
-    fullDescription: 'Monthly gatherings across the globe where developers share real-world experiences, best practices, and build lasting connections.',
-    status: 'Ongoing',
-    attendees: '1,000+',
-    category: 'Meetup',
-    speakers: [],
+    month: 'SEP',
+    day: '20',
+    dayLabel: 'Sun',
+    title: 'Careers in quantum — mentor panel',
+    description: 'Engineers from partner labs answer questions on internships and PhDs.',
+    location: 'Online (Google Meet)',
+    time: '5:00 PM – 7:00 PM IST',
+    attendees: '300+',
+    badge: 'Online',
+    category: 'Panel',
+    fullDescription: 'A candid mentor panel where engineers and researchers from IIT Madras, IISc, IBM Quantum, and TCS Labs answer your questions about careers in quantum computing — internships, PhDs, and industry transitions.',
+    speakers: ['Dr. Ananya Sharma (C-DAC)', 'Prof. Rajesh Varma (IIT Madras)', 'Vikramaditya Singh (TCS)'],
+    price: 'Free',
+    schedule: [
+      { time: '5:00 PM', title: 'Panelist Introductions', speaker: 'Moderator' },
+      { time: '5:15 PM', title: 'Career Pathways in Quantum', speaker: 'All Panelists' },
+      { time: '6:00 PM', title: 'Open Q&A from Audience', speaker: 'All Panelists' },
+      { time: '6:45 PM', title: 'Networking Breakout Rooms', speaker: '' },
+    ],
   },
   {
     id: '5',
-    title: 'Advanced Quantum ML Training',
-    date: 'Dec 1 - Dec 15',
-    startDate: new Date('2024-12-01'),
-    location: 'Mountain View, CA',
-    description: 'Deep dive into quantum machine learning algorithms and production optimization techniques.',
-    fullDescription: 'Intensive two-week certification program covering advanced quantum ML algorithms, optimization, and real-world applications.',
-    status: 'Upcoming',
-    attendees: '50',
-    category: 'Training',
-    speakers: ['Priya Patel', 'Marcus Rodriguez'],
+    month: 'OCT',
+    day: '11',
+    dayLabel: 'Sat',
+    title: 'Quantum error correction deep-dive',
+    description: 'Technical masterclass on surface codes and fault-tolerant computing.',
+    location: 'IIT Bombay, Mumbai',
+    time: '10:00 AM – 4:00 PM IST',
+    attendees: '80',
+    badge: 'In person',
+    category: 'Workshop',
+    fullDescription: 'An advanced technical masterclass covering quantum error correction, surface codes, and fault-tolerant quantum computation. Ideal for researchers and developers with a basic quantum mechanics background.',
+    speakers: ['Prof. Deepak Khosla', 'Rajan Jha (QNI CTO)'],
+    price: '₹299 (Students: ₹99)',
+    schedule: [
+      { time: '10:00 AM', title: 'Introduction to Error Correction', speaker: 'Rajan Jha' },
+      { time: '11:30 AM', title: 'Surface Code Deep-Dive', speaker: 'Prof. Deepak Khosla' },
+      { time: '1:00 PM', title: 'Lunch Break', speaker: '' },
+      { time: '2:00 PM', title: 'Hands-on Lab: Simulating Error Correction', speaker: 'Both Speakers' },
+    ],
   },
   {
     id: '6',
-    title: 'Security & Compliance Summit',
-    date: 'Oct 28 - Oct 29',
-    startDate: new Date('2024-10-28'),
-    location: 'Boston, MA',
-    description: 'Comprehensive coverage of security best practices and compliance frameworks for AI infrastructure.',
-    fullDescription: 'Expert-led sessions on zero-trust architectures, compliance certifications, and security protocols for enterprise AI deployments.',
-    status: 'Upcoming',
-    attendees: '300+',
-    category: 'Summit',
-    speakers: ['Jordan Williams'],
-  },
-  {
-    id: '7',
-    title: 'Community Hackathon',
-    date: 'Nov 10 - Nov 12',
-    startDate: new Date('2024-11-10'),
-    location: 'Online',
-    description: 'Build innovative quantum ML solutions with the community and compete for prizes.',
-    fullDescription: '48-hour online hackathon where developers build quantum ML applications, with mentorship from Optimus engineers and exciting prizes.',
-    status: 'Upcoming',
-    attendees: '1,500+',
-    category: 'Hackathon',
-    speakers: [],
-  },
-  {
-    id: '8',
-    title: 'AI Infrastructure Masterclass',
-    date: 'Sept 15 - Sept 16',
-    startDate: new Date('2024-09-15'),
-    location: 'Austin, TX',
-    description: 'Learn scaling strategies from industry experts and Optimus architects.',
-    fullDescription: 'Two-day masterclass covering infrastructure design, scaling strategies, and best practices for production AI systems.',
-    status: 'Happening Now',
-    attendees: '200',
+    month: 'NOV',
+    day: '08',
+    dayLabel: 'Sat',
+    title: 'Post-quantum cryptography workshop',
+    description: 'Securing systems for the quantum era — enterprise focus.',
+    location: 'Online (Zoom)',
+    time: '2:00 PM – 5:00 PM IST',
+    attendees: '400+',
+    badge: 'Enterprise',
     category: 'Workshop',
-    speakers: ['Alex Chen', 'Marcus Rodriguez'],
+    fullDescription: 'An enterprise-focused workshop covering post-quantum cryptography standards (NIST PQC), lattice-based cryptography, and transitioning enterprise security systems to quantum-safe protocols.',
+    speakers: ['QNI Security Team', 'Industry Expert (TBC)'],
+    price: 'Free for Enterprise Partners',
+    schedule: [
+      { time: '2:00 PM', title: 'NIST PQC Standards Overview', speaker: 'QNI Security Team' },
+      { time: '3:00 PM', title: 'Enterprise Migration Strategies', speaker: 'Industry Expert' },
+      { time: '4:00 PM', title: 'Live Q&A', speaker: 'All Speakers' },
+    ],
   },
 ];
 
-const categories = ['All', 'Conference', 'Workshop', 'Bootcamp', 'Meetup', 'Training', 'Summit', 'Hackathon'];
-
-function EventCard({ event, index }: { event: typeof allEvents[0]; index: number }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setIsVisible(true);
-      },
-      { threshold: 0.1 }
-    );
-
-    if (cardRef.current) observer.observe(cardRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const statusColors = {
-    'Upcoming': 'bg-green-400/10 text-green-400 border-green-400/20',
-    'Limited Seats': 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20',
-    'Ongoing': 'bg-blue-400/10 text-blue-400 border-blue-400/20',
-    'Recurring': 'bg-purple-400/10 text-purple-400 border-purple-400/20',
-    'Happening Now': 'bg-red-400/10 text-red-400 border-red-400/20',
-  };
-
-  return (
-    <div
-      ref={cardRef}
-      className={`group transition-all duration-700 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-      }`}
-      style={{ transitionDelay: `${index * 50}ms` }}
-    >
-      <Link href={`/events/${event.id}`}>
-        <div className="h-full border border-foreground/10 rounded-xl p-6 lg:p-8 bg-background/40 hover:bg-background/80 hover:border-foreground/20 transition-all duration-500 hover:shadow-xl cursor-pointer">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div className="flex-1">
-              <div className="inline-flex items-center gap-2 mb-3">
-                <span className={`text-xs font-mono px-3 py-1 rounded border ${statusColors[event.status as keyof typeof statusColors] || 'bg-foreground/5 text-foreground/60 border-foreground/10'}`}>
-                  {event.status}
-                </span>
-                <span className="text-xs font-mono text-foreground/40 bg-foreground/5 px-3 py-1 rounded">
-                  {event.category}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Title */}
-          <h3 className="text-xl lg:text-2xl font-display mb-3 group-hover:translate-x-1 transition-transform duration-300 line-clamp-2">
-            {event.title}
-          </h3>
-
-          {/* Description */}
-          <p className="text-foreground/60 text-sm mb-6 line-clamp-2">
-            {event.description}
-          </p>
-
-          {/* Details */}
-          <div className="space-y-3 mb-6 pb-6 border-t border-foreground/10">
-            <div className="flex items-center gap-3 text-sm mt-4">
-              <Calendar className="w-4 h-4 text-foreground/40" />
-              <span className="text-foreground/80">{event.date}</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm">
-              <MapPin className="w-4 h-4 text-foreground/40" />
-              <span className="text-foreground/80">{event.location}</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm">
-              <Users className="w-4 h-4 text-foreground/40" />
-              <span className="text-foreground/80">{event.attendees} attendees</span>
-            </div>
-          </div>
-
-          {/* CTA */}
-          <div className="flex items-center gap-2 text-sm font-medium text-foreground group-hover:translate-x-1 transition-transform duration-300">
-            View Details
-            <ChevronRight className="w-4 h-4" />
-          </div>
-        </div>
-      </Link>
-    </div>
-  );
-}
-
 export default function EventsListPage() {
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedEvent, setSelectedEvent] = useState<typeof allEvents[0] | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  const filteredEvents = selectedCategory === 'All'
-    ? allEvents.sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
-    : allEvents.filter((event) => event.category === selectedCategory)
-        .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+  useEffect(() => {
+    if (selectedEvent) {
+      setTimeout(() => setPanelOpen(true), 10);
+      document.body.style.overflow = 'hidden';
+    } else {
+      setPanelOpen(false);
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [selectedEvent]);
+
+  const closePanel = () => {
+    setPanelOpen(false);
+    setTimeout(() => setSelectedEvent(null), 350);
+  };
 
   return (
-    <div ref={pageRef} className="min-h-screen bg-background">
-      {/* Navigation Back */}
-      <div className="fixed top-0 left-0 right-0 z-50 border-b border-foreground/10 bg-background/80 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-4">
-          <a
-            href="/"
-            className="inline-flex items-center gap-2 text-sm text-foreground/60 hover:text-foreground transition-colors"
-          >
-            <span>←</span> Back to home
-          </a>
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Top nav */}
+      <div className="fixed top-0 left-0 right-0 z-50 border-b border-foreground/10 bg-background/95 backdrop-blur-sm">
+        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 text-sm text-foreground/50 hover:text-foreground transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Back to home
+          </Link>
+          <span className="font-mono text-xs text-foreground/30 tracking-widest">QNI / Events</span>
         </div>
       </div>
 
-      {/* Header */}
-      <div className="pt-32 pb-20 border-b border-foreground/10">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div
-            className={`transition-all duration-700 ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
-          >
-            <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground mb-6">
-              <span className="w-8 h-px bg-foreground/30" />
-              Community
-            </span>
-            <h1 className="text-5xl lg:text-7xl font-display tracking-tight mb-6">
-              All Events
-            </h1>
-            <p className="text-lg text-foreground/60 max-w-2xl leading-relaxed">
-              Explore our comprehensive calendar of conferences, workshops, bootcamps, and networking events designed for quantum ML professionals worldwide.
-            </p>
-          </div>
-        </div>
+      {/* Page header */}
+      <div className={`pt-28 pb-12 max-w-5xl mx-auto px-6 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <span className="font-mono text-xs tracking-widest text-foreground/40 uppercase block mb-3">Community</span>
+        <h1 className="text-5xl lg:text-7xl font-display tracking-tight">Events</h1>
       </div>
 
-      {/* Filters */}
-      <div className="sticky top-20 z-40 border-b border-foreground/10 bg-background/80 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-6">
-          <div className="flex items-center gap-3 overflow-x-auto pb-2">
-            <span className="text-sm font-mono text-foreground/50 uppercase tracking-wider whitespace-nowrap">
-              Filter:
-            </span>
-            <div className="flex gap-2 overflow-x-auto">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 whitespace-nowrap text-sm ${
-                    selectedCategory === category
-                      ? 'bg-foreground text-background'
-                      : 'border border-foreground/10 text-foreground/60 hover:text-foreground hover:border-foreground/30'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+      {/* Events list — reference image exact style */}
+      <div className="max-w-5xl mx-auto px-6 pb-24">
+        <div className="divide-y divide-foreground/8">
+          {allEvents.map((event, idx) => (
+            <div
+              key={event.id}
+              onClick={() => setSelectedEvent(event)}
+              className={`group flex items-start gap-10 py-7 cursor-pointer transition-all duration-200 hover:px-3 hover:-mx-3 hover:bg-foreground/[0.03] hover:rounded-xl ${
+                isVisible ? 'opacity-100' : 'opacity-0'
+              }`}
+              style={{ transitionDelay: `${idx * 50}ms` }}
+            >
+              {/* Date column — exact reference layout */}
+              <div className="w-16 shrink-0 text-left select-none">
+                <div className="font-mono text-[11px] text-foreground/35 uppercase tracking-wider leading-tight">{event.month}</div>
+                <div className="font-display text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight my-0.5">{event.day}</div>
+                <div className="font-mono text-[11px] text-foreground/35 leading-tight">{event.dayLabel}</div>
+              </div>
+
+              {/* Content column */}
+              <div className="flex-1 min-w-0 py-0.5">
+                <h3 className="text-lg lg:text-xl text-foreground font-medium leading-snug mb-1.5 group-hover:text-foreground/80 transition-colors">
+                  {event.title}
+                </h3>
+                <p className="text-sm text-foreground/45 leading-relaxed">{event.description}</p>
+              </div>
+
+              {/* Badge column */}
+              <div className="shrink-0 flex items-center gap-3 pt-1">
+                <span className="text-xs font-mono text-foreground/50 border border-foreground/15 px-3 py-1 rounded-full whitespace-nowrap">
+                  {event.badge}
+                </span>
+                <ChevronRight className="w-4 h-4 text-foreground/25 group-hover:text-foreground/50 group-hover:translate-x-0.5 transition-all duration-200" />
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Events Grid */}
-      <div className="py-24 lg:py-32">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          {filteredEvents.length > 0 ? (
-            <>
-              <div className="mb-8 text-sm text-foreground/60">
-                Showing {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
-              </div>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                {filteredEvents.map((event, index) => (
-                  <EventCard key={event.id} event={event} index={index} />
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-20">
-              <p className="text-lg text-foreground/60 mb-4">
-                No events found in this category.
-              </p>
+      {/* Slide-in detail panel */}
+      {selectedEvent && (
+        <>
+          <div
+            className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-350 ${panelOpen ? 'opacity-100' : 'opacity-0'}`}
+            onClick={closePanel}
+          />
+          <div
+            className={`fixed top-0 right-0 bottom-0 z-50 w-full max-w-[520px] bg-background border-l border-foreground/10 shadow-2xl overflow-y-auto transition-transform duration-350 ease-out ${panelOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          >
+            {/* Panel header */}
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-foreground/10 px-8 py-5 flex items-center justify-between">
+              <span className="font-mono text-xs text-foreground/35 uppercase tracking-widest">Event Details</span>
               <button
-                onClick={() => setSelectedCategory('All')}
-                className="px-6 py-2 bg-foreground text-background rounded-lg font-medium hover:bg-foreground/90 transition-all duration-300"
+                onClick={closePanel}
+                className="w-9 h-9 rounded-full border border-foreground/15 flex items-center justify-center hover:bg-foreground/8 transition-colors"
               >
-                View All Events
+                <X className="w-4 h-4 text-foreground/60" />
               </button>
             </div>
-          )}
-        </div>
-      </div>
+
+            <div className="px-8 py-8 space-y-8">
+              {/* Date + badge */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="font-mono text-xs text-foreground/35 uppercase tracking-wider">{selectedEvent.month} {selectedEvent.day}, 2026</div>
+                  <div className="font-mono text-xs text-foreground/30 mt-0.5">{selectedEvent.dayLabel}</div>
+                </div>
+                <span className="text-xs font-mono text-foreground/50 border border-foreground/15 px-3 py-1 rounded-full">
+                  {selectedEvent.badge}
+                </span>
+              </div>
+
+              {/* Title & description */}
+              <div>
+                <h2 className="text-2xl lg:text-3xl font-display leading-tight text-foreground mb-3">
+                  {selectedEvent.title}
+                </h2>
+                <p className="text-foreground/55 leading-relaxed text-sm">{selectedEvent.fullDescription}</p>
+              </div>
+
+              {/* Info grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { icon: MapPin, label: 'Location', value: selectedEvent.location },
+                  { icon: Clock, label: 'Time', value: selectedEvent.time },
+                  { icon: Users, label: 'Attendees', value: `${selectedEvent.attendees} expected` },
+                  { icon: Calendar, label: 'Tickets', value: selectedEvent.price },
+                ].map(({ icon: Icon, label, value }) => (
+                  <div key={label} className="p-4 rounded-2xl border border-foreground/8 bg-foreground/[0.02]">
+                    <div className="flex items-center gap-1.5 text-foreground/35 mb-1.5">
+                      <Icon className="w-3 h-3" />
+                      <span className="font-mono text-[10px] uppercase tracking-widest">{label}</span>
+                    </div>
+                    <p className="text-foreground text-sm font-medium leading-snug">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Agenda */}
+              <div>
+                <h3 className="font-display text-lg mb-4 text-foreground">Agenda</h3>
+                <div className="border-l border-foreground/15 pl-5 space-y-4">
+                  {selectedEvent.schedule.map((item, idx) => (
+                    <div key={idx} className="relative">
+                      <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-foreground/20 border-2 border-background" />
+                      <div className="font-mono text-[10px] text-foreground/30 uppercase tracking-wider mb-0.5">{item.time}</div>
+                      <div className="text-foreground text-sm font-medium">{item.title}</div>
+                      {item.speaker && <div className="text-xs text-foreground/40 mt-0.5">{item.speaker}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Speakers */}
+              {selectedEvent.speakers.length > 0 && (
+                <div>
+                  <h3 className="font-display text-lg mb-3 text-foreground">Speakers</h3>
+                  <div className="space-y-2">
+                    {selectedEvent.speakers.map((s, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 rounded-xl border border-foreground/8 bg-foreground/[0.02]">
+                        <div className="w-8 h-8 rounded-full bg-foreground text-background font-display font-bold text-xs flex items-center justify-center shrink-0">
+                          {s.charAt(0)}
+                        </div>
+                        <span className="text-sm text-foreground">{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Register CTA */}
+              <div className="pt-2 space-y-3">
+                <Link href={`/events/${selectedEvent.id}/register`}>
+                  <button className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-foreground text-background rounded-2xl font-semibold text-sm hover:bg-foreground/90 transition-colors group">
+                    Register for This Event
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </Link>
+                <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border border-foreground/12 text-foreground/55 hover:text-foreground hover:border-foreground/25 text-sm font-medium transition-colors">
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Add to Calendar
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

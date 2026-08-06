@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { AnimatedSphere } from "./animated-sphere";
 
-const words = ["create", "build", "scale", "ship"];
+const words = ["quantum tech", "superposition", "deep computing", "algorithms"];
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -25,7 +25,7 @@ export function HeroSection() {
   return (
     <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
       {/* Animated sphere background */}
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] lg:w-[800px] lg:h-[800px] opacity-40 pointer-events-none">
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] lg:w-[850px] lg:h-[850px] opacity-70 pointer-events-none">
         <AnimatedSphere />
       </div>
       
@@ -64,7 +64,7 @@ export function HeroSection() {
         >
           <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground">
             <span className="w-8 h-px bg-foreground/30" />
-            Advancing Quantum Computing
+            Advancing Quantum Computing in India & Globally
           </span>
         </div>
         
@@ -108,7 +108,7 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            Join us in revolutionizing quantum computing with cutting-edge research, enterprise solutions, and AI-ML innovation. Be part of a global community shaping tomorrow's technology.
+            Empowering quantum researchers, developers, and enterprises with quantum algorithms, fault-tolerant simulations, and cutting-edge deep-tech innovation.
           </p>
           
           {/* CTAs */}
@@ -138,9 +138,9 @@ export function HeroSection() {
         
       </div>
       
-      {/* Stats marquee - full width outside container */}
+      {/* Quantum Stats Marquee - full width loop line */}
       <div 
-        className={`absolute bottom-24 left-0 right-0 transition-all duration-700 delay-500 ${
+        className={`absolute bottom-10 left-0 right-0 transition-all duration-700 delay-500 ${
           isVisible ? "opacity-100" : "opacity-0"
         }`}
       >
@@ -148,16 +148,18 @@ export function HeroSection() {
           {[...Array(2)].map((_, i) => (
             <div key={i} className="flex gap-16">
               {[
-                { value: "20 days", label: "saved on builds", company: "NETFLIX" },
-                { value: "98%", label: "faster deployment", company: "STRIPE" },
-                { value: "300%", label: "throughput increase", company: "LINEAR" },
-                { value: "6x", label: "faster to ship", company: "NOTION" },
+                { value: "100+ Qubits", label: "fault-tolerant simulation", company: "QNEXUS PLATFORM" },
+                { value: "99.9%", label: "2-qubit gate fidelity", company: "QUANTUM BENCHMARK" },
+                { value: "10,000x", label: "quantum speedup in optimization", company: "RESEARCH LABS" },
+                { value: "< 0.05ms", label: "coherence latency threshold", company: "SUPERPOSITION ENGINE" },
+                { value: "50+", label: "quantum algorithms optimized", company: "QNEXUS INDIA" },
+                { value: "10^6", label: "simulated state spaces", company: "QUANTUM CLOUD" },
               ].map((stat) => (
                 <div key={`${stat.company}-${i}`} className="flex items-baseline gap-4">
-                  <span className="text-4xl lg:text-5xl font-display">{stat.value}</span>
+                  <span className="text-4xl lg:text-5xl font-display tracking-tight">{stat.value}</span>
                   <span className="text-sm text-muted-foreground">
                     {stat.label}
-                    <span className="block font-mono text-xs mt-1">{stat.company}</span>
+                    <span className="block font-mono text-xs mt-1 text-foreground/60">{stat.company}</span>
                   </span>
                 </div>
               ))}
@@ -165,9 +167,6 @@ export function HeroSection() {
           ))}
         </div>
       </div>
-      
-      {/* Scroll indicator */}
-      
     </section>
   );
 }
