@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { AnimatedSphere } from "./animated-sphere";
 
-const words = ["quantum tech", "superposition", "deep computing", "algorithms"];
+const words = ["quantum", "superposition", "computing", "algorithms"];
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -64,7 +64,7 @@ export function HeroSection() {
         >
           <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground">
             <span className="w-8 h-px bg-foreground/30" />
-            Advancing Quantum Computing in India & Globally
+           
           </span>
         </div>
         
@@ -108,7 +108,7 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            Empowering quantum researchers, developers, and enterprises with quantum algorithms, fault-tolerant simulations, and cutting-edge deep-tech innovation.
+            
           </p>
           
           {/* CTAs */}

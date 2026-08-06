@@ -216,10 +216,10 @@ export default function AboutPage() {
         <div className="max-w-[1400px] mx-auto">
           <div className="p-12 lg:p-20 rounded-3xl border border-foreground/10 bg-gradient-to-br from-foreground/5 via-background to-background">
             <h2 className="text-4xl lg:text-5xl font-display mb-8 max-w-2xl">
-              Join Us in Shaping the Future of Quantum Computing
+           
             </h2>
             <p className="text-lg text-muted-foreground mb-12 max-w-2xl">
-              Whether you're a researcher, developer, entrepreneur, or enthusiast, there's a place for you in the QNI community.
+              
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
