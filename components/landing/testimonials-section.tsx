@@ -138,64 +138,38 @@ export function TestimonialsSection() {
                 <div
                   key={`${loopIdx}-${t.id}`}
                   onClick={() => setSelectedPartner(t)}
-                  className={`w-[340px] md:w-[380px] shrink-0 rounded-3xl p-8 transition-all duration-300 cursor-pointer flex flex-col justify-between select-none ${
-                    t.featured
-                      ? "relative text-white overflow-hidden shadow-2xl border border-white/20 hover:scale-[1.02]"
-                      : "bg-card border border-border/80 shadow-md hover:shadow-xl hover:border-foreground/40 hover:-translate-y-1"
-                  }`}
-                  style={
-                    t.featured
-                      ? {
-                          backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.85)), url(${t.image})`,
-                          backgroundSize: "cover",
-                          backgroundPosition: "center",
-                        }
-                      : {}
-                  }
+                  className="w-[340px] md:w-[380px] h-[440px] shrink-0 rounded-3xl p-8 transition-all duration-300 cursor-pointer flex flex-col justify-between select-none relative text-white overflow-hidden shadow-2xl border border-white/20 hover:scale-[1.02] hover:border-white/40 group"
+                  style={{
+                    backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.88)), url(${t.image})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
                 >
                   {/* Top Avatar Circle */}
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-4 relative z-10">
                     <img
                       src={t.image}
                       alt={t.author}
-                      className="w-12 h-12 rounded-full object-cover ring-2 ring-foreground/20 shadow-md"
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-white/40 shadow-lg group-hover:scale-105 transition-transform"
                     />
-                    <span
-                      className={`text-[11px] font-mono px-3 py-1 rounded-full font-semibold ${
-                        t.featured
-                          ? "bg-white/20 text-white backdrop-blur-md"
-                          : "bg-foreground/10 text-foreground"
-                      }`}
-                    >
+                    <span className="text-[11px] font-mono px-3 py-1 rounded-full font-semibold bg-white/20 text-white backdrop-blur-md border border-white/20">
                       {t.metric}
                     </span>
                   </div>
 
                   {/* Quote content */}
-                  <div className="my-4">
-                    <p
-                      className={`text-sm md:text-base leading-relaxed line-clamp-4 ${
-                        t.featured ? "text-white/90 font-medium" : "text-muted-foreground font-normal"
-                      }`}
-                    >
+                  <div className="my-auto relative z-10">
+                    <p className="text-sm md:text-base leading-relaxed text-white/95 font-medium line-clamp-4">
                       "{t.shortQuote}"
                     </p>
                   </div>
 
                   {/* Signature / Author info at bottom */}
-                  <div className="pt-6 mt-2 border-t border-current/10 flex flex-col">
-                    <span
-                      className={`font-serif italic text-2xl tracking-wide ${
-                        t.featured ? "text-white" : "text-foreground font-semibold"
-                      }`}
-                    >
+                  <div className="pt-4 mt-2 border-t border-white/20 flex flex-col relative z-10">
+                    <span className="font-serif italic text-2xl tracking-wide text-white font-medium">
                       {t.signature}
                     </span>
-                    <span
-                      className={`text-xs mt-1 ${
-                        t.featured ? "text-white/80" : "text-muted-foreground"
-                      }`}
-                    >
+                    <span className="text-xs mt-1 text-white/80 font-sans">
                       {t.role}, {t.company}
                     </span>
                   </div>

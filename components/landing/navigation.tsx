@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sparkles, ArrowRight } from "lucide-react";
 
 const navLinks = [
   { name: "Events", href: "/events" },
@@ -64,13 +64,17 @@ export function Navigation() {
             ))}
           </div>
 
-          {/* Desktop CTA */}
+          {/* Desktop CTA - Improved Join Us Button */}
           <div className="hidden md:flex items-center gap-4">
             <Link
               href="/join"
-              className={`px-6 py-2 bg-foreground hover:bg-foreground/90 text-background rounded-full font-medium transition-all duration-500 ${isScrolled ? "px-4 h-8 text-xs leading-8 py-0" : "text-sm"}`}
+              className={`relative inline-flex items-center justify-center gap-1.5 bg-foreground text-background font-semibold rounded-full shadow-lg hover:shadow-xl hover:bg-foreground/90 transition-all duration-300 group ${
+                isScrolled ? "px-4 h-9 text-xs" : "px-6 h-11 text-sm"
+              }`}
             >
-              Join Us
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-12 transition-transform" />
+              <span>Join Us</span>
+              <ArrowRight className="w-3.5 h-3.5 opacity-80 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
 

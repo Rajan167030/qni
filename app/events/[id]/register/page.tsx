@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, User, Mail, Phone, Building2, GraduationCap, ArrowRight } from 'lucide-react';
 
+import { saveRegistration } from '@/lib/submissions-store';
+
 const eventData: Record<string, { title: string; date: string; location: string; price: string; category: string }> = {
   '1': { title: 'Intro to Qiskit — Bengaluru Chapter', date: 'Aug 02, 2026', location: 'IISC Campus, Bengaluru', price: 'Free', category: 'Workshop' },
   '2': { title: 'Variational Algorithms Reading Group', date: 'Aug 16, 2026', location: 'Online (Zoom)', price: 'Free for Members', category: 'Seminar' },
@@ -30,6 +32,19 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (event && eventId) {
+      saveRegistration({
+        eventId,
+        eventTitle: event.title,
+        name: form.name,
+        email: form.email,
+        phone: form.phone || 'N/A',
+        organization: form.organization || 'Independent',
+        role: form.role || 'Attendee',
+        background: form.background,
+        teamName: form.teamName || undefined,
+      });
+    }
     setSubmitted(true);
   };
 

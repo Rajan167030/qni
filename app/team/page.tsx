@@ -101,7 +101,8 @@ export default function TeamPage() {
     .team-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 0.75rem;
+      gap: 0.5rem;
+      row-gap: 0.5rem;
       animation: fadeInUp 0.6s ease;
     }
 
@@ -120,21 +121,21 @@ export default function TeamPage() {
     .team-card {
       position: relative;
       overflow: hidden;
-      border-radius: 0.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      transition: all 0.3s ease;
+      border-radius: 0.375rem;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: all 0.25s ease;
       cursor: pointer;
     }
 
     .team-card:hover {
-      border-color: rgba(255, 255, 255, 0.15);
-      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
     }
 
     .team-card-image {
       position: relative;
       width: 100%;
-      aspect-ratio: 1;
+      aspect-ratio: 1.1;
       overflow: hidden;
       background: transparent;
     }
@@ -147,19 +148,19 @@ export default function TeamPage() {
     }
 
     .team-card:hover .team-card-image img {
-      transform: scale(1.08);
+      transform: scale(1.05);
     }
 
     .team-card-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+      background: linear-gradient(180deg, transparent 30%, rgba(0, 0, 0, 0.85) 100%);
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.25s ease;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      padding: 1rem;
+      padding: 0.75rem;
     }
 
     .team-card:hover .team-card-overlay {
@@ -168,7 +169,7 @@ export default function TeamPage() {
 
     .team-card-info {
       position: relative;
-      padding: 0.75rem;
+      padding: 0.5rem 0.6rem;
       background: transparent;
       backdrop-filter: none;
     }
@@ -258,7 +259,7 @@ export default function TeamPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-16">
+      <main className="max-w-7xl mx-auto px-6 py-8 lg:py-10">
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Sidebar */}
           <div className="lg:w-80 flex-shrink-0">
@@ -364,16 +365,6 @@ export default function TeamPage() {
                       <div className="team-card-title">{member.name}</div>
                       <div className="team-card-role">{member.role}</div>
                       <div className="team-card-bio">{member.bio}</div>
-                      <div className="flex flex-wrap gap-1">
-                        {member.expertise.map((skill) => (
-                          <span
-                            key={skill}
-                            className="inline-block px-2 py-0.5 text-xs rounded bg-foreground/5 text-foreground/70 border border-foreground/10"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
                     </div>
                   </div>
                 ))}

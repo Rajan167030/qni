@@ -5,26 +5,26 @@ import { useEffect, useRef, useState } from "react";
 const features = [
   {
     number: "01",
-    title: "Instant Deployment",
-    description: "Push to production in seconds. Our edge network ensures your applications load instantly, anywhere in the world.",
+    title: "Fault-Tolerant Circuit Simulation",
+    description: "Run high-qubit quantum algorithm simulations with ultra-low latency and state-of-the-art NISQ noise mitigation models.",
     visual: "deploy",
   },
   {
     number: "02",
-    title: "AI-Native Workflows",
-    description: "Build intelligent applications with built-in AI capabilities. From inference to training, everything scales automatically.",
+    title: "Quantum-Classical Hybrid Engines",
+    description: "Seamlessly integrate VQE, QAOA, and Quantum ML algorithms into enterprise HPC and classical AI pipelines.",
     visual: "ai",
   },
   {
     number: "03",
-    title: "Real-time Collaboration",
-    description: "Work together seamlessly. Live preview, instant feedback, and version control that actually makes sense.",
+    title: "Qiskit & Open-SDK Transpilation",
+    description: "Automated pulse-level compilation and gate transpilation across IBM Quantum, Rigetti, and cloud simulator backends.",
     visual: "collab",
   },
   {
     number: "04",
-    title: "Enterprise Security",
-    description: "Bank-grade encryption, SOC 2 compliance, and granular access controls. Your data stays yours.",
+    title: "Post-Quantum Cryptography",
+    description: "NIST-standard lattice-based cryptographic algorithms to protect enterprise infrastructure against quantum attacks.",
     visual: "security",
   },
 ];
