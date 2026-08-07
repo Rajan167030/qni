@@ -337,6 +337,17 @@ export default function AdminDashboardPage() {
                 {registrations.length}
               </span>
             </button>
+
+            <Link
+              href="/admin/events"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all mt-2"
+            >
+              <div className="flex items-center gap-3">
+                <CalendarCheck className="w-4 h-4" />
+                <span>+ Create & Manage Events</span>
+              </div>
+              <Sparkles className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
           {/* Database Setup Helper Note */}

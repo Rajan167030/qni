@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { AnimatedSphere } from "./animated-sphere";
+import SpecularButton from "@/components/ui/SpecularButton";
 
 const words = ["quantum", "superposition", "computing", "algorithms"];
 
@@ -112,19 +113,31 @@ export function HeroSection() {
           </p>
           
           {/* CTAs */}
-          <div 
-            className={`flex flex-col sm:flex-row items-start gap-4 transition-all duration-700 delay-300 ${
+            <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 mx-auto transition-all duration-700 delay-300 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            }`}
-          >
-            <Button 
-              size="lg" 
-              className="bg-foreground hover:bg-foreground/90 text-background px-8 h-14 text-base rounded-full group"
+            }`}>
+            <SpecularButton 
+              size="lg"
+              radius={18}
+              tint="#ffffff"
+              tintOpacity={0}
+              blur={0}
+              textColor="#f5f5f5"
+              lineColor="#ffffff"
+              baseColor="#262626"
+              intensity={1}
+              shineSize={10}
+              shineFade={40}
+              thickness={1}
+              speed={0.35}
+              followMouse
+              proximity={250}
+              autoAnimate={false}
               onClick={() => window.location.href = '/join'}
             >
               Join Us
-              <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-            </Button>
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </SpecularButton>
             <Button 
               size="lg" 
               variant="outline" 

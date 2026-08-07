@@ -72,11 +72,15 @@ const orgLogos = [
   { name: "Dell Technologies", image: "/our speaker from/delltechnologies_logo.jpg" },
   { name: "Duke Engineering", image: "/our speaker from/duke_engineering_logo.jpg" },
   { name: "University of North Dakota", image: "/our speaker from/uofnorthdakota_logo.jpg" },
+  { name: "Organisation", image: "/our speaker from/download (2).png" },
+  { name: "University of Notre Dame", image: "/our speaker from/university_of_notre_dame_college_of_science_logo.jpg" },
   // Duplicated for seamless infinite scroll
   { name: "QNexus India", image: "/our speaker from/1631348310705.jpg" },
   { name: "Dell Technologies", image: "/our speaker from/delltechnologies_logo.jpg" },
   { name: "Duke Engineering", image: "/our speaker from/duke_engineering_logo.jpg" },
   { name: "University of North Dakota", image: "/our speaker from/uofnorthdakota_logo.jpg" },
+  { name: "Organisation", image: "/our speaker from/download (2).png" },
+  { name: "University of Notre Dame", image: "/our speaker from/university_of_notre_dame_college_of_science_logo.jpg" },
 ];
 
 const speakerAnimationStyles = `
@@ -166,7 +170,10 @@ const speakerAnimationStyles = `
   .speaker-image-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 100%);
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     opacity: 0;
     transition: opacity 0.4s ease;
     display: flex;
@@ -222,6 +229,7 @@ export function SpeakersSection() {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [selectedSpeaker, setSelectedSpeaker] = useState<typeof speakers[0] | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -242,14 +250,13 @@ export function SpeakersSection() {
       className="relative py-24 lg:py-32 overflow-hidden border-t border-foreground/10"
     >
       <style dangerouslySetInnerHTML={{ __html: speakerAnimationStyles }} />
-      
+
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         {/* Section Header */}
         <div className="mb-16">
           <div
-            className={`transition-all duration-700 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
+            className={`transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
           >
             <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground mb-6">
               <span className="w-8 h-px bg-foreground/30" />
@@ -268,9 +275,8 @@ export function SpeakersSection() {
 
         {/* ── Our Speakers From – infinite logo scroll ── */}
         <div
-          className={`mb-16 transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className={`mb-16 transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
           style={{ transitionDelay: "150ms" }}
         >
           <div className="text-center mb-8">
@@ -306,9 +312,9 @@ export function SpeakersSection() {
           {speakers.map((speaker, index) => (
             <div
               key={speaker.id}
-              className={`speaker-card transition-all duration-700 ${
-                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
+              onClick={() => setSelectedSpeaker(speaker)}
+              className={`speaker-card cursor-pointer transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                }`}
               style={{ transitionDelay: `${index * 100}ms` }}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
@@ -325,6 +331,7 @@ export function SpeakersSection() {
                 <div className="speaker-image-overlay">
                   <div className="speaker-overlay-content">
                     <p className="font-medium mb-2">{speaker.fullBio}</p>
+                    <span className="text-xs font-mono text-amber-300 underline">Click to view profile →</span>
                   </div>
                 </div>
               </div>
@@ -332,8 +339,8 @@ export function SpeakersSection() {
               {/* Speaker Info */}
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-medium text-foreground leading-tight">
-                    {speaker.name}
+                  <h3 className="text-lg font-medium text-foreground leading-tight flex items-center justify-between">
+                    <span>{speaker.name}</span>
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">{speaker.role}</p>
                   <p className="text-xs text-muted-foreground/50 mt-0.5 font-mono tracking-wide">{speaker.company}</p>
@@ -357,6 +364,7 @@ export function SpeakersSection() {
                 <div className="flex items-center gap-3 pt-4 border-t border-foreground/10">
                   <a
                     href={speaker.social.email}
+                    onClick={(e) => e.stopPropagation()}
                     className="social-icon hover:text-foreground"
                     aria-label="Email"
                   >
@@ -364,6 +372,7 @@ export function SpeakersSection() {
                   </a>
                   <a
                     href={speaker.social.linkedin}
+                    onClick={(e) => e.stopPropagation()}
                     className="social-icon hover:text-foreground"
                     aria-label="LinkedIn"
                   >
@@ -371,6 +380,7 @@ export function SpeakersSection() {
                   </a>
                   <a
                     href={speaker.social.twitter}
+                    onClick={(e) => e.stopPropagation()}
                     className="social-icon hover:text-foreground"
                     aria-label="Twitter"
                   >
@@ -381,9 +391,116 @@ export function SpeakersSection() {
             </div>
           ))}
         </div>
-
-
       </div>
+
+      {/* SPEAKER PROFILE POPUP MODAL (Testimonial Style) */}
+      {selectedSpeaker && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setSelectedSpeaker(null)}
+        >
+          <div
+            className="bg-card text-card-foreground border border-border w-full max-w-xl rounded-3xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedSpeaker(null)}
+              className="absolute top-5 right-5 z-10 w-10 h-10 rounded-full bg-background/80 hover:bg-background border border-border text-foreground flex items-center justify-center transition-transform hover:scale-105"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Modal Header Banner */}
+            <div className="relative h-60 sm:h-72 overflow-hidden">
+              <img
+                src={selectedSpeaker.image}
+                alt={selectedSpeaker.name}
+                className="w-full h-full object-cover object-top filter brightness-95"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+              <div className="absolute bottom-4 left-6 sm:left-8 flex items-center gap-2">
+                <span className="bg-foreground text-background font-mono text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase">
+                  FEATURED SPEAKER
+                </span>
+                <span className="bg-background/90 backdrop-blur-md text-foreground font-mono text-xs font-bold px-3 py-1 rounded-full border border-border shadow-md">
+                  {selectedSpeaker.company}
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 sm:p-8 space-y-6">
+              {/* Profile Details */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+                <div>
+                  <h3 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
+                    {selectedSpeaker.name}
+                  </h3>
+                  <p className="text-sm font-medium text-muted-foreground mt-0.5">
+                    {selectedSpeaker.role}
+                  </p>
+                  <p className="text-xs font-mono text-foreground/80 mt-1">
+                    {selectedSpeaker.company}
+                  </p>
+                </div>
+
+                {/* Social Links Buttons */}
+                <div className="flex items-center gap-2.5">
+                  <a
+                    href={selectedSpeaker.social.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs font-semibold shadow-md transition-transform hover:scale-105"
+                  >
+                    <Linkedin className="w-4 h-4" />
+                    <span>LinkedIn</span>
+                  </a>
+                  <a
+                    href={selectedSpeaker.social.twitter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2.5 rounded-full bg-foreground/10 hover:bg-foreground/20 text-foreground transition-transform hover:scale-105"
+                    title="Twitter / X Profile"
+                  >
+                    <X className="w-4 h-4" />
+                  </a>
+                  <a
+                    href={selectedSpeaker.social.email}
+                    className="p-2.5 rounded-full bg-foreground/10 hover:bg-foreground/20 text-foreground transition-transform hover:scale-105"
+                    title="Email"
+                  >
+                    <Mail className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Bio & Details */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-mono uppercase tracking-widest text-muted-foreground">About & Biography</h4>
+                <p className="text-base leading-relaxed text-foreground font-sans">
+                  {selectedSpeaker.fullBio}
+                </p>
+              </div>
+
+              {/* Expertise Badges */}
+              <div className="pt-4 border-t border-border space-y-2">
+                <h4 className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Key Expertise</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedSpeaker.expertise.map((skill) => (
+                    <span
+                      key={skill}
+                      className="text-xs font-mono px-3 py-1 rounded-full bg-foreground/10 text-foreground border border-foreground/10"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

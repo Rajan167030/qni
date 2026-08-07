@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles, ArrowRight } from "lucide-react";
+import SpecularButton from "@/components/ui/SpecularButton";
 
 const navLinks = [
   { name: "Events", href: "/events" },
@@ -46,8 +47,8 @@ export function Navigation() {
         >
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <span className={`font-display tracking-tight transition-all duration-500 ${isScrolled ? "text-xl" : "text-2xl"}`}>QNI</span>
-            <span className={`text-muted-foreground font-mono transition-all duration-500 ${isScrolled ? "text-[10px] mt-0.5" : "text-xs mt-1"}`}>Quantum</span>
+            <span className={`font-display tracking-tight transition-all duration-500 ${isScrolled ? "text-xl" : "text-2xl"}`}>QNG</span>
+            <span className={`text-muted-foreground font-mono transition-all duration-500 ${isScrolled ? "text-[10px] mt-0.5" : "text-xs mt-1"}`}>Global</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -66,15 +67,28 @@ export function Navigation() {
 
           {/* Desktop CTA - Improved Join Us Button */}
           <div className="hidden md:flex items-center gap-4">
-            <Link
-              href="/join"
-              className={`relative inline-flex items-center justify-center gap-1.5 bg-foreground text-background font-semibold rounded-full shadow-lg hover:shadow-xl hover:bg-foreground/90 transition-all duration-300 group ${
-                isScrolled ? "px-4 h-9 text-xs" : "px-6 h-11 text-sm"
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-12 transition-transform" />
-              <span>Join Us</span>
-              <ArrowRight className="w-3.5 h-3.5 opacity-80 group-hover:translate-x-0.5 transition-transform" />
+            <Link href="/join">
+              <SpecularButton
+                size={isScrolled ? "sm" : "md"}
+                radius={18}
+                tint="#ffffff"
+                tintOpacity={0}
+                blur={0}
+                textColor="#f5f5f5"
+                lineColor="#ffffff"
+                baseColor="#262626"
+                intensity={1}
+                shineSize={10}
+                shineFade={40}
+                thickness={1}
+                speed={0.35}
+                followMouse
+                proximity={250}
+                autoAnimate={false}
+              >
+                <span>Join Us</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </SpecularButton>
             </Link>
           </div>
 
