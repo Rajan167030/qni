@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mail, Linkedin, Twitter, X } from "lucide-react";
+import { Mail, Linkedin, X } from "lucide-react";
 import Image from "next/image";
 
 const speakers = [
   {
     id: "1",
-    name: "Alex Chen",
-    role: "AI Infrastructure Lead",
-    company: "Optimus Core",
-    bio: "Pioneering scalable AI systems",
-    image: "/speakers/alex-chen.png",
-    fullBio: "With 10+ years in distributed systems and ML infrastructure, Alex leads the technical architecture at Optimus, ensuring scalability and reliability for enterprise deployments.",
-    expertise: ["ML Ops", "Distributed Systems", "DevOps"],
+    name: "Emmanuel Umukoro",
+    role: "AI & Quantum Computing Researcher",
+    company: "University of North Dakota",
+    bio: "Bridging quantum computing and practical AI applications",
+    image: "/speakers/emmanuelumukoro.jpg",
+    fullBio: "Emmanuel is a researcher specializing in quantum algorithms and their intersection with machine learning, working to unlock next-generation computational capabilities.",
+    expertise: ["Quantum AI", "Research", "Machine Learning"],
     social: {
       twitter: "#",
       linkedin: "#",
@@ -22,13 +22,13 @@ const speakers = [
   },
   {
     id: "2",
-    name: "Jordan Williams",
-    role: "Security Architect",
-    company: "Optimus Security",
-    bio: "Enterprise security at scale",
-    image: "/speakers/jordan-williams.png",
-    fullBio: "Jordan brings 15+ years of cybersecurity expertise, specializing in zero-trust architectures and compliance frameworks for global enterprises at scale.",
-    expertise: ["Cloud Security", "Zero Trust", "Compliance"],
+    name: "Sergey Grigorovich",
+    role: "Senior Research Scientist",
+    company: "Duke Engineering",
+    bio: "Advancing state-of-the-art in neural architectures",
+    image: "/speakers/sergeygrigorovich.jpg",
+    fullBio: "Sergey brings deep expertise in neural network research and advanced engineering systems, contributing pioneering work in computational modeling at Duke Engineering.",
+    expertise: ["Neural Networks", "Engineering", "Modeling"],
     social: {
       twitter: "#",
       linkedin: "#",
@@ -37,13 +37,13 @@ const speakers = [
   },
   {
     id: "3",
-    name: "Priya Patel",
-    role: "Developer Relations",
-    company: "Optimus DevX",
-    bio: "Crafting exceptional developer experiences",
-    image: "/speakers/priya-patel.png",
-    fullBio: "Priya has built developer communities from the ground up, focusing on creating intuitive APIs and tools that empower developers to build faster and smarter.",
-    expertise: ["API Design", "Developer Tools", "Community"],
+    name: "Smriti Bajaj",
+    role: "Technology Strategist",
+    company: "Dell Technologies",
+    bio: "Driving enterprise digital transformation at scale",
+    image: "/speakers/smriti bajaj.jpg",
+    fullBio: "Smriti leads strategic technology initiatives at Dell Technologies, helping enterprises navigate digital transformation and adopt cutting-edge infrastructure solutions.",
+    expertise: ["Strategy", "Enterprise Tech", "Cloud"],
     social: {
       twitter: "#",
       linkedin: "#",
@@ -52,13 +52,13 @@ const speakers = [
   },
   {
     id: "4",
-    name: "Marcus Rodriguez",
-    role: "Performance Engineer",
-    company: "Optimus Performance",
-    bio: "Optimizing for speed and efficiency",
-    image: "/speakers/marcus-rodriguez.png",
-    fullBio: "Marcus specializes in performance optimization and benchmarking, helping teams squeeze every millisecond out of their infrastructure and applications.",
-    expertise: ["Performance", "Benchmarking", "Optimization"],
+    name: "Srivathan",
+    role: "Quantum Software Engineer",
+    company: "QNexus India",
+    bio: "Building the software layer for quantum systems",
+    image: "/speakers/srivathan.jpg",
+    fullBio: "Srivathan is a quantum software pioneer developing the tools, SDKs, and frameworks that will make quantum computers accessible and practical for developers worldwide.",
+    expertise: ["Quantum Software", "SDK Design", "Dev Tools"],
     social: {
       twitter: "#",
       linkedin: "#",
@@ -67,7 +67,71 @@ const speakers = [
   },
 ];
 
+const orgLogos = [
+  { name: "QNexus India", image: "/our speaker from/1631348310705.jpg" },
+  { name: "Dell Technologies", image: "/our speaker from/delltechnologies_logo.jpg" },
+  { name: "Duke Engineering", image: "/our speaker from/duke_engineering_logo.jpg" },
+  { name: "University of North Dakota", image: "/our speaker from/uofnorthdakota_logo.jpg" },
+  // Duplicated for seamless infinite scroll
+  { name: "QNexus India", image: "/our speaker from/1631348310705.jpg" },
+  { name: "Dell Technologies", image: "/our speaker from/delltechnologies_logo.jpg" },
+  { name: "Duke Engineering", image: "/our speaker from/duke_engineering_logo.jpg" },
+  { name: "University of North Dakota", image: "/our speaker from/uofnorthdakota_logo.jpg" },
+];
+
 const speakerAnimationStyles = `
+  @keyframes logoScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .logo-track {
+    display: flex;
+    gap: 6rem;
+    align-items: center;
+    width: max-content;
+    animation: logoScroll 22s linear infinite;
+  }
+
+  .logo-track:hover {
+    animation-play-state: paused;
+  }
+
+  .logo-img {
+    height: 72px;
+    width: auto;
+    max-width: 180px;
+    object-fit: contain;
+    filter: none;
+    opacity: 0.9;
+    transition: opacity 0.35s ease, transform 0.35s ease, filter 0.35s ease;
+    cursor: default;
+  }
+
+  .logo-img:hover {
+    opacity: 1;
+    transform: scale(1.12);
+    filter: drop-shadow(0 4px 18px rgba(255,255,255,0.18));
+  }
+
+  .logo-fade-left {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 140px;
+    background: linear-gradient(to right, var(--background, #09090b) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .logo-fade-right {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 140px;
+    background: linear-gradient(to left, var(--background, #09090b) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
   .speaker-card {
     position: relative;
     transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -82,7 +146,7 @@ const speakerAnimationStyles = `
     width: 100%;
     aspect-ratio: 3/4;
     overflow: hidden;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     cursor: pointer;
     margin-bottom: 1.5rem;
   }
@@ -91,6 +155,7 @@ const speakerAnimationStyles = `
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: top center;
     transition: transform 0.5s ease;
   }
   
@@ -101,12 +166,13 @@ const speakerAnimationStyles = `
   .speaker-image-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 100%);
     opacity: 0;
     transition: opacity 0.4s ease;
     display: flex;
     align-items: flex-end;
     padding: 1.5rem;
+    border-radius: 0.75rem;
   }
   
   .speaker-card:hover .speaker-image-overlay {
@@ -122,17 +188,19 @@ const speakerAnimationStyles = `
   
   .expertise-badge {
     display: inline-block;
-    font-size: 0.75rem;
-    padding: 0.35rem 0.75rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0.25rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.7rem;
+    padding: 0.3rem 0.65rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.04em;
     transition: all 0.3s ease;
+    background: rgba(255,255,255,0.03);
   }
   
   .speaker-card:hover .expertise-badge {
     border-color: rgba(255, 255, 255, 0.3);
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.85);
   }
   
   .social-icon {
@@ -142,7 +210,7 @@ const speakerAnimationStyles = `
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    opacity: 0.6;
+    opacity: 0.5;
   }
   
   .social-icon:hover {
@@ -193,8 +261,43 @@ export function SpeakersSection() {
               <span className="text-muted-foreground">expert speakers</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
-              Industry leaders and visionaries sharing their insights on building the future of AI infrastructure and development platforms.
+              Industry leaders and visionaries sharing their insights on quantum computing, AI infrastructure, and the future of technology.
             </p>
+          </div>
+        </div>
+
+        {/* ── Our Speakers From – infinite logo scroll ── */}
+        <div
+          className={`mb-16 transition-all duration-700 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          }`}
+          style={{ transitionDelay: "150ms" }}
+        >
+          <div className="text-center mb-8">
+            <p className="text-xs font-mono tracking-[0.28em] uppercase text-muted-foreground/50">
+              Our speakers from
+            </p>
+          </div>
+
+          <div className="relative overflow-hidden py-4">
+            <div className="logo-fade-left" />
+            <div className="logo-fade-right" />
+            <div className="logo-track">
+              {orgLogos.map((org, i) => (
+                <div
+                  key={`${org.name}-${i}`}
+                  className="flex-shrink-0 flex items-center justify-center"
+                  title={org.name}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={org.image}
+                    alt={org.name}
+                    className="logo-img"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -233,7 +336,7 @@ export function SpeakersSection() {
                     {speaker.name}
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">{speaker.role}</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">{speaker.company}</p>
+                  <p className="text-xs text-muted-foreground/50 mt-0.5 font-mono tracking-wide">{speaker.company}</p>
                 </div>
 
                 {/* Bio */}
@@ -279,26 +382,7 @@ export function SpeakersSection() {
           ))}
         </div>
 
-        {/* Security Badge */}
-        <div
-          className={`mt-16 p-8 border border-foreground/10 rounded-lg bg-foreground/[0.02] transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-          style={{ transitionDelay: "400ms" }}
-        >
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div>
-              <h3 className="text-lg font-medium text-foreground mb-2">🔒 Security & Privacy</h3>
-              <p className="text-muted-foreground">
-                All speaker information is handled with enterprise-grade security. Your data is encrypted and never shared with third parties.
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-display text-foreground">Enterprise Grade</p>
-              <p className="text-sm text-muted-foreground">End-to-end encryption</p>
-            </div>
-          </div>
-        </div>
+
       </div>
     </section>
   );
