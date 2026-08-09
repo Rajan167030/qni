@@ -66,16 +66,16 @@ const memberMetadata: Record<
   },
   myank: {
     name: "Mayank",
-    role: "Head of Product & Design",
+    role: "Founding Member",
     bio: "Building intuitive interfaces, SDK tooling, and cloud execution portals for quantum developers worldwide.",
-    linkedin: "https://linkedin.com/in/mayank-product",
+    linkedin: "https://www.linkedin.com/in/mayank-sharma-aa3648287/",
     twitter: "https://twitter.com/mayank_product",
   },
   mayank: {
     name: "Mayank",
-    role: "Head of Product & Design",
+    role: "Founding Member",
     bio: "Building intuitive interfaces, SDK tooling, and cloud execution portals for quantum developers worldwide.",
-    linkedin: "https://linkedin.com/in/mayank-product",
+    linkedin: "https://www.linkedin.com/in/mayank-sharma-aa3648287/",
     twitter: "https://twitter.com/mayank_product",
   },
 };
@@ -389,7 +389,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
                             </a>
                           )}
                           <a
-                            href={`mailto:contact@qnglobal.io`}
+                            href={`mailto:rajan.quantumnexusgobal@gmail.com`}
                             onClick={(e) => e.stopPropagation()}
                             className="p-2.5 rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors border border-white/10"
                             aria-label="Email"
@@ -528,7 +528,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        placeholder="+91 98765 43210"
+                        placeholder="+91 8860573577"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground"
                       />
                     </div>
@@ -727,7 +727,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
                     </a>
                   )}
                   <a
-                    href="mailto:contact@qnglobal.io"
+                    href="mailto:rajan.quantumnexusgobal@gmail.com"
                     className="p-2.5 rounded-full bg-foreground/10 hover:bg-foreground/20 text-foreground transition-transform hover:scale-105"
                     title="Email"
                   >

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Mail, Phone, MapPin, Linkedin, Twitter, Send, CheckCircle2, Globe2, Building2, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Mail, Phone, Linkedin, Twitter, Send, CheckCircle2, Globe2, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveContact } from '@/lib/submissions-store';
 
@@ -62,44 +62,20 @@ export default function ContactPage() {
     {
       icon: Mail,
       title: 'General & Enterprise',
-      content: 'contact@qnexusindia.com',
-      link: 'mailto:contact@qnexusindia.com',
+      content: 'rajan.quantumnexusgobal@gmail.com',
+      link: 'mailto:rajan.quantumnexusgobal@gmail.com',
     },
     {
       icon: Mail,
       title: 'Research & Grants',
-      content: 'research@qnexusindia.com',
-      link: 'mailto:research@qnexusindia.com',
+      content: 'rajan.quantumnexusgobal@gmail.com',
+      link: 'mailto:rajan.quantumnexusgobal@gmail.com',
     },
     {
       icon: Phone,
       title: 'Direct Phone',
-      content: '+91 (080) 4567-8900',
-      link: 'tel:+9108045678900',
-    },
-  ];
-
-  const officeLocations = [
-    {
-      city: 'Bengaluru (India)',
-      tag: 'Quantum Hardware & Research Hub',
-      address: 'IISc Innovation Center, Malleshwaram, Bengaluru 560012',
-      timezone: 'IST (UTC+5:30)',
-      team: 'R&D, QPU Hardware & Algorithms',
-    },
-    {
-      city: 'New Delhi (India)',
-      tag: 'National Policy & Alliances',
-      address: 'C-DAC Complex, Institutional Area, New Delhi 110016',
-      timezone: 'IST (UTC+5:30)',
-      team: 'Government & Enterprise Alliances',
-    },
-    {
-      city: 'Silicon Valley (USA)',
-      tag: 'Global Ecosystem & Alliances',
-      address: 'Palo Alto Tech Center, California 94301',
-      timezone: 'PST (UTC-8)',
-      team: 'Global Academic & QPU Hardware Partnerships',
+      content: '+91 8860573577',
+      link: 'tel:+918860573577',
     },
   ];
 
@@ -353,53 +329,6 @@ export default function ContactPage() {
 
           </div>
         </div>
-      </div>
-
-      {/* Global Research Hubs */}
-      <div className="border-t border-foreground/10 py-20 lg:py-28 bg-foreground/[0.015]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="mb-16 text-center max-w-2xl mx-auto">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-foreground/15 bg-foreground/5 text-xs font-mono tracking-wider uppercase mb-3">
-              <Building2 className="w-3.5 h-3.5 text-foreground/80" />
-              <span>Physical Ecosystem Hubs</span>
-            </span>
-            <h2 className="text-3xl lg:text-5xl font-display tracking-tight text-foreground">
-              Visit QNexus India Hubs
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {officeLocations.map((location) => (
-              <div
-                key={location.city}
-                className="p-8 border border-foreground/15 rounded-3xl bg-background/80 backdrop-blur-md hover:border-foreground/30 transition-all duration-300 space-y-6"
-              >
-                <div>
-                  <span className="text-[10px] font-mono px-2.5 py-1 rounded-md bg-foreground/10 text-foreground font-semibold block w-fit mb-3">
-                    {location.tag}
-                  </span>
-                  <h3 className="text-2xl font-display font-bold text-foreground">{location.city}</h3>
-                </div>
-
-                <div className="space-y-4 text-xs font-mono">
-                  <div>
-                    <p className="text-muted-foreground uppercase tracking-wider mb-1">Address</p>
-                    <p className="text-foreground font-sans text-sm font-medium">{location.address}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground uppercase tracking-wider mb-1">Timezone</p>
-                    <p className="text-foreground font-medium">{location.timezone}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground uppercase tracking-wider mb-1">Focus</p>
-                    <p className="text-foreground font-medium">{location.team}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+      </div>    </div>
   );
 }

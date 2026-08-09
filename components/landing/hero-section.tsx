@@ -76,7 +76,7 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            <span className="block">Build the Future</span>
+            <span className="block">Build Future</span>
             <span className="block">
               of{" "}
               <span className="relative inline-block">

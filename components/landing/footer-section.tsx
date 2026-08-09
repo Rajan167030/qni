@@ -15,17 +15,9 @@ const footerLinks = {
     { name: "QNG Tech Blog", href: "/blog" },
     { name: "Join Community", href: "/join" },
   ],
-  Platform: [
-    { name: "Quantum Simulators", href: "/#features" },
-    { name: "Qiskit Integrations", href: "/#integrations" },
-    { name: "NISQ Benchmarks", href: "/#metrics" },
-    { name: "Research Grants", href: "/join" },
-  ],
   Resources: [
     { name: "QNG Tech Blog", href: "/blog" },
     { name: "Team Writer Portal", href: "/team-portal" },
-    { name: "Documentation", href: "/events" },
-    { name: "Publications & Papers", href: "/blog" },
     { name: "Admin Dashboard", href: "/admin" },
   ],
   Legal: [

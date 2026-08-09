@@ -195,7 +195,7 @@ export default function JoinPage() {
                             name="phone"
                             value={formData.phone}
                             onChange={handleChange}
-                            placeholder="+91 98765 43210"
+                            placeholder="+91 8860573577"
                             className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
                           />
                         </div>
@@ -388,13 +388,13 @@ export default function JoinPage() {
               <div className="p-6 rounded-3xl border border-foreground/10 bg-background/60 backdrop-blur-md space-y-4">
                 <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">Need Direct Support?</p>
                 <div className="space-y-3 text-sm">
-                  <a href="mailto:join@qnexusindia.com" className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors">
+                  <a href="mailto:rajan.quantumnexusgobal@gmail.com" className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors">
                     <Mail className="w-4 h-4 text-foreground/60" />
-                    <span>join@qnexusindia.com</span>
+                    <span>rajan.quantumnexusgobal@gmail.com</span>
                   </a>
-                  <a href="tel:+919876543210" className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors">
+                  <a href="tel:+918860573577" className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors">
                     <Phone className="w-4 h-4 text-foreground/60" />
-                    <span>+91 (080) 4567-8900</span>
+                    <span>+91 8860573577</span>
                   </a>
                 </div>
               </div>
