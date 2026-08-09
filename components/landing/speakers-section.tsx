@@ -16,7 +16,7 @@ const speakers = [
     expertise: ["Quantum AI", "Research", "Machine Learning"],
     social: {
       twitter: "#",
-      linkedin: "#",
+      linkedin: "https://www.linkedin.com/in/emmanuel-umukoro-415373127",
       email: "#",
     },
   },
@@ -31,7 +31,7 @@ const speakers = [
     expertise: ["Neural Networks", "Engineering", "Modeling"],
     social: {
       twitter: "#",
-      linkedin: "#",
+      linkedin: "https://www.linkedin.com/in/sergey-grigorovich",
       email: "#",
     },
   },
@@ -46,7 +46,7 @@ const speakers = [
     expertise: ["Strategy", "Enterprise Tech", "Cloud"],
     social: {
       twitter: "#",
-      linkedin: "#",
+      linkedin: "https://www.linkedin.com/in/smriti-bajaj",
       email: "#",
     },
   },
@@ -61,7 +61,7 @@ const speakers = [
     expertise: ["Quantum Software", "SDK Design", "Dev Tools"],
     social: {
       twitter: "#",
-      linkedin: "#",
+      linkedin: "https://www.linkedin.com/in/srivathsan-poyyapakkam-sundar-50545534",
       email: "#",
     },
   },

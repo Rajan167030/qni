@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { X, Calendar, MapPin, Clock, ArrowRight, ExternalLink, ArrowLeft, ChevronRight, Users } from 'lucide-react';
+import { getEvents, EventItem } from '@/lib/events-store';
 
 const allEvents = [
   {
@@ -138,11 +139,13 @@ const allEvents = [
 ];
 
 export default function EventsListPage() {
-  const [selectedEvent, setSelectedEvent] = useState<typeof allEvents[0] | null>(null);
+  const [allEvents, setAllEvents] = useState<EventItem[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    setAllEvents(getEvents());
     setIsVisible(true);
   }, []);
 
@@ -178,10 +181,22 @@ export default function EventsListPage() {
       {/* Page header */}
       <div className={`pt-28 pb-12 max-w-5xl mx-auto px-6 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <span className="font-mono text-xs tracking-widest text-foreground/40 uppercase block mb-3">Community</span>
-        <h1 className="text-5xl lg:text-7xl font-display tracking-tight">Events</h1>
+        <div className="relative">
+          <h1
+            className="text-5xl lg:text-7xl font-display tracking-tight glitch-heading"
+            data-text="Events"
+          >
+            Events
+          </h1>
+          {/* Terminal cursor blink */}
+          <span
+            className="inline-block w-[3px] h-12 lg:h-16 bg-cyan-400 ml-2 align-bottom"
+            style={{ animation: 'quantum-pulse 1s step-end infinite' }}
+          />
+        </div>
       </div>
 
-      {/* Events list — reference image exact style */}
+      {/* Events list */}
       <div className="max-w-5xl mx-auto px-6 pb-24">
         <div className="divide-y divide-foreground/8">
           {allEvents.map((event, idx) => (
@@ -189,11 +204,11 @@ export default function EventsListPage() {
               key={event.id}
               onClick={() => setSelectedEvent(event)}
               className={`group flex items-start gap-10 py-7 cursor-pointer transition-all duration-200 hover:px-3 hover:-mx-3 hover:bg-foreground/[0.03] hover:rounded-xl ${
-                isVisible ? 'opacity-100' : 'opacity-0'
+                isVisible ? 'scan-in' : 'opacity-0'
               }`}
-              style={{ transitionDelay: `${idx * 50}ms` }}
+              style={{ animationDelay: `${idx * 80}ms` }}
             >
-              {/* Date column — exact reference layout */}
+              {/* Date column */}
               <div className="w-16 shrink-0 text-left select-none">
                 <div className="font-mono text-[11px] text-foreground/35 uppercase tracking-wider leading-tight">{event.month}</div>
                 <div className="font-display text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight my-0.5">{event.day}</div>
@@ -202,6 +217,10 @@ export default function EventsListPage() {
 
               {/* Content column */}
               <div className="flex-1 min-w-0 py-0.5">
+                {/* Quantum scan line accent */}
+                <div
+                  className="h-px w-0 bg-gradient-to-r from-cyan-400/60 to-transparent mb-2 group-hover:w-full transition-all duration-500 ease-out"
+                />
                 <h3 className="text-lg lg:text-xl text-foreground font-medium leading-snug mb-1.5 group-hover:text-foreground/80 transition-colors">
                   {event.title}
                 </h3>
@@ -210,7 +229,9 @@ export default function EventsListPage() {
 
               {/* Badge column */}
               <div className="shrink-0 flex items-center gap-3 pt-1">
-                <span className="text-xs font-mono text-foreground/50 border border-foreground/15 px-3 py-1 rounded-full whitespace-nowrap">
+                <span
+                  className="text-xs font-mono text-foreground/50 border border-foreground/15 px-3 py-1 rounded-full whitespace-nowrap group-hover:border-cyan-400/30 group-hover:text-cyan-500/70 transition-colors duration-300"
+                >
                   {event.badge}
                 </span>
                 <ChevronRight className="w-4 h-4 text-foreground/25 group-hover:text-foreground/50 group-hover:translate-x-0.5 transition-all duration-200" />

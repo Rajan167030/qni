@@ -12,7 +12,8 @@ const footerLinks = {
     { name: "Quantum Events", href: "/events" },
     { name: "Event Gallery", href: "/gallery" },
     { name: "Quantum Team", href: "/team" },
-    { name: "Join Community", href: "/join text" },
+    { name: "QNG Tech Blog", href: "/blog" },
+    { name: "Join Community", href: "/join" },
   ],
   Platform: [
     { name: "Quantum Simulators", href: "/#features" },
@@ -21,10 +22,11 @@ const footerLinks = {
     { name: "Research Grants", href: "/join" },
   ],
   Resources: [
+    { name: "QNG Tech Blog", href: "/blog" },
+    { name: "Team Writer Portal", href: "/team-portal" },
     { name: "Documentation", href: "/events" },
-    { name: "Publications & Papers", href: "/gallery" },
-    { name: "Open Source SDK", href: "#" },
-    { name: "Community Discord", href: "/join" },
+    { name: "Publications & Papers", href: "/blog" },
+    { name: "Admin Dashboard", href: "/admin" },
   ],
   Legal: [
     { name: "Privacy Policy", href: "#" },

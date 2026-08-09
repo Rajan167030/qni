@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Instrument_Sans, Instrument_Serif, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { FooterSection } from '@/components/landing/footer-section'
+import { CurtainTransition } from '@/components/ui/curtain-transition'
 import './globals.css'
 
 const instrumentSans = Instrument_Sans({ 
@@ -41,14 +42,14 @@ export const metadata: Metadata = {
   authors: [{ name: 'Quantum Nexus Global Team' }],
   creator: 'Quantum Nexus Global',
   publisher: 'Quantum Nexus Global',
-  metadataBase: new URL('https://qnglobal.io'),
+  metadataBase: new URL('https://www.quantumnexusglobal.org'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'Quantum Nexus Global (QNG) — Advancing Quantum Computing & AI',
     description: 'Premier quantum computing R&D network advancing quantum algorithms, NISQ error mitigation, enterprise cloud QPU simulators, and AI infrastructure worldwide.',
-    url: 'https://qnglobal.io',
+    url: 'https://www.quantumnexusglobal.org',
     siteName: 'Quantum Nexus Global',
     images: [
       {
@@ -90,8 +91,8 @@ export default function RootLayout({
     '@type': 'Organization',
     name: 'Quantum Nexus Global',
     alternateName: 'QNG',
-    url: 'https://qnglobal.io',
-    logo: 'https://qnglobal.io/placeholder-logo.png',
+    url: 'https://www.quantumnexusglobal.org',
+    logo: 'https://www.quantumnexusglobal.org/placeholder-logo.png',
     description: 'Advancing quantum computing research, VQE algorithms, NISQ error mitigation, and quantum AI infrastructure globally.',
     sameAs: [
       'https://linkedin.com/company/qnexusglobal',
@@ -102,12 +103,26 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-XVFLLRLN56" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+
+              gtag('config', 'G-XVFLLRLN56');
+            `,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body className={`${instrumentSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+        <CurtainTransition />
         {children}
         <FooterSection />
         <Analytics />

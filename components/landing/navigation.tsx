@@ -8,6 +8,7 @@ import SpecularButton from "@/components/ui/SpecularButton";
 
 const navLinks = [
   { name: "Events", href: "/events" },
+  { name: "Blog", href: "/blog" },
   { name: "Team", href: "/team" },
   { name: "About", href: "/about" },
   { name: "Contact", href: "/contact" },

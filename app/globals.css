@@ -192,4 +192,72 @@
       linear-gradient(135deg, var(--foreground) 25%, transparent 25%, transparent 50%, var(--foreground) 50%, var(--foreground) 75%, transparent 75%) border-box;
     background-size: 100% 100%, 8px 8px;
   }
+
+  /* Quantum sphere glow ring animations */
+  @keyframes quantum-pulse {
+    0%, 100% { opacity: 0.5; transform: scale(0.97); }
+    50% { opacity: 1; transform: scale(1.03); }
+  }
+
+  @keyframes quantum-ring-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Events page scan-line reveal */
+  @keyframes scan-in {
+    0% {
+      opacity: 0;
+      clip-path: inset(0 100% 0 0);
+    }
+    60% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 1;
+      clip-path: inset(0 0% 0 0);
+    }
+  }
+
+  .scan-in {
+    animation: scan-in 0.55s cubic-bezier(0.77, 0, 0.175, 1) both;
+  }
+
+  /* Events glitch heading */
+  @keyframes glitch-1 {
+    0%, 90%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+    92%            { clip-path: inset(30% 0 40% 0); transform: translate(-4px, 0); }
+    94%            { clip-path: inset(60% 0 10% 0); transform: translate(4px, 0); }
+    96%            { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 0); }
+  }
+
+  @keyframes glitch-2 {
+    0%, 88%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+    90%            { clip-path: inset(50% 0 20% 0); transform: translate(4px, 0); }
+    93%            { clip-path: inset(20% 0 60% 0); transform: translate(-4px, 0); }
+    97%            { clip-path: inset(70% 0 5%  0); transform: translate(2px, 0); }
+  }
+
+  .glitch-heading {
+    position: relative;
+  }
+
+  .glitch-heading::before,
+  .glitch-heading::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .glitch-heading::before {
+    color: rgba(6, 182, 212, 0.7);
+    animation: glitch-1 6s infinite;
+  }
+
+  .glitch-heading::after {
+    color: rgba(139, 92, 246, 0.7);
+    animation: glitch-2 6s infinite;
+  }
 }
+

@@ -24,44 +24,70 @@ function nameFromFile(filename: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase()); // title-case
 }
 
-// Custom data for top team members
+// Custom data for top team members (Sharvan, Saurabh, Rajan, Mayank)
 const memberMetadata: Record<
   string,
-  { role: string; bio: string; linkedin: string; twitter?: string }
+  { name?: string; role: string; bio: string; linkedin: string; twitter?: string }
 > = {
-  "sharvan-kumar-sharma": {
-    role: "CEO & Co-Founder",
-    bio: "Quantum computing researcher and visionary leading QNG's mission to build global quantum computing ecosystem.",
+  "sharvan sharma": {
+    name: "Sharvan Kumar Sharma",
+    role: "Founder & CEO",
+    bio: "Quantum computing researcher and visionary leading QNG's mission to build a global quantum computing ecosystem.",
+    linkedin: "https://www.linkedin.com/in/shravan-kumar-sharma-947a3512b",
+    twitter: "https://twitter.com/sharvansharma",
+  },
+  "sharvan-sharma": {
+    name: "Sharvan Kumar Sharma",
+    role: "Founder & CEO",
+    bio: "Quantum computing researcher and visionary leading QNG's mission to build a global quantum computing ecosystem.",
     linkedin: "https://linkedin.com/in/sharvankumarsharma",
     twitter: "https://twitter.com/sharvansharma",
   },
+  "saurabh": {
+    name: "Saurabh",
+    role: "Co-founder",
+    bio: "Quantum algorithm researcher specializing in variational eigensolvers, circuit compilation, and pulse control.",
+    linkedin: "https://in.linkedin.com/in/saurabh-sharma-59910b18b",
+    twitter: "https://twitter.com/saurabh_quantum",
+  },
+  "rajan jha": {
+    name: "Rajan Jha",
+    role: "CTO & Co-Founder",
+    bio: "Systems architect specializing in hybrid quantum-classical algorithms and pulse-level Qiskit optimization.",
+    linkedin: "https://in.linkedin.com/in/rajan-jha-4a921828a",
+    twitter: "https://twitter.com/rajanjha",
+  },
   "rajan-jha": {
+    name: "Rajan Jha",
     role: "CTO & Co-Founder",
     bio: "Systems architect specializing in hybrid quantum-classical algorithms and pulse-level Qiskit optimization.",
     linkedin: "https://linkedin.com/in/rajanjha",
     twitter: "https://twitter.com/rajanjha",
   },
-  subham: {
-    role: "Lead Quantum Algorithm Engineer",
-    bio: "Pioneering variational quantum algorithms (VQE/QAOA), quantum circuit optimization, and error mitigation.",
-    linkedin: "https://linkedin.com/in/subham-quantum",
-  },
   myank: {
+    name: "Mayank",
     role: "Head of Product & Design",
     bio: "Building intuitive interfaces, SDK tooling, and cloud execution portals for quantum developers worldwide.",
-    linkedin: "https://linkedin.com/in/myank-product",
+    linkedin: "https://linkedin.com/in/mayank-product",
+    twitter: "https://twitter.com/mayank_product",
   },
-  "aisha-patel": {
-    role: "Senior Quantum Researcher",
-    bio: "Focusing on fault-tolerant quantum error correction codes, noise modeling, and topological quantum computing.",
-    linkedin: "https://linkedin.com/in/aishapatel",
-  },
-  "rajesh-kumar": {
-    role: "Backend Infrastructure Lead",
-    bio: "Architecting cloud-native microservices, queue managers, and distributed cluster execution for quantum tasks.",
-    linkedin: "https://linkedin.com/in/rajeshkumar",
+  mayank: {
+    name: "Mayank",
+    role: "Head of Product & Design",
+    bio: "Building intuitive interfaces, SDK tooling, and cloud execution portals for quantum developers worldwide.",
+    linkedin: "https://linkedin.com/in/mayank-product",
+    twitter: "https://twitter.com/mayank_product",
   },
 };
+
+function getMemberWeight(filename: string): number {
+  const lower = filename.toLowerCase();
+  if (lower.includes("sharvan")) return 1;
+  if (lower.includes("saurabh")) return 2;
+  if (lower.includes("rajan")) return 3;
+  if (lower.includes("myank") || lower.includes("mayank")) return 4;
+  return 10;
+}
 
 interface Props {
   imageFiles: string[];
@@ -101,8 +127,8 @@ export default function TeamPageClient({ imageFiles }: Props) {
     setIsVisible(true);
   }, []);
 
-  // Limit display to exactly 4 team cards as requested
-  const displayFiles = imageFiles.slice(0, 4);
+  // Enforce requested display order: Sharvan -> Saurabh -> Rajan -> Mayank
+  const displayFiles = [...imageFiles].sort((a, b) => getMemberWeight(a) - getMemberWeight(b));
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -265,16 +291,15 @@ export default function TeamPageClient({ imageFiles }: Props) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
             {displayFiles.map((filename, index) => {
-              const name = nameFromFile(filename);
-              const src = `/team/${filename}`;
               const slug = filename.replace(/\.[^.]+$/, "").toLowerCase();
               const meta = memberMetadata[slug] || {
                 role: "Quantum Research Lead",
-                bio: `${name} is a key team member driving quantum algorithm innovation and system architecture at QNG.`,
+                bio: `Key team member driving quantum algorithm innovation and system architecture at QNG.`,
                 linkedin: `https://linkedin.com/search/results/all/?keywords=${encodeURIComponent(
-                  name
+                  filename
                 )}`,
               };
+              const name = meta.name || nameFromFile(filename);
 
               const isRevealed = activeCard === filename;
 
@@ -290,7 +315,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
                   onClick={() =>
                     setSelectedTeamMember({
                       name,
-                      src,
+                      src: `/team/${filename}`,
                       role: meta.role,
                       bio: meta.bio,
                       linkedin: meta.linkedin,
@@ -301,7 +326,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
                   {/* Image Container */}
                   <div className="relative aspect-[3/4] w-full overflow-hidden">
                     <Image
-                      src={src}
+                      src={`/team/${filename}`}
                       alt={name}
                       fill
                       className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
@@ -342,11 +367,12 @@ export default function TeamPageClient({ imageFiles }: Props) {
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="p-2.5 rounded-full bg-white text-black hover:bg-white/90 transition-colors shadow-md"
+                              className="p-2.5 rounded-full bg-white text-black hover:bg-white/90 transition-colors shadow-md flex items-center gap-1.5 font-medium text-xs px-3"
                               aria-label="LinkedIn"
                               title="LinkedIn Profile"
                             >
                               <Linkedin className="w-4 h-4 fill-current" />
+                              <span>LinkedIn</span>
                             </a>
                           )}
                           {meta.twitter && (
@@ -386,9 +412,21 @@ export default function TeamPageClient({ imageFiles }: Props) {
                         {meta.role}
                       </p>
                     </div>
-                    <span className="text-[10px] font-mono text-muted-foreground/60 uppercase tracking-widest group-hover:text-foreground transition-colors">
-                      Profile →
-                    </span>
+
+                    <div className="flex items-center gap-2">
+                      {meta.linkedin && (
+                        <a
+                          href={meta.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 text-foreground transition-colors"
+                          title={`LinkedIn profile for ${name}`}
+                        >
+                          <Linkedin className="w-3.5 h-3.5 fill-current" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

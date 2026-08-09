@@ -20,6 +20,12 @@ import {
   LogOut,
   KeyRound,
   Database,
+  PenSquare,
+  BookOpen,
+  Globe,
+  Star,
+  Trash2,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +39,7 @@ import {
   JoinSubmission,
   EventRegistration,
 } from '@/lib/submissions-store';
+import { getBlogs, saveBlog, deleteBlog, BlogPost } from '@/lib/blogs-store';
 
 export default function AdminDashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -40,12 +47,13 @@ export default function AdminDashboardPage() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'joins' | 'registrations'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'joins' | 'registrations' | 'blogs'>('overview');
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
   const [joins, setJoins] = useState<JoinSubmission[]>([]);
   const [registrations, setRegistrations] = useState<EventRegistration[]>([]);
+  const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDetail, setSelectedDetail] = useState<{ type: 'contact' | 'join' | 'reg'; data: any } | null>(null);
+  const [selectedDetail, setSelectedDetail] = useState<{ type: 'contact' | 'join' | 'reg' | 'blog'; data: any } | null>(null);
 
   // Check login state on mount
   useEffect(() => {
@@ -83,6 +91,7 @@ export default function AdminDashboardPage() {
     setContacts(getContacts());
     setJoins(getJoins());
     setRegistrations(getRegistrations());
+    setBlogs(getBlogs());
   };
 
   useEffect(() => {
@@ -105,6 +114,24 @@ export default function AdminDashboardPage() {
   const handleRegStatus = (id: string, status: EventRegistration['status']) => {
     updateRegistrationStatus(id, status);
     refreshData();
+  };
+
+  const handleBlogToggleStatus = (blog: BlogPost) => {
+    const newStatus = blog.status === 'Published' ? 'Draft' : 'Published';
+    saveBlog({ ...blog, status: newStatus });
+    refreshData();
+  };
+
+  const handleBlogToggleFeatured = (blog: BlogPost) => {
+    saveBlog({ ...blog, featured: !blog.featured });
+    refreshData();
+  };
+
+  const handleBlogDelete = (id: string) => {
+    if (confirm('Delete this blog post permanently?')) {
+      deleteBlog(id);
+      refreshBlogs();
+    }
   };
 
   // Export Data to JSON
@@ -338,9 +365,38 @@ export default function AdminDashboardPage() {
               </span>
             </button>
 
+            <button
+              onClick={() => setActiveTab('blogs')}
+              className={`w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === 'blogs'
+                  ? 'bg-foreground text-background shadow-md'
+                  : 'text-foreground/70 hover:bg-foreground/10 hover:text-foreground'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <PenSquare className="w-4 h-4 text-purple-400" />
+                <span>Blogs Management</span>
+              </div>
+              <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-foreground/15 font-bold">
+                {blogs.length}
+              </span>
+            </button>
+
+            <Link
+              href="/team-portal"
+              target="_blank"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 transition-all mt-2"
+            >
+              <div className="flex items-center gap-3">
+                <Globe className="w-4 h-4" />
+                <span>Team Writer Portal</span>
+              </div>
+              <Sparkles className="w-3.5 h-3.5" />
+            </Link>
+
             <Link
               href="/admin/events"
-              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all mt-2"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all mt-1"
             >
               <div className="flex items-center gap-3">
                 <CalendarCheck className="w-4 h-4" />
@@ -368,15 +424,15 @@ export default function AdminDashboardPage() {
           {activeTab === 'overview' && (
             <div className="space-y-8 animate-in fade-in duration-300">
               {/* KPI Cards */}
-              <div className="grid sm:grid-cols-3 gap-6">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="p-6 rounded-3xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-2">
                   <div className="flex items-center justify-between text-muted-foreground">
-                    <span className="font-mono text-xs uppercase tracking-wider">Total Contact Enquiries</span>
+                    <span className="font-mono text-xs uppercase tracking-wider">Contact Enquiries</span>
                     <Mail className="w-4 h-4 text-sky-500" />
                   </div>
                   <p className="font-display text-4xl font-bold text-foreground">{contacts.length}</p>
                   <p className="text-xs text-emerald-500 font-mono">
-                    {contacts.filter((c) => c.status === 'New').length} Pending Action
+                    {contacts.filter((c) => c.status === 'New').length} Pending
                   </p>
                 </div>
 
@@ -387,18 +443,29 @@ export default function AdminDashboardPage() {
                   </div>
                   <p className="font-display text-4xl font-bold text-foreground">{joins.length}</p>
                   <p className="text-xs text-amber-500 font-mono">
-                    {joins.filter((j) => j.status === 'Pending').length} Awaiting Review
+                    {joins.filter((j) => j.status === 'Pending').length} Pending
                   </p>
                 </div>
 
                 <div className="p-6 rounded-3xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-2">
                   <div className="flex items-center justify-between text-muted-foreground">
-                    <span className="font-mono text-xs uppercase tracking-wider">Event Registrations</span>
+                    <span className="font-mono text-xs uppercase tracking-wider">Registrations</span>
                     <CalendarCheck className="w-4 h-4 text-emerald-500" />
                   </div>
                   <p className="font-display text-4xl font-bold text-foreground">{registrations.length}</p>
                   <p className="text-xs text-emerald-500 font-mono">
-                    {registrations.filter((r) => r.status === 'Confirmed').length} Confirmed Seats
+                    {registrations.filter((r) => r.status === 'Confirmed').length} Confirmed
+                  </p>
+                </div>
+
+                <div className="p-6 rounded-3xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-2">
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span className="font-mono text-xs uppercase tracking-wider">Blog Articles</span>
+                    <PenSquare className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <p className="font-display text-4xl font-bold text-foreground">{blogs.length}</p>
+                  <p className="text-xs text-purple-400 font-mono">
+                    {blogs.filter((b) => b.status === 'Published').length} Published Live
                   </p>
                 </div>
               </div>
@@ -659,6 +726,109 @@ export default function AdminDashboardPage() {
                             >
                               <Eye className="w-3.5 h-3.5" /> View
                             </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: BLOGS MANAGEMENT TABLE */}
+          {activeTab === 'blogs' && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-display text-2xl font-bold text-foreground">Blog Articles Management</h3>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    Overview and moderation of team member & executive blog posts.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/team-portal"
+                    target="_blank"
+                    className="px-4 py-2 rounded-xl bg-foreground text-background text-xs font-semibold inline-flex items-center gap-1.5 hover:bg-foreground/90 transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Write New Blog
+                  </Link>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-foreground/15 bg-background overflow-hidden shadow-xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-foreground/5 text-xs font-mono uppercase tracking-wider text-muted-foreground border-b border-foreground/10">
+                      <tr>
+                        <th className="p-4">Article</th>
+                        <th className="p-4">Author</th>
+                        <th className="p-4">Category</th>
+                        <th className="p-4">Featured</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-foreground/10">
+                      {blogs.map((b) => (
+                        <tr key={b.id} className="hover:bg-foreground/[0.02] transition-colors">
+                          <td className="p-4">
+                            <p className="font-bold text-foreground line-clamp-1">{b.title}</p>
+                            <p className="text-xs text-muted-foreground font-mono">/blog/{b.slug}</p>
+                          </td>
+                          <td className="p-4">
+                            <p className="font-medium text-foreground text-xs">{b.author.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{b.author.role}</p>
+                          </td>
+                          <td className="p-4">
+                            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-foreground/10 text-foreground">
+                              {b.category}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <button
+                              onClick={() => handleBlogToggleFeatured(b)}
+                              className={`p-1.5 rounded-lg border text-xs flex items-center gap-1 font-mono transition-all ${
+                                b.featured
+                                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 font-bold'
+                                  : 'bg-foreground/5 border-foreground/10 text-muted-foreground hover:text-foreground'
+                              }`}
+                            >
+                              <Star className={`w-3.5 h-3.5 ${b.featured ? 'fill-amber-400' : ''}`} />
+                              {b.featured ? 'Featured' : 'Normal'}
+                            </button>
+                          </td>
+                          <td className="p-4">
+                            <button
+                              onClick={() => handleBlogToggleStatus(b)}
+                              className={`px-3 py-1 rounded-full text-xs font-mono font-semibold transition-all ${
+                                b.status === 'Published'
+                                  ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                                  : 'bg-amber-500/10 border border-amber-500/20 text-amber-400'
+                              }`}
+                            >
+                              {b.status}
+                            </button>
+                          </td>
+                          <td className="p-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Link
+                                href={`/blog/${b.slug}`}
+                                target="_blank"
+                                className="p-1.5 rounded-lg hover:bg-foreground/10 text-xs text-muted-foreground hover:text-foreground"
+                                title="Public View"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </Link>
+                              <button
+                                onClick={() => handleBlogDelete(b.id)}
+                                className="p-1.5 rounded-lg hover:bg-rose-500/10 text-xs text-rose-400"
+                                title="Delete Blog"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
