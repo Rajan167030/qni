@@ -111,44 +111,63 @@ export function Navigation() {
       
       {/* Mobile Menu - Full Screen Overlay */}
       <div
-        className={`md:hidden fixed inset-0 bg-background z-40 transition-all duration-500 ${
+        className={`md:hidden fixed inset-0 z-[45] transition-all duration-500 ease-in-out ${
           isMobileMenuOpen 
             ? "opacity-100 pointer-events-auto" 
             : "opacity-0 pointer-events-none"
         }`}
-        style={{ top: 0 }}
       >
-        <div className="flex flex-col h-full px-8 pt-28 pb-8">
+        {/* Animated Background Blur */}
+        <div 
+          className={`absolute inset-0 bg-background/95 backdrop-blur-2xl transition-all duration-700 ${
+            isMobileMenuOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+        
+        {/* Menu Content */}
+        <div 
+          className={`relative h-full w-full max-w-md ml-auto bg-background/50 border-l border-foreground/10 flex flex-col px-8 pt-28 pb-10 transition-transform duration-700 cubic-bezier(0.16, 1, 0.3, 1) ${
+            isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {/* Top subtle decoration */}
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-foreground/5 to-transparent pointer-events-none" />
+
           {/* Navigation Links */}
-          <div className="flex-1 flex flex-col justify-center gap-8">
+          <div className="flex-1 flex flex-col justify-start gap-8 mt-4 relative z-10">
             {navLinks.map((link, i) => (
               <Link
                 key={link.name}
                 href={link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`text-5xl font-display text-foreground hover:text-muted-foreground transition-all duration-500 ${
+                className={`text-4xl font-display font-medium text-foreground hover:text-muted-foreground transition-all duration-500 flex items-center justify-between group ${
                   isMobileMenuOpen 
                     ? "opacity-100 translate-y-0" 
-                    : "opacity-0 translate-y-4"
+                    : "opacity-0 translate-y-8"
                 }`}
-                style={{ transitionDelay: isMobileMenuOpen ? `${i * 75}ms` : "0ms" }}
+                style={{ transitionDelay: isMobileMenuOpen ? `${100 + i * 100}ms` : "0ms" }}
               >
                 {link.name}
+                <ArrowRight className="w-6 h-6 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
               </Link>
             ))}
           </div>
           
           {/* Bottom CTA */}
-          <div className={`pt-8 border-t border-foreground/10 transition-all duration-500 ${
+          <div className={`pt-10 transition-all duration-700 relative z-10 ${
             isMobileMenuOpen 
               ? "opacity-100 translate-y-0" 
-              : "opacity-0 translate-y-4"
+              : "opacity-0 translate-y-8"
           }`}
-          style={{ transitionDelay: isMobileMenuOpen ? "300ms" : "0ms" }}
+          style={{ transitionDelay: isMobileMenuOpen ? "600ms" : "0ms" }}
           >
+            <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4 text-center">
+              Ready to start?
+            </p>
             <Link 
               href="/join"
-              className="w-full bg-foreground text-background rounded-full h-14 text-base font-medium flex items-center justify-center hover:bg-foreground/90 transition-all"
+              className="w-full bg-foreground text-background rounded-full h-14 text-lg font-semibold flex items-center justify-center hover:bg-foreground/90 transition-all shadow-xl shadow-foreground/10"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Join Us
