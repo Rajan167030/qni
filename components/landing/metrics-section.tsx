@@ -45,29 +45,29 @@ function AnimatedCounter({ end, suffix = "", prefix = "" }: { end: number; suffi
 }
 
 const metrics = [
-  { 
-    value: 156, 
-    suffix: "", 
-    prefix: "",
-    label: "Events Hosted",
+  {
+    value: 0,
+    suffix: "",
+    prefix: "₹",
+    label: "Cost to join — free, always",
   },
-  { 
-    value: 12500, 
-    suffix: "+", 
+  {
+    value: 4,
+    suffix: "",
     prefix: "",
-    label: "Community Members",
+    label: "First expert sessions (days 1–60)",
   },
-  { 
-    value: 89, 
-    suffix: "", 
+  {
+    value: 100,
+    suffix: "%",
     prefix: "",
-    label: "Research Projects",
+    label: "Student-first, by design",
   },
-  { 
-    value: 18, 
-    suffix: "", 
+  {
+    value: 2026,
+    suffix: "",
     prefix: "",
-    label: "Active Chapters",
+    label: "The year we began — open to all",
   },
 ];
 
@@ -101,16 +101,16 @@ export function MetricsSection() {
           <div>
             <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground mb-6">
               <span className="w-8 h-px bg-foreground/30" />
-              Live metrics
+              Core idea
             </span>
             <h2
               className={`text-4xl lg:text-6xl font-display tracking-tight transition-all duration-700 ${
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               }`}
             >
-              Performance you
+              Give value first.
               <br />
-              can measure.
+              Build the community around it.
             </h2>
           </div>
           <div className="flex items-center gap-4 font-mono text-sm text-muted-foreground">

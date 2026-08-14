@@ -268,7 +268,7 @@ export function SpeakersSection() {
               <span className="text-muted-foreground">expert speakers</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
-              Industry leaders and visionaries sharing their insights on quantum computing, AI infrastructure, and the future of technology.
+              Researchers, engineers, and industry leaders who give their time for free — sharing what a career and a life in quantum actually looks like.
             </p>
           </div>
         </div>

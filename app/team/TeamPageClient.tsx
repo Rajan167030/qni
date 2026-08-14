@@ -250,17 +250,17 @@ export default function TeamPageClient({ imageFiles }: Props) {
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-5 h-5 text-amber-400" />
               <span className="text-xs font-mono tracking-[0.25em] uppercase text-muted-foreground">
-                Quantum Nexus Global Team
+                QNexus India Team
               </span>
             </div>
 
             <h1 className="text-4xl lg:text-7xl font-display tracking-tight leading-none mb-4">
-              The Minds Behind <br />
-              <span className="text-muted-foreground">Quantum Innovation</span>
+              The People Behind <br />
+              <span className="text-muted-foreground">the Community</span>
             </h1>
 
             <p className="text-base lg:text-lg text-muted-foreground max-w-2xl leading-relaxed">
-              Meet our world-class team of researchers, engineers, and visionaries advancing quantum technology worldwide.
+              Students and early quantum enthusiasts building a free, student-first community — open to students everywhere.
             </p>
           </div>
         </div>
@@ -462,7 +462,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
                   Application Submitted!
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-                  Thank you for applying to Quantum Nexus Global. Your candidate profile has been saved to the system database and sent to the Admin Dashboard for review.
+                  Thank you for applying to join the QNexus India team. Your application has been saved and sent to our team for review.
                 </p>
                 <button
                   onClick={resetFormModal}
@@ -475,10 +475,10 @@ export default function TeamPageClient({ imageFiles }: Props) {
               <div>
                 <div className="mb-6">
                   <span className="text-xs font-mono tracking-widest text-amber-500 uppercase">
-                    Careers & Fellowships
+                    Volunteer With Us
                   </span>
                   <h3 className="text-2xl lg:text-3xl font-display font-bold text-foreground mt-1">
-                    Join Quantum Nexus Global
+                    Join the QNexus India Team
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1">
                     Fill in your details below. Your submission will be stored and reviewed directly by the admin team.
@@ -698,7 +698,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
                     {selectedTeamMember.role}
                   </p>
                   <p className="text-xs font-mono text-foreground/80 mt-1">
-                    Quantum Nexus Global
+                    QNexus India
                   </p>
                 </div>
 

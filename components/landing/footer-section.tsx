@@ -75,13 +75,13 @@ export function FooterSection() {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-foreground/15 bg-foreground/5 text-xs font-mono tracking-wider uppercase mb-2">
               <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Quantum Intelligence Dispatch</span>
+              <span>Quantum Dispatch</span>
             </div>
             <h3 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-foreground">
-              Stay ahead in Quantum Computing & Deep Tech
+              Never miss a free talk or workshop
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Get monthly quantum algorithm benchmarks, research papers, and event invitations.
+              Get event invitations, mentorship opportunities, and community updates in your inbox.
             </p>
           </div>
 
@@ -129,7 +129,7 @@ export function FooterSection() {
               </Link>
 
               <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
-                Empowering researchers, developers, and enterprises with quantum algorithms, fault-tolerant simulations, and cutting-edge deep-tech innovation in India and globally.
+                A student-first quantum community connecting students with researchers, industry leaders, and peers through free talks, mentorship, and workshops — open to students everywhere.
               </p>
 
               {/* Social Links Badges */}
@@ -187,7 +187,7 @@ export function FooterSection() {
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-              QNexus Cloud — All Systems Operational
+              Free to Join — Always
             </span>
           </div>
         </div>

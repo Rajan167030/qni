@@ -11,7 +11,7 @@ export default function ContactPage() {
     name: '',
     email: '',
     company: '',
-    inquiryType: 'Enterprise Quantum Solutions',
+    inquiryType: 'General Question',
     subject: '',
     message: '',
   });
@@ -49,7 +49,7 @@ export default function ContactPage() {
     });
 
     setSubmitSuccess(true);
-    setFormData({ name: '', email: '', company: '', inquiryType: 'Enterprise Quantum Solutions', subject: '', message: '' });
+    setFormData({ name: '', email: '', company: '', inquiryType: 'General Question', subject: '', message: '' });
     
     setTimeout(() => {
       setSubmitSuccess(false);
@@ -61,13 +61,13 @@ export default function ContactPage() {
   const contactChannels = [
     {
       icon: Mail,
-      title: 'General & Enterprise',
+      title: 'General Questions',
       content: 'rajan.quantumnexusgobal@gmail.com',
       link: 'mailto:rajan.quantumnexusgobal@gmail.com',
     },
     {
       icon: Mail,
-      title: 'Research & Grants',
+      title: 'Mentorship & Opportunities',
       content: 'rajan.quantumnexusgobal@gmail.com',
       link: 'mailto:rajan.quantumnexusgobal@gmail.com',
     },
@@ -110,15 +110,15 @@ export default function ContactPage() {
           >
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-foreground/15 bg-foreground/5 text-xs font-mono tracking-wider uppercase mb-6 text-foreground">
               <Globe2 className="w-3.5 h-3.5 text-sky-500" />
-              <span>Global Support & Enquiries</span>
+              <span>We'd Love to Hear From You</span>
             </div>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-display tracking-tight text-foreground mb-6 leading-[1.05]">
-              Connect with Quantum Nexus India
+              Get in Touch
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
-              Have questions about enterprise quantum acceleration, QPU simulator access, or academic research grants? Our quantum systems team is ready to collaborate.
+              Questions about joining, mentorship, speaking at an event, or partnering with us? We're a student-first community — reach out, we're happy to help.
             </p>
           </div>
         </div>
@@ -192,10 +192,10 @@ export default function ContactPage() {
               <div className="p-6 rounded-3xl border border-foreground/10 bg-foreground/5 space-y-3">
                 <div className="flex items-center gap-2 text-xs font-mono text-foreground font-bold">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span>Enterprise SLA & Privacy</span>
+                  <span>Quick Response, Kept Private</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  All enterprise inquiries are subject to strict non-disclosure compliance. We respond within 24 business hours.
+                  We typically respond within 24 hours. Your information is never shared without your consent.
                 </p>
               </div>
             </div>
@@ -204,7 +204,7 @@ export default function ContactPage() {
             <div className="lg:col-span-8">
               <div className="p-8 md:p-12 rounded-3xl border border-foreground/15 bg-background/80 backdrop-blur-xl shadow-2xl">
                 <h3 className="text-2xl font-display font-bold text-foreground mb-2">Send us a Message</h3>
-                <p className="text-xs font-mono text-muted-foreground mb-8">Specify your inquiry type for priority routing to our quantum engineering team.</p>
+                <p className="text-xs font-mono text-muted-foreground mb-8">Let us know what you need help with and we'll route it to the right person.</p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
@@ -219,12 +219,12 @@ export default function ContactPage() {
                         onChange={handleChange}
                         required
                         className="w-full px-4 py-3.5 bg-foreground/5 border border-foreground/15 rounded-2xl focus:border-foreground/50 focus:outline-none transition-colors text-foreground text-sm placeholder:text-muted-foreground"
-                        placeholder="Dr. Sarah Chen"
+                        placeholder="Your name"
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-mono text-foreground/70 uppercase tracking-wider mb-2">
-                        Work / Academic Email *
+                        Email *
                       </label>
                       <input
                         type="email"
@@ -233,7 +233,7 @@ export default function ContactPage() {
                         onChange={handleChange}
                         required
                         className="w-full px-4 py-3.5 bg-foreground/5 border border-foreground/15 rounded-2xl focus:border-foreground/50 focus:outline-none transition-colors text-foreground text-sm placeholder:text-muted-foreground"
-                        placeholder="sarah@institution.org"
+                        placeholder="you@example.com"
                       />
                     </div>
                   </div>
@@ -241,7 +241,7 @@ export default function ContactPage() {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-xs font-mono text-foreground/70 uppercase tracking-wider mb-2">
-                        Company / Institution
+                        College / Company (Optional)
                       </label>
                       <input
                         type="text"
@@ -249,7 +249,7 @@ export default function ContactPage() {
                         value={formData.company}
                         onChange={handleChange}
                         className="w-full px-4 py-3.5 bg-foreground/5 border border-foreground/15 rounded-2xl focus:border-foreground/50 focus:outline-none transition-colors text-foreground text-sm placeholder:text-muted-foreground"
-                        placeholder="IIT / IBM / TCS / Lab"
+                        placeholder="Your college or company"
                       />
                     </div>
                     <div>
@@ -262,11 +262,12 @@ export default function ContactPage() {
                         onChange={handleChange}
                         className="w-full px-4 py-3.5 bg-foreground/5 border border-foreground/15 rounded-2xl focus:border-foreground/50 focus:outline-none transition-colors text-foreground text-sm"
                       >
-                        <option value="Enterprise Quantum Solutions">Enterprise Quantum Solutions</option>
-                        <option value="Research Grants & Fellowships">Research Grants & Fellowships</option>
-                        <option value="Hardware / QPU Access">Hardware / QPU Cloud Access</option>
-                        <option value="University Chapter & Hackathons">University Chapter & Hackathons</option>
-                        <option value="Press & Media Alliances">Press & Media Alliances</option>
+                        <option value="General Question">General Question</option>
+                        <option value="Joining the Community">Joining the Community</option>
+                        <option value="Mentorship">Mentorship</option>
+                        <option value="Speaking or Volunteering">Speaking or Volunteering</option>
+                        <option value="Partnerships">Partnerships</option>
+                        <option value="Press & Media">Press & Media</option>
                       </select>
                     </div>
                   </div>
@@ -282,7 +283,7 @@ export default function ContactPage() {
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-3.5 bg-foreground/5 border border-foreground/15 rounded-2xl focus:border-foreground/50 focus:outline-none transition-colors text-foreground text-sm placeholder:text-muted-foreground"
-                      placeholder="How can QNexus India assist your team?"
+                      placeholder="How can we help?"
                     />
                   </div>
 
@@ -297,7 +298,7 @@ export default function ContactPage() {
                       required
                       rows={5}
                       className="w-full px-4 py-3.5 bg-foreground/5 border border-foreground/15 rounded-2xl focus:border-foreground/50 focus:outline-none transition-colors text-foreground text-sm placeholder:text-muted-foreground resize-none"
-                      placeholder="Provide details about your project, timeline, or research requirements..."
+                      placeholder="Tell us more about your question or what you'd like help with..."
                     />
                   </div>
 
@@ -310,7 +311,7 @@ export default function ContactPage() {
                     {isSubmitting ? (
                       <span className="flex items-center gap-2">
                         <span className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                        Routing Message...
+                        Sending...
                       </span>
                     ) : submitSuccess ? (
                       <span className="flex items-center gap-2 text-emerald-400">
@@ -319,7 +320,7 @@ export default function ContactPage() {
                     ) : (
                       <span className="flex items-center gap-2">
                         <Send className="w-4 h-4" />
-                        Send Priority Inquiry
+                        Send Message
                       </span>
                     )}
                   </Button>

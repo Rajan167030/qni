@@ -60,18 +60,18 @@ export function CtaSection() {
                 {/* Eyebrow Badge */}
                 <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-foreground/20 bg-foreground/5 text-xs font-mono tracking-widest uppercase mb-8 text-foreground shadow-inner">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                  <span>Join Quantum Nexus Global</span>
+                  <span>Join QNexus India</span>
                 </div>
 
                 {/* Spectacular Main Headline */}
                 <h2 className="text-4xl sm:text-6xl lg:text-7xl font-display tracking-tight leading-[0.95] mb-6 text-foreground">
-                  Ready to Shape <br />
-                  <span className="text-muted-foreground">the Quantum Era?</span>
+                  Start Your <br />
+                  <span className="text-muted-foreground">Quantum Journey.</span>
                 </h2>
 
                 {/* Subtitle / Copy */}
                 <p className="text-lg lg:text-xl text-muted-foreground leading-relaxed mb-10">
-                  Connect with leading quantum researchers, access state-of-the-art QPU cloud simulation clusters, and collaborate on groundbreaking quantum AI & algorithm research.
+                  Free talks, mentorship, workshops, and a community of students, researchers, and industry leaders — regardless of your background or resources.
                 </p>
 
                 {/* CTA Action Buttons */}
@@ -115,15 +115,15 @@ export function CtaSection() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-8 border-t border-foreground/10">
                   <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
                     <Globe className="w-4 h-4 text-foreground/60" />
-                    <span>Global Ecosystem</span>
+                    <span>Free, Always</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
                     <Cpu className="w-4 h-4 text-foreground/60" />
-                    <span>QPU Simulator</span>
+                    <span>Student-First</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
                     <ShieldCheck className="w-4 h-4 text-foreground/60" />
-                    <span>Research Fellowships</span>
+                    <span>Mentorship & Access</span>
                   </div>
                 </div>
               </div>

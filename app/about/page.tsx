@@ -21,20 +21,20 @@ export default function AboutPage() {
         {/* Content pinned to bottom */}
         <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 pb-10 w-full">
           <span className="text-xs font-mono tracking-[0.25em] uppercase text-foreground/50 mb-3 block">
-            Quantum Nexus Global
+            QNexus India
           </span>
           <h1 className="text-5xl lg:text-7xl font-display leading-tight mb-5">
-            About QNG
+            About QNexus India
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mb-6">
-            
+            A student-first quantum community. We connect students with researchers, industry leaders, and peers through free talks, mentorship, workshops, and collaborative opportunities — regardless of their background or resources.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
               href="/join"
               className="px-7 py-3 bg-foreground hover:bg-foreground/90 text-background rounded-full font-medium transition-all inline-flex items-center gap-2"
             >
-              Join Our Team
+              Join the Community
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
@@ -56,14 +56,14 @@ export default function AboutPage() {
               <Target className="w-10 h-10 mb-5 text-foreground/60" />
               <h3 className="text-2xl font-display mb-3">Mission</h3>
               <p className="text-muted-foreground leading-relaxed">
-                To advance quantum computing research, develop practical quantum solutions, and build a collaborative ecosystem where researchers, enterprises, and innovators can explore quantum technologies and drive technological excellence.
+                To make quantum education and opportunities accessible to students, regardless of their background or resources — connecting them with researchers, industry leaders, and peers through free talks, mentorship, workshops, and collaborative opportunities.
               </p>
             </div>
             <div className="p-7 border border-foreground/10 rounded-2xl hover:border-foreground/20 transition-all">
               <Rocket className="w-10 h-10 mb-5 text-foreground/60" />
               <h3 className="text-2xl font-display mb-3">Vision</h3>
               <p className="text-muted-foreground leading-relaxed">
-                To position India as a global leader in quantum computing innovation, making quantum technology accessible and practical for solving real-world problems across industries, research, and society.
+                Don&apos;t try to be the biggest quantum community — try to be the most useful one. We&apos;re building a student-first quantum ecosystem, open to students everywhere.
               </p>
             </div>
           </div>
@@ -76,12 +76,12 @@ export default function AboutPage() {
           <h2 className="text-4xl lg:text-5xl font-display mb-10">Core Values</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { icon: Zap, title: "Innovation", description: "Pushing boundaries with cutting-edge quantum research and breakthrough solutions" },
-              { icon: Users, title: "Collaboration", description: "Building a thriving community of researchers, developers, and quantum enthusiasts" },
-              { icon: Globe, title: "Accessibility", description: "Making quantum computing education and tools available to everyone globally" },
-              { icon: Target, title: "Excellence", description: "Maintaining the highest standards of research and development quality" },
-              { icon: BookOpen, title: "Knowledge Sharing", description: "Open collaboration and transparent sharing of research findings and insights" },
-              { icon: Rocket, title: "Impact", description: "Creating practical, real-world applications that solve meaningful problems" },
+              { icon: Target, title: "Student-First", description: "Students are the primary beneficiaries of everything we build." },
+              { icon: Zap, title: "Free-First", description: "We don't want financial barriers to prevent participation." },
+              { icon: Rocket, title: "Access", description: "Bringing students closer to people actually working in quantum." },
+              { icon: Users, title: "Community", description: "Not just one-way lectures — real relationships and collaboration." },
+              { icon: BookOpen, title: "Practical Value", description: "Learning should lead to projects, mentorship, research, and opportunities." },
+              { icon: Globe, title: "Global Community", description: "Open to every student, everywhere — no borders." },
             ].map((value, idx) => {
               const Icon = value.icon;
               return (
@@ -102,12 +102,12 @@ export default function AboutPage() {
           <h2 className="text-4xl lg:text-5xl font-display mb-10">What We Do</h2>
           <div className="grid md:grid-cols-2 gap-5">
             {[
-              { title: "Quantum Research", description: "Conducting advanced research in quantum algorithms, hardware, and applications to push the boundaries of what's possible in quantum computing." },
-              { title: "Enterprise Solutions", description: "Developing practical quantum solutions for enterprise clients across finance, pharmaceutical, optimization, and AI-ML sectors." },
-              { title: "Community Building", description: "Hosting events, workshops, and hackathons to foster a vibrant quantum computing community and nurture emerging talent." },
-              { title: "Education & Training", description: "Providing comprehensive quantum computing education programs, courses, and mentorship to build the next generation of quantum scientists." },
-              { title: "Industry Partnerships", description: "Collaborating with leading quantum hardware providers and tech companies to accelerate quantum computing adoption and innovation." },
-              { title: "Open Innovation", description: "Supporting open-source quantum projects and publishing research to advance the entire quantum computing ecosystem." },
+              { title: "Expert Talks", description: "Free sessions with researchers, industry leaders, and quantum pioneers — no cost, ever." },
+              { title: "Community Discussions", description: "Open conversations, reading groups, and technical discussions with peers on the same journey." },
+              { title: "Student Networking", description: "Connect directly with fellow students exploring quantum, across campuses and backgrounds." },
+              { title: "Workshops & Research Sessions", description: "Hands-on workshops and deep-dive sessions that go beyond the basics." },
+              { title: "Mentorship", description: "One-on-one guidance from people actually working in quantum research and industry." },
+              { title: "Student Projects & Hackathons", description: "Real projects, research collaborations, and student-led initiatives you can contribute to." },
             ].map((item, idx) => (
               <div key={idx} className="flex gap-5 p-6 border border-foreground/10 rounded-2xl hover:border-foreground/20 transition-all group">
                 <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center flex-shrink-0 group-hover:bg-foreground/20 transition-colors">
@@ -130,7 +130,7 @@ export default function AboutPage() {
             <div>
               <h2 className="text-4xl lg:text-5xl font-display leading-tight mb-6">Meet Our Team</h2>
               <p className="text-lg text-muted-foreground leading-relaxed mb-7">
-                Our team comprises leading quantum researchers, experienced engineers, and visionary leaders from around the world, united in the mission to advance quantum computing.
+                We're students and early quantum enthusiasts ourselves, united by one goal: make the quantum journey easier and more accessible for the student who's just getting started.
               </p>
               <Link
                 href="/team"
@@ -149,7 +149,7 @@ export default function AboutPage() {
               <div className="p-7 bg-gradient-to-br from-foreground/10 to-foreground/5 rounded-2xl border border-foreground/10">
                 <Globe className="w-10 h-10 mb-4 text-foreground/40" />
                 <p className="text-3xl font-display mb-1">Global</p>
-                <p className="text-sm text-muted-foreground">International Reach</p>
+                <p className="text-sm text-muted-foreground">Open to Students Everywhere</p>
               </div>
             </div>
           </div>
@@ -164,14 +164,14 @@ export default function AboutPage() {
             <div className="relative z-10">
               <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-foreground/20 bg-foreground/5 text-xs font-mono tracking-widest uppercase mb-6 text-foreground">
                 <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>Join Quantum Nexus Global</span>
+                <span>Join QNexus India</span>
               </span>
               <h2 className="text-4xl lg:text-6xl font-display tracking-tight mb-4 max-w-2xl text-foreground">
-                Ready to Shape the <br />
-                <span className="text-muted-foreground">Quantum Future?</span>
+                Start Your <br />
+                <span className="text-muted-foreground">Quantum Journey.</span>
               </h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl leading-relaxed">
-                Join our global network of quantum researchers, developers, and enterprise innovators building tomorrow&apos;s computational landscape.
+                Free, always. Join a community of students, researchers, and industry leaders learning and building together — regardless of background or resources.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link

@@ -25,87 +25,104 @@ interface Testimonial {
 const testimonials: Testimonial[] = [
   {
     id: 1,
-    author: "Dr. Ananya Sharma",
-    signature: "Ananya Sharma",
-    role: "Head of Quantum Systems",
-    company: "C-DAC India",
-    organization: "Centre for Development of Advanced Computing",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&auto=format&fit=crop&q=80",
-    shortQuote: "The team at QNexus India has provided our research lab with unprecedented quantum leverage. Their error-mitigation pipeline cut our simulation time from weeks to hours.",
-    fullQuote: "QNexus India has built a state-of-the-art quantum-classical pipeline. Their fault-tolerant simulators and automated gate optimization allowed our team at C-DAC to accelerate national quantum computing benchmarks by 95%.",
-    metric: "95% Faster Quantum Circuits",
-    stack: "Quantum VQE • NISQ Error Mitigation",
-    linkedin: "https://linkedin.com/in/dr-ananya-sharma-quantum",
-    twitter: "https://x.com/ananya_quantum",
-    website: "https://cdac.in",
+    author: "Student-First",
+    signature: "Student-First",
+    role: "Core Value",
+    company: "QNexus India",
+    organization: "Students are the primary beneficiaries of everything we build",
+    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&auto=format&fit=crop&q=80",
+    shortQuote: "Every talk, workshop, and opportunity we build starts with one question: does this actually help a student?",
+    fullQuote: "Students are the primary beneficiaries of everything we build. Talks, mentorship, workshops, and opportunities exist because they help someone learn, explore, and find their path in quantum — not the other way around.",
+    metric: "STUDENT-FIRST",
+    stack: "Learn • Connect • Build • Grow",
+    linkedin: "https://linkedin.com",
+    twitter: "https://x.com",
+    website: "#",
     featured: false,
   },
   {
     id: 2,
-    author: "Priya Patel",
-    signature: "Priya Patel",
-    role: "Product Lead at Lightdash",
-    company: "Lightdash Quantum",
-    organization: "Lightdash Quantum Systems",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80",
-    shortQuote: "QNexus India's hybrid quantum-classical workflows integrated seamlessly into our production. The design, speed, and algorithmic precision are spot on.",
-    fullQuote: "Deploying enterprise-grade quantum workflows used to require custom compilers. QNexus India's unified platform enabled our R&D team to ship 14 quantum applications seamlessly within 6 weeks.",
-    metric: "14 Production Quantum Apps",
-    stack: "Hybrid HPC • Qiskit SDK",
-    linkedin: "https://linkedin.com/in/priya-patel-quantum",
-    twitter: "https://x.com/priyapatel_q",
-    website: "https://lightdash.io",
-    featured: true, // Photo card like the center card in screenshot
+    author: "Free-First",
+    signature: "Free-First",
+    role: "Core Value",
+    company: "QNexus India",
+    organization: "We don't want financial barriers to prevent participation",
+    image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&auto=format&fit=crop&q=80",
+    shortQuote: "We don't want financial barriers to stand between a curious student and the quantum field.",
+    fullQuote: "Cost should never be the reason a student can't attend a talk, join a workshop, or find a mentor. We start free and build sustainably from there — value first, always.",
+    metric: "FREE, ALWAYS",
+    stack: "No cost to join, ever",
+    linkedin: "https://linkedin.com",
+    twitter: "https://x.com",
+    website: "#",
+    featured: true,
   },
   {
     id: 3,
-    author: "Prof. Rajesh K. Varma",
-    role: "Chair of Quantum Computing",
-    signature: "Rajesh K. Varma",
-    company: "IIT Madras",
-    organization: "IIT Madras Quantum Information Lab",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80",
-    shortQuote: "QNexus has greatly exceeded our expectations. Communication is excellent, turnaround is extremely quick, and the quantum algorithms are fresh and innovative.",
-    fullQuote: "Managing NISQ hardware noise was our biggest bottleneck. QNexus India's quantum noise suppression strategies now ensure 3.5x more reliable results on real quantum processors.",
-    metric: "350% Gate Fidelity Boost",
-    stack: "NISQ Hardware • Noise Reduction",
-    linkedin: "https://linkedin.com/in/prof-rajesh-varma-iit",
-    twitter: "https://x.com/rkvarma_quantum",
-    website: "https://iitm.ac.in",
+    author: "Access",
+    signature: "Access",
+    role: "Core Value",
+    company: "QNexus India",
+    organization: "Bringing students closer to people actually working in quantum",
+    image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=600&auto=format&fit=crop&q=80",
+    shortQuote: "We bring students closer to the researchers, industry professionals, and mentors they normally wouldn't have access to.",
+    fullQuote: "Access is the gap we exist to close. Through free talks, mentorship, and direct conversations, we connect students with researchers, industry leaders, and peers already working in the field.",
+    metric: "REAL ACCESS",
+    stack: "Researchers • Industry • Peers",
+    linkedin: "https://linkedin.com",
+    twitter: "https://x.com",
+    website: "#",
     featured: false,
   },
   {
     id: 4,
-    author: "Vikramaditya Singh",
-    role: "Director of Quantum AI",
-    signature: "V. Singh",
-    company: "TCS Innovation",
-    organization: "TCS Innovation & Deep Tech Labs",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&auto=format&fit=crop&q=80",
-    shortQuote: "QNexus India bridges theoretical quantum physics and industrial optimization with remarkable efficiency. Their QAOA algorithms saved months of work.",
-    fullQuote: "QNexus India's algorithms transformed our financial portfolio optimization. Their QAOA solvers deliver 10,000x speedup in multi-variable combinatorial problem solving.",
-    metric: "10,000x Speedup in QAOA",
-    stack: "QAOA • Portfolio Optimization",
-    linkedin: "https://linkedin.com/in/vikramaditya-singh-tcs",
-    twitter: "https://x.com/vikram_quantum",
-    website: "https://tcs.com",
+    author: "Community",
+    signature: "Community",
+    role: "Core Value",
+    company: "QNexus India",
+    organization: "Relationships and collaboration, not one-way lectures",
+    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80",
+    shortQuote: "We're not just another webinar community — this is about relationships and collaboration, not one-way lectures.",
+    fullQuote: "A community for learning, collaboration, and exploration. Students connect with researchers, industry, educators, and each other — building real relationships, not just watching talks.",
+    metric: "TOGETHER",
+    stack: "Discussions • Networking • Projects",
+    linkedin: "https://linkedin.com",
+    twitter: "https://x.com",
+    website: "#",
     featured: false,
   },
   {
     id: 5,
-    author: "Dr. Marcus Vance",
-    role: "VP Research & Development",
-    signature: "Marcus Vance",
-    company: "IBM Quantum",
-    organization: "IBM Quantum Network Partner",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&auto=format&fit=crop&q=80",
-    shortQuote: "Working with QNexus India has given our enterprise clients a competitive edge in quantum readiness and fault-tolerant algorithm deployment.",
-    fullQuote: "QNexus India's deep-tech expertise and developer ecosystem are unmatched. They have helped us benchmark novel quantum circuits across global supercomputing networks.",
-    metric: "50+ Qubit Hardware Sim",
-    stack: "IBM Qiskit • Superposition Sim",
-    linkedin: "https://linkedin.com/in/marcus-vance-quantum",
-    twitter: "https://x.com/marcus_vance_q",
-    website: "https://ibm.com/quantum",
+    author: "Practical Value",
+    signature: "Practical Value",
+    role: "Core Value",
+    company: "QNexus India",
+    organization: "Learning should lead somewhere",
+    image: "https://images.unsplash.com/photo-1528901166007-3784c7dd3653?w=600&auto=format&fit=crop&q=80",
+    shortQuote: "Learning should lead to projects, mentorship, research, and opportunities — not stop at a talk.",
+    fullQuote: "Practical value means learning doesn't end when the talk does. It should lead somewhere: a project, a mentor, a research collaboration, an internship, or a fellowship.",
+    metric: "BEYOND TALKS",
+    stack: "Mentorship • Research • Internships",
+    linkedin: "https://linkedin.com",
+    twitter: "https://x.com",
+    website: "#",
+    featured: false,
+  },
+  {
+    id: 6,
+    author: "Global Community",
+    signature: "Global Community",
+    role: "Core Value",
+    company: "QNexus India",
+    organization: "Open to every student, everywhere",
+    image: "https://images.unsplash.com/photo-1544531585-9847b68c8c86?w=600&auto=format&fit=crop&q=80",
+    shortQuote: "We think beyond borders — every student, everywhere, has a place here.",
+    fullQuote: "A global mindset means we don't think in borders. QNexus India connects students across campuses, cities, and countries to the same researchers, mentors, and opportunities.",
+    metric: "GLOBAL COMMUNITY",
+    stack: "Open to every student, everywhere",
+    linkedin: "https://linkedin.com",
+    twitter: "https://x.com",
+    website: "#",
     featured: false,
   },
 ];
@@ -119,12 +136,12 @@ export function TestimonialsSection() {
         {/* Header matching user's design image */}
         <div className="mb-16">
           <span className="font-mono text-xs tracking-widest text-muted-foreground uppercase block mb-3">
-            TESTIMONIALS
+            CORE VALUES
           </span>
           <h2 className="text-4xl md:text-6xl font-display tracking-tight text-foreground max-w-2xl leading-[1.05]">
-            Don't take our word for it!
+            What we stand for.
             <br />
-            Hear it from our partners.
+            The values that guide us.
           </h2>
         </div>
       </div>
@@ -183,7 +200,7 @@ export function TestimonialsSection() {
       <div className="text-center mt-6">
         <p className="font-mono text-xs text-muted-foreground flex items-center justify-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          Hover to pause loop • Click any testimonial to view profile & social links
+          Hover to pause loop • Click any value to read more
         </p>
       </div>
 
@@ -215,7 +232,7 @@ export function TestimonialsSection() {
               <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
               <div className="absolute bottom-4 left-6 sm:left-8 flex items-center gap-2">
                 <span className="bg-foreground text-background font-mono text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> VERIFIED PARTNER
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> CORE VALUE
                 </span>
                 <span className="bg-background/90 backdrop-blur-md text-foreground font-mono text-xs font-bold px-3 py-1 rounded-full border border-border shadow-md">
                   {selectedPartner.metric}
@@ -282,7 +299,7 @@ export function TestimonialsSection() {
               {/* Tech Stack & Footer */}
               <div className="pt-4 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-mono text-muted-foreground">
                 <div>
-                  <span className="text-foreground/70">Quantum Stack:</span>{" "}
+                  <span className="text-foreground/70">Applies to:</span>{" "}
                   <span className="text-foreground font-semibold">{selectedPartner.stack}</span>
                 </div>
                 <Button
@@ -291,7 +308,7 @@ export function TestimonialsSection() {
                   className="rounded-full text-xs"
                   onClick={() => setSelectedPartner(null)}
                 >
-                  Close Profile
+                  Close
                 </Button>
               </div>
             </div>

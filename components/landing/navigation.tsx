@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles, ArrowRight } from "lucide-react";
 import SpecularButton from "@/components/ui/SpecularButton";
@@ -48,8 +49,14 @@ export function Navigation() {
         >
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <span className={`font-display tracking-tight transition-all duration-500 ${isScrolled ? "text-xl" : "text-2xl"}`}>QNG</span>
-            <span className={`text-muted-foreground font-mono transition-all duration-500 ${isScrolled ? "text-[10px] mt-0.5" : "text-xs mt-1"}`}>Global</span>
+            <Image
+              src="/logo-mark.png"
+              alt="QNexus India"
+              width={512}
+              height={512}
+              priority
+              className={`w-auto transition-all duration-500 ${isScrolled ? "h-8" : "h-10"}`}
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -133,6 +140,15 @@ export function Navigation() {
         >
           {/* Top subtle decoration */}
           <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-foreground/5 to-transparent pointer-events-none" />
+
+          {/* Close Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-label="Close menu"
+            className="absolute top-6 right-6 z-20 w-11 h-11 rounded-full border border-foreground/15 bg-background/80 backdrop-blur-md flex items-center justify-center hover:bg-foreground/10 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
           {/* Navigation Links */}
           <div className="flex-1 flex flex-col justify-start gap-8 mt-4 relative z-10">

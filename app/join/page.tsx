@@ -14,8 +14,8 @@ export default function JoinPage() {
     phone: '',
     company: '',
     position: '',
-    expertise: 'quantum-algorithms',
-    experience: 'Intermediate',
+    expertise: 'just-exploring',
+    experience: 'Beginner',
     country: 'India',
     message: '',
   });
@@ -94,27 +94,27 @@ export default function JoinPage() {
           <div className={`mb-16 text-center max-w-3xl mx-auto transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-foreground/15 bg-foreground/5 text-xs font-mono tracking-wider uppercase mb-6 text-foreground">
               <Globe2 className="w-4 h-4 text-sky-500" />
-              <span>Global Quantum Innovation Network</span>
+              <span>A Student-First Quantum Community</span>
             </div>
 
             <h1 className="text-4xl md:text-6xl font-display tracking-tight text-foreground mb-6 leading-[1.05]">
-              Join the World's Leading Quantum Network
+              Join the Community
             </h1>
 
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Connect with researchers, engineers, and quantum pioneers across 20+ countries to accelerate fault-tolerant computing and deep-tech breakthroughs.
+              Connect with researchers, industry leaders, and peers through free talks, mentorship, and workshops — regardless of your background or resources.
             </p>
 
             {/* Quick Metrics Bar */}
             <div className="flex flex-wrap items-center justify-center gap-8 mt-10 pt-8 border-t border-foreground/10 text-xs font-mono text-muted-foreground">
               <span className="flex items-center gap-2 text-foreground font-medium">
-                <Users className="w-4 h-4 text-emerald-500" /> 5,000+ Active Members
+                <Users className="w-4 h-4 text-emerald-500" /> Free, Always
               </span>
               <span className="flex items-center gap-2 text-foreground font-medium">
-                <Award className="w-4 h-4 text-amber-500" /> 50+ Research Institutes
+                <Award className="w-4 h-4 text-amber-500" /> Student-First
               </span>
               <span className="flex items-center gap-2 text-foreground font-medium">
-                <Cpu className="w-4 h-4 text-sky-500" /> QPU Cloud Access
+                <Cpu className="w-4 h-4 text-sky-500" /> Open Worldwide
               </span>
             </div>
           </div>
@@ -130,9 +130,9 @@ export default function JoinPage() {
                     <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center mb-6">
                       <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                     </div>
-                    <h3 className="text-3xl font-display text-foreground mb-3">Application Received!</h3>
+                    <h3 className="text-3xl font-display text-foreground mb-3">You're In!</h3>
                     <p className="text-muted-foreground max-w-md mb-8 leading-relaxed">
-                      Thank you for applying to QNexus India. Our research review committee will verify your credentials and reach out with your membership invitation code.
+                      Thank you for joining QNexus India. We'll be in touch soon with details on upcoming talks, workshops, and how to get involved.
                     </p>
                     <Button
                       onClick={() => setIsSubmitted(false)}
@@ -145,8 +145,8 @@ export default function JoinPage() {
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-8">
                     <div>
-                      <h3 className="text-2xl font-display text-foreground mb-1">Quantum Network Application</h3>
-                      <p className="text-xs font-mono text-muted-foreground">Complete details for membership verification & QPU sandbox access.</p>
+                      <h3 className="text-2xl font-display text-foreground mb-1">Community Application</h3>
+                      <p className="text-xs font-mono text-muted-foreground">Tell us a bit about yourself so we can get you involved.</p>
                     </div>
 
                     {/* Personal Info Grid */}
@@ -169,7 +169,7 @@ export default function JoinPage() {
                         </div>
                         <div>
                           <label htmlFor="email" className="block text-xs font-mono text-foreground/70 uppercase tracking-wider mb-2">
-                            Institutional / Work Email *
+                            Email *
                           </label>
                           <input
                             type="email"
@@ -178,7 +178,7 @@ export default function JoinPage() {
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            placeholder="eleanor@university.edu"
+                            placeholder="you@example.com"
                             className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
                           />
                         </div>
@@ -201,7 +201,7 @@ export default function JoinPage() {
                         </div>
                         <div>
                           <label htmlFor="company" className="block text-xs font-mono text-foreground/70 uppercase tracking-wider mb-2">
-                            Organization / University *
+                            College / University (Optional)
                           </label>
                           <input
                             type="text"
@@ -209,8 +209,7 @@ export default function JoinPage() {
                             name="company"
                             value={formData.company}
                             onChange={handleChange}
-                            required
-                            placeholder="IIT Madras / IBM / C-DAC"
+                            placeholder="Your college or university"
                             className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
                           />
                         </div>
@@ -228,7 +227,7 @@ export default function JoinPage() {
                             value={formData.position}
                             onChange={handleChange}
                             required
-                            placeholder="Researcher / Engineer / Student"
+                            placeholder="Student / Researcher / Engineer"
                             className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
                           />
                         </div>
@@ -262,13 +261,13 @@ export default function JoinPage() {
                           required
                           className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
                         >
-                          <option value="quantum-algorithms">Quantum Algorithms & VQE/QAOA</option>
-                          <option value="nisq-error">NISQ Error Mitigation & Noise Suppression</option>
-                          <option value="quantum-hardware">Quantum Hardware & QPU Compilation</option>
-                          <option value="post-quantum">Post-Quantum Cryptography & Security</option>
-                          <option value="hybrid-hpc">Hybrid HPC & Supercomputing</option>
-                          <option value="quantum-ml">Quantum Machine Learning (QML)</option>
-                          <option value="student-chapter">Student & University Chapter</option>
+                          <option value="just-exploring">Just Exploring / New to Quantum</option>
+                          <option value="quantum-algorithms">Quantum Algorithms & Computing</option>
+                          <option value="quantum-ml">Quantum Machine Learning</option>
+                          <option value="quantum-hardware">Quantum Hardware & Devices</option>
+                          <option value="research-mentorship">Research & Mentorship</option>
+                          <option value="career-guidance">Careers & Internships in Quantum</option>
+                          <option value="community-building">Community Building & Events</option>
                         </select>
                       </div>
 
@@ -298,14 +297,14 @@ export default function JoinPage() {
                       {/* Statement */}
                       <div>
                         <label htmlFor="message" className="block text-xs font-mono text-foreground/70 uppercase tracking-wider mb-2">
-                          Research Interests & Project Proposals (Optional)
+                          What draws you to quantum? (Optional)
                         </label>
                         <textarea
                           id="message"
                           name="message"
                           value={formData.message}
                           onChange={handleChange}
-                          placeholder="Briefly describe your quantum computing background or what you hope to build with QNexus..."
+                          placeholder="Tell us a bit about your background and what you're hoping to get out of the community..."
                           rows={4}
                           className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm resize-none"
                         />
@@ -321,11 +320,11 @@ export default function JoinPage() {
                       {isLoading ? (
                         <span className="flex items-center gap-2">
                           <span className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                          Processing Application...
+                          Submitting...
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">
-                          Submit Application for Global Network
+                          Join the Community
                           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </span>
                       )}
@@ -333,7 +332,7 @@ export default function JoinPage() {
 
                     <p className="text-[11px] font-mono text-muted-foreground text-center flex items-center justify-center gap-1.5">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                      Your data is encrypted & protected under QNexus global privacy standards.
+                      Your data is kept private and never shared without your consent.
                     </p>
                   </form>
                 )}
@@ -346,39 +345,39 @@ export default function JoinPage() {
               <div className="p-8 rounded-3xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-6">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-amber-500" />
-                  <h3 className="font-display text-xl text-foreground font-bold">Global Member Benefits</h3>
+                  <h3 className="font-display text-xl text-foreground font-bold">Why Join?</h3>
                 </div>
 
                 <div className="space-y-4 text-sm">
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-foreground">Direct QPU Hardware Access</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Run algorithms on IBM Quantum QPUs & fault-tolerant cloud simulators.</p>
+                      <p className="font-semibold text-foreground">Free Talks & Workshops</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Learn directly from researchers and industry professionals — always free.</p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-foreground">Research Grants & Fellowships</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Apply for academic research grants and publication support.</p>
+                      <p className="font-semibold text-foreground">Mentorship & Guidance</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Get matched with mentors for career guidance and research opportunities.</p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-foreground">Global Hackathons & Seminars</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Participate in national hackathons with ₹5L+ prize pools and expert mentorship.</p>
+                      <p className="font-semibold text-foreground">Hackathons & Projects</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Build real things through hackathons, research collaborations, and student-led projects.</p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-foreground">Open Source SDK Contributions</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Collaborate on NISQ noise suppression compilers and circuit optimizers.</p>
+                      <p className="font-semibold text-foreground">A Real Community</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Connect with peers, researchers, and industry leaders — not just one-way lectures.</p>
                     </div>
                   </div>
                 </div>

@@ -5,26 +5,26 @@ import { useEffect, useRef, useState } from "react";
 const features = [
   {
     number: "01",
-    title: "Fault-Tolerant Circuit Simulation",
-    description: "Run high-qubit quantum algorithm simulations with ultra-low latency and state-of-the-art NISQ noise mitigation models.",
+    title: "Learn",
+    description: "Expert talks, hands-on workshops, reading groups, and technical discussions — built for students starting from zero.",
     visual: "deploy",
   },
   {
     number: "02",
-    title: "Quantum-Classical Hybrid Engines",
-    description: "Seamlessly integrate VQE, QAOA, and Quantum ML algorithms into enterprise HPC and classical AI pipelines.",
-    visual: "ai",
-  },
-  {
-    number: "03",
-    title: "Qiskit & Open-SDK Transpilation",
-    description: "Automated pulse-level compilation and gate transpilation across IBM Quantum, Rigetti, and cloud simulator backends.",
+    title: "Connect",
+    description: "Meet researchers, industry professionals, fellow students, founders, and universities working in quantum.",
     visual: "collab",
   },
   {
+    number: "03",
+    title: "Build",
+    description: "Projects, hackathons, research collaborations, and student-led initiatives you can actually contribute to.",
+    visual: "ai",
+  },
+  {
     number: "04",
-    title: "Post-Quantum Cryptography",
-    description: "NIST-standard lattice-based cryptographic algorithms to protect enterprise infrastructure against quantum attacks.",
+    title: "Grow",
+    description: "Mentorship, career guidance, research opportunities, internships, and fellowships to build your path forward.",
     visual: "security",
   },
 ];
@@ -323,16 +323,16 @@ export function FeaturesSection() {
         <div className="mb-16 lg:mb-24">
           <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground mb-6">
             <span className="w-8 h-px bg-foreground/30" />
-            Capabilities
+            How it works
           </span>
           <h2
             className={`text-4xl lg:text-6xl font-display tracking-tight transition-all duration-700 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            Everything you need.
+            A student-first
             <br />
-            <span className="text-muted-foreground">Nothing you don&apos;t.</span>
+            <span className="text-muted-foreground">quantum ecosystem.</span>
           </h2>
         </div>
 

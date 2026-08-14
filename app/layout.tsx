@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     siteName: 'Quantum Nexus Global',
     images: [
       {
-        url: '/placeholder-logo.png',
+        url: '/logo.png',
         width: 1200,
         height: 630,
         alt: 'Quantum Nexus Global Logo',
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Quantum Nexus Global (QNG)',
     description: 'Advancing quantum computing R&D, quantum algorithms, and AI infrastructure globally.',
-    images: ['/placeholder-logo.png'],
+    images: ['/logo.png'],
   },
   robots: {
     index: true,
@@ -92,7 +92,7 @@ export default function RootLayout({
     name: 'Quantum Nexus Global',
     alternateName: 'QNG',
     url: 'https://www.quantumnexusglobal.org',
-    logo: 'https://www.quantumnexusglobal.org/placeholder-logo.png',
+    logo: 'https://www.quantumnexusglobal.org/logo.png',
     description: 'Advancing quantum computing research, VQE algorithms, NISQ error mitigation, and quantum AI infrastructure globally.',
     sameAs: [
       'https://linkedin.com/company/qnexusglobal',

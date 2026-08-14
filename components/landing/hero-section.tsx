@@ -6,14 +6,23 @@ import { ArrowRight } from "lucide-react";
 import { AnimatedSphere } from "./animated-sphere";
 import SpecularButton from "@/components/ui/SpecularButton";
 
-const words = ["quantum", "superposition", "computing", "algorithms"];
+const words = ["students", "everyone", "you", "explorers"];
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
   const [wordIndex, setWordIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
+  }, []);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 639px)");
+    setIsMobile(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
   }, []);
 
   useEffect(() => {
@@ -65,20 +74,20 @@ export function HeroSection() {
         >
           <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground">
             <span className="w-8 h-px bg-foreground/30" />
-           
+            A student-first quantum community
           </span>
         </div>
-        
+
         {/* Main headline */}
         <div className="mb-12">
-          <h1 
+          <h1
             className={`text-[clamp(3rem,12vw,10rem)] font-display leading-[0.9] tracking-tight transition-all duration-1000 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-            <span className="block">Build Future</span>
+            <span className="block">Quantum, made</span>
             <span className="block">
-              of{" "}
+              for{" "}
               <span className="relative inline-block">
                 <span 
                   key={wordIndex}
@@ -104,20 +113,19 @@ export function HeroSection() {
         
         {/* Description */}
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-end">
-          <p 
+          <p
             className={`text-xl lg:text-2xl text-muted-foreground leading-relaxed max-w-xl transition-all duration-700 delay-200 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            
           </p>
           
           {/* CTAs */}
-            <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 mx-auto transition-all duration-700 delay-300 ${
+            <div className={`flex flex-row flex-nowrap items-center justify-center gap-2 sm:gap-4 mx-auto transition-all duration-700 delay-300 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}>
-            <SpecularButton 
-              size="lg"
+            <SpecularButton
+              size={isMobile ? "sm" : "lg"}
               radius={18}
               tint="#ffffff"
               tintOpacity={0}
@@ -138,10 +146,10 @@ export function HeroSection() {
               Join Us
               <ArrowRight className="w-4 h-4 ml-1" />
             </SpecularButton>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="h-14 px-8 text-base rounded-full border-foreground/20 hover:bg-foreground/5"
+            <Button
+              size={isMobile ? "sm" : "lg"}
+              variant="outline"
+              className="h-10 px-4 text-sm sm:h-14 sm:px-8 sm:text-base rounded-full border-foreground/20 hover:bg-foreground/5 whitespace-nowrap"
               onClick={() => window.location.href = '/events'}
             >
               Explore Events
@@ -161,12 +169,12 @@ export function HeroSection() {
           {[...Array(2)].map((_, i) => (
             <div key={i} className="flex gap-16">
               {[
-                { value: "100+ Qubits", label: "fault-tolerant simulation", company: "QNEXUS PLATFORM" },
-                { value: "99.9%", label: "2-qubit gate fidelity", company: "QUANTUM BENCHMARK" },
-                { value: "10,000x", label: "quantum speedup in optimization", company: "RESEARCH LABS" },
-                { value: "< 0.05ms", label: "coherence latency threshold", company: "SUPERPOSITION ENGINE" },
-                { value: "50+", label: "quantum algorithms optimized", company: "QNEXUS INDIA" },
-                { value: "10^6", label: "simulated state spaces", company: "QUANTUM CLOUD" },
+                { value: "Free", label: "always, no cost to join", company: "FREE-FIRST" },
+                { value: "Student", label: "led talks, workshops & mentorship", company: "STUDENT-FIRST" },
+                { value: "Global", label: "open to students everywhere", company: "GLOBAL COMMUNITY" },
+                { value: "Value", label: "given first, community built around it", company: "CORE IDEA" },
+                { value: "Access", label: "to researchers, industry & peers", company: "OUR MISSION" },
+                { value: "Useful", label: "not the biggest — the most useful", company: "OUR GOAL" },
               ].map((stat) => (
                 <div key={`${stat.company}-${i}`} className="flex items-baseline gap-4">
                   <span className="text-4xl lg:text-5xl font-display tracking-tight">{stat.value}</span>

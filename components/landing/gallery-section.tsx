@@ -213,10 +213,10 @@ export function GallerySection() {
           }`}
         >
           {[
-            { value: "50+", label: "Event Photos" },
-            { value: "12+", label: "Cities Covered" },
-            { value: "2024–2026", label: "Timeline" },
-            { value: "5,000+", label: "Community Members" },
+            { value: "Free", label: "To Attend" },
+            { value: "2026", label: "Launch Year" },
+            { value: "Global", label: "Open Community" },
+            { value: "Student-Led", label: "Always" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="font-display text-2xl md:text-3xl font-bold text-foreground">{stat.value}</div>
