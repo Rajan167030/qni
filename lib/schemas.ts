@@ -1,5 +1,5 @@
 /**
- * QNexus India — Database Schema Definitions & Validation Specifications
+ * QNexus — Database Schema Definitions & Validation Specifications
  * 
  * Includes Mongoose-compatible schema specifications & TypeScript Types for:
  * 1. ContactInquirySchema

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Mail, Phone, ArrowRight, CheckCircle2, Globe2, Award, Sparkles, ShieldCheck, Cpu, ArrowLeft, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -70,9 +71,8 @@ export default function JoinPage() {
       {/* Top Header */}
       <header className="fixed z-50 top-0 left-0 right-0 px-6 lg:px-12 py-4 border-b border-foreground/10 bg-background/90 backdrop-blur-md">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <span className="font-display text-2xl font-bold tracking-tight text-foreground">QNexus</span>
-            <span className="text-xs text-foreground/80 font-mono px-2 py-0.5 border border-foreground/20 rounded-full">Quantum</span>
+          <Link href="/" className="flex items-center group">
+            <Image src="/logo-mark.png" alt="QNexus" width={512} height={512} className="h-12 w-auto" />
           </Link>
           <Link 
             href="/" 
@@ -132,7 +132,7 @@ export default function JoinPage() {
                     </div>
                     <h3 className="text-3xl font-display text-foreground mb-3">You're In!</h3>
                     <p className="text-muted-foreground max-w-md mb-8 leading-relaxed">
-                      Thank you for joining QNexus India. We'll be in touch soon with details on upcoming talks, workshops, and how to get involved.
+                      Thank you for joining QNexus. We'll be in touch soon with details on upcoming talks, workshops, and how to get involved.
                     </p>
                     <Button
                       onClick={() => setIsSubmitted(false)}

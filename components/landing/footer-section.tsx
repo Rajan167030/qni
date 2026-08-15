@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight, Github, Linkedin, Twitter, Send, CheckCircle2, Sparkles, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedWave } from "./animated-wave";
@@ -119,13 +120,14 @@ export function FooterSection() {
           <div className="grid grid-cols-2 md:grid-cols-6 gap-10 lg:gap-12">
             {/* Brand Column */}
             <div className="col-span-2 space-y-6">
-              <Link href="/" className="inline-flex items-center gap-3 group">
-                <span className="text-3xl font-display font-bold tracking-tight text-foreground">
-                  QNexus India
-                </span>
-                <span className="text-xs text-foreground/80 font-mono px-2.5 py-1 border border-foreground/20 rounded-full group-hover:border-foreground/40 transition-colors">
-                  Quantum
-                </span>
+              <Link href="/" className="inline-flex items-center group">
+                <Image
+                  src="/logo-mark.png"
+                  alt="QNexus"
+                  width={512}
+                  height={512}
+                  className="h-16 w-auto"
+                />
               </Link>
 
               <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
@@ -181,7 +183,7 @@ export function FooterSection() {
         {/* Bottom Bar & Status */}
         <div className="py-8 border-t border-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-muted-foreground">
           <p className="flex items-center gap-1.5">
-            © 2026 QNexus India (QNI). Built with <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline" /> for India's Quantum Ecosystem.
+            © 2026 QNexus (Quantum Nexus Global). Built with <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline" /> for the global quantum community.
           </p>
 
           <div className="flex items-center gap-4">

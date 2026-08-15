@@ -60,7 +60,7 @@ export function CtaSection() {
                 {/* Eyebrow Badge */}
                 <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-foreground/20 bg-foreground/5 text-xs font-mono tracking-widest uppercase mb-8 text-foreground shadow-inner">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                  <span>Join QNexus India</span>
+                  <span>Join QNexus</span>
                 </div>
 
                 {/* Spectacular Main Headline */}

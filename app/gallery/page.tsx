@@ -1,6 +1,14 @@
 import fs from 'fs/promises';
 import path from 'path';
+import type { Metadata } from 'next';
 import GalleryPageClient from './GalleryPageClient';
+
+export const metadata: Metadata = {
+  title: 'Event Gallery — Quantum Community Moments',
+  description:
+    'Photos from QNexus (Quantum Nexus Global) events — free quantum talks, workshops, hackathons, and community gatherings. See our student-first quantum community in action.',
+  alternates: { canonical: '/gallery' },
+};
 
 // Server component – auto detects local images from public folders
 export default async function GalleryPage() {

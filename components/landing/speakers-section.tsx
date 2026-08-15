@@ -54,7 +54,7 @@ const speakers = [
     id: "4",
     name: "Srivathan",
     role: "Quantum Software Engineer",
-    company: "QNexus India",
+    company: "QNexus",
     bio: "Building the software layer for quantum systems",
     image: "/speakers/srivathan.jpg",
     fullBio: "Srivathan is a quantum software pioneer developing the tools, SDKs, and frameworks that will make quantum computers accessible and practical for developers worldwide.",
@@ -68,14 +68,14 @@ const speakers = [
 ];
 
 const orgLogos = [
-  { name: "QNexus India", image: "/our speaker from/1631348310705.jpg" },
+  { name: "QNexus", image: "/our speaker from/1631348310705.jpg" },
   { name: "Dell Technologies", image: "/our speaker from/delltechnologies_logo.jpg" },
   { name: "Duke Engineering", image: "/our speaker from/duke_engineering_logo.jpg" },
   { name: "University of North Dakota", image: "/our speaker from/uofnorthdakota_logo.jpg" },
   { name: "Organisation", image: "/our speaker from/download (2).png" },
   { name: "University of Notre Dame", image: "/our speaker from/university_of_notre_dame_college_of_science_logo.jpg" },
   // Duplicated for seamless infinite scroll
-  { name: "QNexus India", image: "/our speaker from/1631348310705.jpg" },
+  { name: "QNexus", image: "/our speaker from/1631348310705.jpg" },
   { name: "Dell Technologies", image: "/our speaker from/delltechnologies_logo.jpg" },
   { name: "Duke Engineering", image: "/our speaker from/duke_engineering_logo.jpg" },
   { name: "University of North Dakota", image: "/our speaker from/uofnorthdakota_logo.jpg" },

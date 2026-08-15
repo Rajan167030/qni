@@ -148,7 +148,7 @@ export function GallerySection() {
               Events in Pictures
             </h2>
             <p className="text-foreground/50 mt-3 text-base max-w-md leading-relaxed">
-              Glimpses from workshops, hackathons, summits & community gatherings across India.
+              Glimpses from workshops, hackathons, summits & community gatherings around the world.
             </p>
           </div>
           <Link

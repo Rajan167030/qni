@@ -250,7 +250,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-5 h-5 text-amber-400" />
               <span className="text-xs font-mono tracking-[0.25em] uppercase text-muted-foreground">
-                QNexus India Team
+                QNexus Team
               </span>
             </div>
 
@@ -462,7 +462,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
                   Application Submitted!
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-                  Thank you for applying to join the QNexus India team. Your application has been saved and sent to our team for review.
+                  Thank you for applying to join the QNexus team. Your application has been saved and sent to our team for review.
                 </p>
                 <button
                   onClick={resetFormModal}
@@ -478,7 +478,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
                     Volunteer With Us
                   </span>
                   <h3 className="text-2xl lg:text-3xl font-display font-bold text-foreground mt-1">
-                    Join the QNexus India Team
+                    Join the QNexus Team
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1">
                     Fill in your details below. Your submission will be stored and reviewed directly by the admin team.
@@ -698,7 +698,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
                     {selectedTeamMember.role}
                   </p>
                   <p className="text-xs font-mono text-foreground/80 mt-1">
-                    QNexus India
+                    QNexus
                   </p>
                 </div>
 

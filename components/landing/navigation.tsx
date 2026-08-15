@@ -51,11 +51,11 @@ export function Navigation() {
           <Link href="/" className="flex items-center gap-2 group">
             <Image
               src="/logo-mark.png"
-              alt="QNexus India"
+              alt="QNexus"
               width={512}
               height={512}
               priority
-              className={`w-auto transition-all duration-500 ${isScrolled ? "h-8" : "h-10"}`}
+              className={`w-auto transition-all duration-500 ${isScrolled ? "h-11" : "h-14"}`}
             />
           </Link>
 

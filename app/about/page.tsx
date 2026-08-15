@@ -21,10 +21,10 @@ export default function AboutPage() {
         {/* Content pinned to bottom */}
         <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 pb-10 w-full">
           <span className="text-xs font-mono tracking-[0.25em] uppercase text-foreground/50 mb-3 block">
-            QNexus India
+            QNexus
           </span>
           <h1 className="text-5xl lg:text-7xl font-display leading-tight mb-5">
-            About QNexus India
+            About QNexus
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mb-6">
             A student-first quantum community. We connect students with researchers, industry leaders, and peers through free talks, mentorship, workshops, and collaborative opportunities — regardless of their background or resources.
@@ -164,7 +164,7 @@ export default function AboutPage() {
             <div className="relative z-10">
               <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-foreground/20 bg-foreground/5 text-xs font-mono tracking-widest uppercase mb-6 text-foreground">
                 <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>Join QNexus India</span>
+                <span>Join QNexus</span>
               </span>
               <h2 className="text-4xl lg:text-6xl font-display tracking-tight mb-4 max-w-2xl text-foreground">
                 Start Your <br />

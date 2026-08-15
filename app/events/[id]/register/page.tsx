@@ -256,7 +256,7 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
               </button>
 
               <p className="text-xs text-center text-foreground/40 font-mono">
-                By registering, you agree to QNexus India's community guidelines and privacy policy.
+                By registering, you agree to QNexus's community guidelines and privacy policy.
               </p>
             </form>
           </div>

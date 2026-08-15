@@ -22,41 +22,52 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-jetbrains'
 });
 
+const siteDescription =
+  'QNexus (Quantum Nexus Global) is a free, student-first quantum computing community. We connect students with researchers, industry leaders, and peers through free talks, mentorship, and workshops — helping you learn, explore, and build your path in quantum. Open to students everywhere.';
+
 export const metadata: Metadata = {
   title: {
-    default: 'Quantum Nexus Global (QNG) — Advancing Quantum Computing & AI',
-    template: '%s | Quantum Nexus Global (QNG)',
+    default: 'QNexus — Quantum Nexus Global | Student-First Quantum Computing Community',
+    template: '%s | QNexus — Quantum Nexus Global',
   },
-  description: 'Quantum Nexus Global is a premier quantum computing R&D network advancing quantum algorithms, NISQ error mitigation, enterprise cloud QPU simulators, and AI infrastructure worldwide.',
+  description: siteDescription,
   keywords: [
-    'Quantum Computing',
+    'Quantum Nexus',
     'Quantum Nexus Global',
+    'QNexus',
     'QNG',
-    'Qiskit',
-    'VQE Algorithms',
-    'Quantum AI',
-    'NISQ Error Mitigation',
-    'Quantum Infrastructure',
-    'Quantum Research India',
+    'Quantum Community',
+    'Quantum Collective',
+    'Global Quantum Community',
+    'Quantum Computing Community',
+    'Student Quantum Community',
+    'Free Quantum Talks',
+    'Quantum Mentorship',
+    'Learn Quantum Computing',
+    'Quantum Computing for Beginners',
+    'Quantum Computing Events',
+    'Quantum Computing Workshops',
+    'Join Quantum Community',
+    'Quantum Computing Students',
   ],
-  authors: [{ name: 'Quantum Nexus Global Team' }],
-  creator: 'Quantum Nexus Global',
-  publisher: 'Quantum Nexus Global',
+  authors: [{ name: 'QNexus Team' }],
+  creator: 'QNexus',
+  publisher: 'QNexus',
   metadataBase: new URL('https://www.quantumnexusglobal.org'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Quantum Nexus Global (QNG) — Advancing Quantum Computing & AI',
-    description: 'Premier quantum computing R&D network advancing quantum algorithms, NISQ error mitigation, enterprise cloud QPU simulators, and AI infrastructure worldwide.',
+    title: 'QNexus — Quantum Nexus Global | Student-First Quantum Computing Community',
+    description: siteDescription,
     url: 'https://www.quantumnexusglobal.org',
-    siteName: 'Quantum Nexus Global',
+    siteName: 'QNexus — Quantum Nexus Global',
     images: [
       {
         url: '/logo.png',
         width: 1200,
         height: 630,
-        alt: 'Quantum Nexus Global Logo',
+        alt: 'QNexus — Quantum Nexus Global',
       },
     ],
     locale: 'en_US',
@@ -64,8 +75,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Quantum Nexus Global (QNG)',
-    description: 'Advancing quantum computing R&D, quantum algorithms, and AI infrastructure globally.',
+    title: 'QNexus — Quantum Nexus Global',
+    description: siteDescription,
     images: ['/logo.png'],
   },
   robots: {
@@ -86,19 +97,29 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Quantum Nexus Global',
-    alternateName: 'QNG',
-    url: 'https://www.quantumnexusglobal.org',
-    logo: 'https://www.quantumnexusglobal.org/logo.png',
-    description: 'Advancing quantum computing research, VQE algorithms, NISQ error mitigation, and quantum AI infrastructure globally.',
-    sameAs: [
-      'https://linkedin.com/company/qnexusglobal',
-      'https://twitter.com/qnexusglobal',
-    ],
-  };
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'QNexus',
+      alternateName: ['Quantum Nexus Global', 'Quantum Nexus', 'QNG', 'Quantum Collective'],
+      url: 'https://www.quantumnexusglobal.org',
+      logo: 'https://www.quantumnexusglobal.org/logo.png',
+      description: siteDescription,
+      sameAs: [
+        'https://linkedin.com/company/qnexusglobal',
+        'https://twitter.com/qnexusglobal',
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'QNexus — Quantum Nexus Global',
+      alternateName: ['Quantum Nexus', 'Quantum Nexus Global', 'QNexus', 'QNG'],
+      url: 'https://www.quantumnexusglobal.org',
+      description: siteDescription,
+    },
+  ];
 
   return (
     <html lang="en">

@@ -58,7 +58,7 @@ const events = [
     attendees: "500+",
     badge: "Flagship",
     category: "Hackathon",
-    fullDescription: "India's premier quantum computing hackathon. Build real-world solutions using QNexus India's quantum cloud platform with direct QPU access on IBM Quantum hardware. Win prizes worth ₹5 Lakhs.",
+    fullDescription: "India's premier quantum computing hackathon. Build real-world solutions using QNexus's quantum cloud platform with direct QPU access on IBM Quantum hardware. Win prizes worth ₹5 Lakhs.",
     speakers: ["Sharvan Kumar Sharma", "Dr. Ananya Sharma", "Prof. Rajesh Varma"],
     price: "₹500/team (up to 4 members)",
     schedule: [

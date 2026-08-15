@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Mail, Phone, Linkedin, Twitter, Send, CheckCircle2, Globe2, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveContact } from '@/lib/submissions-store';
@@ -84,9 +85,8 @@ export default function ContactPage() {
       {/* Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-foreground/10 bg-background/90 backdrop-blur-md px-6 lg:px-12 py-4">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <span className="font-display text-2xl font-bold tracking-tight text-foreground">QNexus</span>
-            <span className="text-xs text-foreground/80 font-mono px-2 py-0.5 border border-foreground/20 rounded-full">Quantum</span>
+          <Link href="/" className="flex items-center group">
+            <Image src="/logo-mark.png" alt="QNexus" width={512} height={512} className="h-12 w-auto" />
           </Link>
           <Link
             href="/"

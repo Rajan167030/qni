@@ -1,5 +1,5 @@
 /**
- * QNexus India — Email Service (Nodemailer + Gmail SMTP)
+ * QNexus — Email Service (Nodemailer + Gmail SMTP)
  *
  * Setup: Add these to your .env.local file:
  *   EMAIL_FROM=your-gmail@gmail.com
@@ -55,7 +55,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to QNexus India</title>
+  <title>Welcome to QNexus</title>
 </head>
 <body style="margin:0;padding:0;background:#0a0a0f;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0f;padding:40px 0;">
@@ -66,7 +66,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#1a0a2e 0%,#0d1a3a 100%);padding:48px 40px 32px;text-align:center;">
-              <div style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#06b6d4);-webkit-background-clip:text;color:transparent;font-size:28px;font-weight:800;letter-spacing:-0.5px;">QNexus India</div>
+              <div style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#06b6d4);-webkit-background-clip:text;color:transparent;font-size:28px;font-weight:800;letter-spacing:-0.5px;">QNexus</div>
               <div style="color:#a78bfa;font-size:13px;letter-spacing:3px;text-transform:uppercase;margin-top:4px;">Quantum Computing Community</div>
             </td>
           </tr>
@@ -76,7 +76,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
             <td style="padding:40px 40px 32px;">
               <h1 style="color:#ffffff;font-size:26px;font-weight:700;margin:0 0 8px;">Welcome, ${name}! 🎉</h1>
               <p style="color:#a1a1aa;font-size:16px;line-height:1.7;margin:0 0 24px;">
-                We're thrilled to have you as a part of <strong style="color:#8b5cf6;">QNexus India</strong> — India's premier quantum computing community bridging research, innovation, and enterprise.
+                We're thrilled to have you as a part of <strong style="color:#8b5cf6;">QNexus</strong> — a global quantum computing community bridging research, innovation, and enterprise.
               </p>
 
               <p style="color:#a1a1aa;font-size:16px;line-height:1.7;margin:0 0 32px;">
@@ -141,10 +141,10 @@ export async function sendWelcomeEmail(to: string, name: string) {
           <tr>
             <td style="background:#0d0d14;padding:24px 40px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
               <p style="color:#52525b;font-size:12px;margin:0 0 8px;">
-                This email was sent to you because you applied to join QNexus India.
+                This email was sent to you because you applied to join QNexus.
               </p>
               <p style="color:#52525b;font-size:12px;margin:0;">
-                © 2025 QNexus India · <a href="https://qnexusindia.com" style="color:#6d28d9;text-decoration:none;">qnexusindia.com</a>
+                © 2025 QNexus · <a href="https://qnexusindia.com" style="color:#6d28d9;text-decoration:none;">qnexusindia.com</a>
               </p>
             </td>
           </tr>
@@ -159,9 +159,9 @@ export async function sendWelcomeEmail(to: string, name: string) {
 
   try {
     await transporter.sendMail({
-      from: `"QNexus India" <${from}>`,
+      from: `"QNexus" <${from}>`,
       to,
-      subject: `Welcome to QNexus India, ${name}! 🚀`,
+      subject: `Welcome to QNexus, ${name}! 🚀`,
       html,
     });
     console.log(`[Email] Welcome email sent to ${to}`);
@@ -198,7 +198,7 @@ export async function sendContactNotification(data: {
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>New Contact Inquiry — QNexus India</title>
+  <title>New Contact Inquiry — QNexus</title>
 </head>
 <body style="margin:0;padding:0;background:#0a0a0f;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0f;padding:40px 0;">
@@ -210,7 +210,7 @@ export async function sendContactNotification(data: {
           <tr>
             <td style="background:linear-gradient(135deg,#1a0a0a 0%,#1a0d0d 100%);padding:32px 40px;text-align:center;">
               <div style="color:#ef4444;font-size:12px;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">📬 New Contact Inquiry</div>
-              <div style="color:#ffffff;font-size:22px;font-weight:700;">QNexus India — Admin Alert</div>
+              <div style="color:#ffffff;font-size:22px;font-weight:700;">QNexus — Admin Alert</div>
               <div style="color:#6b7280;font-size:12px;margin-top:8px;">${timestamp} IST</div>
             </td>
           </tr>
@@ -261,7 +261,7 @@ export async function sendContactNotification(data: {
           <!-- Reply CTA -->
           <tr>
             <td style="padding:24px 40px 32px;">
-              <a href="mailto:${data.email}?subject=Re: ${encodeURIComponent(data.subject || 'Your Inquiry to QNexus India')}"
+              <a href="mailto:${data.email}?subject=Re: ${encodeURIComponent(data.subject || 'Your Inquiry to QNexus')}"
                  style="display:inline-block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;">
                 Reply to ${data.name} →
               </a>
@@ -272,7 +272,7 @@ export async function sendContactNotification(data: {
           <tr>
             <td style="background:#0d0d14;padding:20px 40px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
               <p style="color:#52525b;font-size:12px;margin:0;">
-                QNexus India Admin Dashboard · Auto-generated notification
+                QNexus Admin Dashboard · Auto-generated notification
               </p>
             </td>
           </tr>
@@ -287,7 +287,7 @@ export async function sendContactNotification(data: {
 
   try {
     await transporter.sendMail({
-      from: `"QNexus India Contact Form" <${from}>`,
+      from: `"QNexus Contact Form" <${from}>`,
       to: adminEmail,
       replyTo: `"${data.name}" <${data.email}>`,   // ← reply directly to the person
       subject: `[Contact] ${data.subject || 'General Inquiry'} — from ${data.name}`,

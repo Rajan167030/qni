@@ -1,5 +1,5 @@
 /**
- * QNexus India — Safe MongoDB / Mongoose Connection Helper
+ * QNexus — Safe MongoDB / Mongoose Connection Helper
  * 
  * Instructions to connect MongoDB later:
  * 1. Create `.env.local` in `qni/` folder
