@@ -52,8 +52,8 @@ export function Navigation() {
             <Image
               src="/logo-mark.png"
               alt="QNexus"
-              width={512}
-              height={512}
+              width={789}
+              height={302}
               priority
               className={`w-auto transition-all duration-500 ${isScrolled ? "h-11" : "h-14"}`}
             />

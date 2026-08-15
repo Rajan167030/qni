@@ -3,29 +3,36 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowUpRight, Github, Linkedin, Twitter, Send, CheckCircle2, Sparkles, Heart } from "lucide-react";
+import {
+  ArrowUpRight,
+  ArrowUp,
+  Github,
+  Linkedin,
+  Twitter,
+  Send,
+  CheckCircle2,
+  Sparkles,
+  Heart,
+  Mail,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedWave } from "./animated-wave";
 
 const footerLinks = {
-  Ecosystem: [
-    { name: "About QNexus", href: "/about" },
-    { name: "Quantum Events", href: "/events" },
-    { name: "Event Gallery", href: "/gallery" },
-    { name: "Quantum Team", href: "/team" },
-    { name: "QNG Tech Blog", href: "/blog" },
-    { name: "Join Community", href: "/join" },
+  Explore: [
+    { name: "Events", href: "/events" },
+    { name: "Gallery", href: "/gallery" },
+    { name: "Team", href: "/team" },
+    { name: "Blog", href: "/blog" },
   ],
-  Resources: [
-    { name: "QNG Tech Blog", href: "/blog" },
-    { name: "Team Writer Portal", href: "/team-portal" },
-    { name: "Admin Dashboard", href: "/admin" },
+  Community: [
+    { name: "About Us", href: "/about" },
+    { name: "Join Us", href: "/join" },
+    { name: "Contact", href: "/contact" },
   ],
   Legal: [
     { name: "Privacy Policy", href: "#" },
     { name: "Terms of Service", href: "#" },
-    { name: "Security Statement", href: "#" },
-    { name: "Compliance", href: "#" },
   ],
 };
 
@@ -34,6 +41,8 @@ const socialLinks = [
   { name: "LinkedIn", href: "https://linkedin.com", icon: Linkedin },
   { name: "Twitter / X", href: "https://x.com", icon: Twitter },
 ];
+
+const pillars = ["Learn", "Connect", "Build", "Grow"];
 
 export function FooterSection() {
   const [email, setEmail] = useState("");
@@ -49,9 +58,13 @@ export function FooterSection() {
     }, 4000);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <footer className="relative border-t border-foreground/10 bg-background text-foreground overflow-hidden">
-      {/* 🌊 SVG Wave Top Border Accent */}
+      {/* SVG Wave Top Border Accent */}
       <div className="absolute top-0 left-0 right-0 h-16 pointer-events-none overflow-hidden -translate-y-full">
         <svg
           className="w-full h-full text-foreground/5 fill-current preserve-3d animate-pulse"
@@ -62,61 +75,78 @@ export function FooterSection() {
         </svg>
       </div>
 
-      {/* 🌊 Interactive Canvas Quantum Wave Background */}
+      {/* Interactive Canvas Quantum Wave Background */}
       <div className="absolute inset-0 opacity-60 dark:opacity-80 pointer-events-none overflow-hidden">
         <AnimatedWave />
+      </div>
+
+      {/* Giant faded wordmark, purely typographic texture */}
+      <div className="absolute -bottom-[6vw] left-1/2 -translate-x-1/2 w-full pointer-events-none select-none overflow-hidden">
+        <span className="block text-center font-display font-bold tracking-tight text-foreground/[0.035] text-[22vw] leading-none whitespace-nowrap">
+          QNEXUS
+        </span>
       </div>
 
       {/* Subtle overlay gradient to ensure text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/85 to-background pointer-events-none" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12">
-        {/* Top Newsletter / Community Banner */}
-        <div className="py-12 border-b border-foreground/10 flex flex-col lg:flex-row items-center justify-between gap-8">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-foreground/15 bg-foreground/5 text-xs font-mono tracking-wider uppercase mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Quantum Dispatch</span>
-            </div>
-            <h3 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-foreground">
-              Never miss a free talk or workshop
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Get event invitations, mentorship opportunities, and community updates in your inbox.
-            </p>
-          </div>
+        {/* Top Newsletter Card */}
+        <div className="pt-16 lg:pt-20">
+          <div className="relative rounded-3xl border border-foreground/15 bg-foreground/[0.03] backdrop-blur-sm px-6 py-8 sm:px-10 sm:py-10 overflow-hidden">
+            <div className="absolute -top-16 -right-16 w-56 h-56 bg-foreground/5 blur-3xl rounded-full pointer-events-none" />
+            <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+              <div className="flex items-start gap-4">
+                <div className="hidden sm:flex w-12 h-12 rounded-2xl border border-foreground/15 bg-background items-center justify-center shrink-0">
+                  <Mail className="w-5 h-5 text-foreground/70" />
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-foreground/15 bg-background text-xs font-mono tracking-wider uppercase mb-3">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Quantum Dispatch</span>
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-foreground">
+                    Never miss a free talk or workshop
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1.5 max-w-md">
+                    Event invitations, mentorship opportunities, and community updates — straight to your inbox.
+                  </p>
+                </div>
+              </div>
 
-          <form onSubmit={handleSubscribe} className="w-full sm:w-auto flex items-center gap-2">
-            <div className="relative flex-1 sm:w-80">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your research email..."
-                className="w-full px-4 py-3 rounded-full border border-foreground/20 bg-background/80 text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:border-foreground/50 transition-colors"
-              />
+              <form onSubmit={handleSubscribe} className="w-full lg:w-auto flex items-center gap-2 shrink-0">
+                <div className="relative flex-1 lg:w-72">
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full px-4 py-3 rounded-full border border-foreground/20 bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:border-foreground/50 transition-colors"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="bg-foreground hover:bg-foreground/90 text-background rounded-full px-6 h-11 text-sm font-semibold shrink-0"
+                >
+                  {subscribed ? (
+                    <span className="flex items-center gap-1.5 text-emerald-400">
+                      <CheckCircle2 className="w-4 h-4" /> Subscribed
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      Subscribe <Send className="w-3.5 h-3.5 ml-1" />
+                    </span>
+                  )}
+                </Button>
+              </form>
             </div>
-            <Button
-              type="submit"
-              size="lg"
-              className="bg-foreground hover:bg-foreground/90 text-background rounded-full px-6 h-11 text-sm font-semibold shrink-0"
-            >
-              {subscribed ? (
-                <span className="flex items-center gap-1.5 text-emerald-400">
-                  <CheckCircle2 className="w-4 h-4" /> Subscribed
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5">
-                  Subscribe <Send className="w-3.5 h-3.5 ml-1" />
-                </span>
-              )}
-            </Button>
-          </form>
+          </div>
         </div>
 
         {/* Main Footer Grid */}
-        <div className="py-16 lg:py-24">
+        <div className="pt-14 pb-12 lg:pt-16 lg:pb-16">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-10 lg:gap-12">
             {/* Brand Column */}
             <div className="col-span-2 space-y-6">
@@ -124,8 +154,8 @@ export function FooterSection() {
                 <Image
                   src="/logo-mark.png"
                   alt="QNexus"
-                  width={512}
-                  height={512}
+                  width={789}
+                  height={302}
                   className="h-16 w-auto"
                 />
               </Link>
@@ -133,6 +163,16 @@ export function FooterSection() {
               <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
                 A student-first quantum community connecting students with researchers, industry leaders, and peers through free talks, mentorship, and workshops — open to students everywhere.
               </p>
+
+              {/* Pillars strip */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-xs uppercase tracking-widest text-foreground/50">
+                {pillars.map((p, i) => (
+                  <span key={p} className="inline-flex items-center gap-3">
+                    {i > 0 && <span className="w-1 h-1 rounded-full bg-foreground/30" />}
+                    {p}
+                  </span>
+                ))}
+              </div>
 
               {/* Social Links Badges */}
               <div className="flex flex-wrap gap-3">
@@ -186,11 +226,19 @@ export function FooterSection() {
             © 2026 QNexus (Quantum Nexus Global). Built with <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline" /> for the global quantum community.
           </p>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
               Free to Join — Always
             </span>
+
+            <button
+              onClick={scrollToTop}
+              aria-label="Back to top"
+              className="w-8 h-8 rounded-full border border-foreground/15 bg-foreground/5 hover:bg-foreground/10 hover:border-foreground/30 flex items-center justify-center transition-all duration-300 group shrink-0"
+            >
+              <ArrowUp className="w-3.5 h-3.5 text-foreground/70 group-hover:-translate-y-0.5 transition-transform" />
+            </button>
           </div>
         </div>
       </div>

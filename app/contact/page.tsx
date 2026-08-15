@@ -86,7 +86,7 @@ export default function ContactPage() {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-foreground/10 bg-background/90 backdrop-blur-md px-6 lg:px-12 py-4">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center group">
-            <Image src="/logo-mark.png" alt="QNexus" width={512} height={512} className="h-12 w-auto" />
+            <Image src="/logo-mark.png" alt="QNexus" width={789} height={302} className="h-12 w-auto" />
           </Link>
           <Link
             href="/"
