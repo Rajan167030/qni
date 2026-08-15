@@ -41,11 +41,9 @@ export default function JoinPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 800));
 
-      // Save to Admin Store
+    try {
+      // Save to Admin Store (local, for the admin dashboard)
       saveJoin({
         fullName: formData.fullName,
         email: formData.email,
@@ -58,6 +56,24 @@ export default function JoinPage() {
         message: formData.message,
       });
 
+      // Save to MongoDB + trigger welcome email
+      await fetch('/api/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.fullName,
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          company: formData.company,
+          position: formData.position,
+          expertise: formData.expertise,
+          experience: formData.experience,
+          country: formData.country,
+          message: formData.message,
+        }),
+      }).catch((err) => console.warn('API POST warn (fallback to local store):', err));
+
       setIsSubmitted(true);
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -69,44 +85,45 @@ export default function JoinPage() {
   return (
     <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* Top Header */}
-      <header className="fixed z-50 top-0 left-0 right-0 px-6 lg:px-12 py-4 border-b border-foreground/10 bg-background/90 backdrop-blur-md">
+      <header className="fixed z-50 top-0 left-0 right-0 px-4 sm:px-6 lg:px-12 py-3 sm:py-4 border-b border-foreground/10 bg-background/90 backdrop-blur-md">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center group">
-            <Image src="/logo-mark.png" alt="QNexus" width={789} height={302} className="h-12 w-auto" />
+          <Link href="/" className="flex items-center group shrink-0">
+            <Image src="/logo-mark.png" alt="QNexus" width={789} height={302} className="h-9 sm:h-12 w-auto" />
           </Link>
-          <Link 
-            href="/" 
-            className="flex items-center gap-2 text-sm text-foreground/60 hover:text-foreground transition-colors"
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-foreground/60 hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to home
+            <span className="hidden sm:inline">Back to home</span>
+            <span className="sm:hidden">Back</span>
           </Link>
         </div>
       </header>
 
       {/* Main Content Container */}
-      <div className="relative pt-28 pb-24">
+      <div className="relative pt-20 sm:pt-28 pb-16 sm:pb-24">
         {/* Ambient background glow */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[450px] bg-foreground/5 blur-[160px] rounded-full pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-6 lg:px-12" ref={sectionRef}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12" ref={sectionRef}>
           {/* Header Banner */}
-          <div className={`mb-16 text-center max-w-3xl mx-auto transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-foreground/15 bg-foreground/5 text-xs font-mono tracking-wider uppercase mb-6 text-foreground">
-              <Globe2 className="w-4 h-4 text-sky-500" />
+          <div className={`mb-10 sm:mb-16 text-center max-w-3xl mx-auto transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full border border-foreground/15 bg-foreground/5 text-[11px] sm:text-xs font-mono tracking-wider uppercase mb-5 sm:mb-6 text-foreground">
+              <Globe2 className="w-4 h-4 text-sky-500 shrink-0" />
               <span>A Student-First Quantum Community</span>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-display tracking-tight text-foreground mb-6 leading-[1.05]">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-display tracking-tight text-foreground mb-4 sm:mb-6 leading-[1.05]">
               Join the Community
             </h1>
 
-            <p className="text-lg text-muted-foreground leading-relaxed">
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
               Connect with researchers, industry leaders, and peers through free talks, mentorship, and workshops — regardless of your background or resources.
             </p>
 
             {/* Quick Metrics Bar */}
-            <div className="flex flex-wrap items-center justify-center gap-8 mt-10 pt-8 border-t border-foreground/10 text-xs font-mono text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 sm:gap-8 mt-7 sm:mt-10 pt-6 sm:pt-8 border-t border-foreground/10 text-[11px] sm:text-xs font-mono text-muted-foreground">
               <span className="flex items-center gap-2 text-foreground font-medium">
                 <Users className="w-4 h-4 text-emerald-500" /> Free, Always
               </span>
@@ -120,18 +137,18 @@ export default function JoinPage() {
           </div>
 
           {/* Form & Sidebar Grid */}
-          <div className={`grid lg:grid-cols-12 gap-12 items-start transition-all duration-700 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            
+          <div className={`grid lg:grid-cols-12 gap-8 lg:gap-12 items-start transition-all duration-700 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+
             {/* Form Column */}
             <div className="lg:col-span-8">
-              <div className="rounded-3xl border border-foreground/15 bg-background/80 backdrop-blur-xl p-8 md:p-12 shadow-2xl relative">
+              <div className="rounded-2xl sm:rounded-3xl border border-foreground/15 bg-background/80 backdrop-blur-xl p-5 sm:p-8 md:p-12 shadow-2xl relative">
                 {isSubmitted ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-center">
                     <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center mb-6">
                       <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                     </div>
-                    <h3 className="text-3xl font-display text-foreground mb-3">You're In!</h3>
-                    <p className="text-muted-foreground max-w-md mb-8 leading-relaxed">
+                    <h3 className="text-2xl sm:text-3xl font-display text-foreground mb-3">You're In!</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground max-w-md mb-8 leading-relaxed">
                       Thank you for joining QNexus. We'll be in touch soon with details on upcoming talks, workshops, and how to get involved.
                     </p>
                     <Button
@@ -143,15 +160,15 @@ export default function JoinPage() {
                     </Button>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-8">
+                  <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
                     <div>
-                      <h3 className="text-2xl font-display text-foreground mb-1">Community Application</h3>
+                      <h3 className="text-xl sm:text-2xl font-display text-foreground mb-1">Community Application</h3>
                       <p className="text-xs font-mono text-muted-foreground">Tell us a bit about yourself so we can get you involved.</p>
                     </div>
 
                     {/* Personal Info Grid */}
-                    <div className="space-y-6">
-                      <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="space-y-5 sm:space-y-6">
+                      <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                         <div>
                           <label htmlFor="fullName" className="block text-xs font-mono text-foreground/70 uppercase tracking-wider mb-2">
                             Full Name *
@@ -164,7 +181,7 @@ export default function JoinPage() {
                             onChange={handleChange}
                             required
                             placeholder="Dr. Eleanor Vance"
-                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
+                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-base sm:text-sm"
                           />
                         </div>
                         <div>
@@ -179,12 +196,12 @@ export default function JoinPage() {
                             onChange={handleChange}
                             required
                             placeholder="you@example.com"
-                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
+                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-base sm:text-sm"
                           />
                         </div>
                       </div>
 
-                      <div className="grid sm:grid-cols-2 gap-6">
+                      <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                         <div>
                           <label htmlFor="phone" className="block text-xs font-mono text-foreground/70 uppercase tracking-wider mb-2">
                             Phone / WhatsApp (Optional)
@@ -196,7 +213,7 @@ export default function JoinPage() {
                             value={formData.phone}
                             onChange={handleChange}
                             placeholder="+91 8860573577"
-                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
+                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-base sm:text-sm"
                           />
                         </div>
                         <div>
@@ -210,12 +227,12 @@ export default function JoinPage() {
                             value={formData.company}
                             onChange={handleChange}
                             placeholder="Your college or university"
-                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
+                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-base sm:text-sm"
                           />
                         </div>
                       </div>
 
-                      <div className="grid sm:grid-cols-2 gap-6">
+                      <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                         <div>
                           <label htmlFor="position" className="block text-xs font-mono text-foreground/70 uppercase tracking-wider mb-2">
                             Current Role *
@@ -228,7 +245,7 @@ export default function JoinPage() {
                             onChange={handleChange}
                             required
                             placeholder="Student / Researcher / Engineer"
-                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
+                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-base sm:text-sm"
                           />
                         </div>
                         <div>
@@ -243,7 +260,7 @@ export default function JoinPage() {
                             onChange={handleChange}
                             required
                             placeholder="India, USA, Germany..."
-                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
+                            className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-base sm:text-sm"
                           />
                         </div>
                       </div>
@@ -259,7 +276,7 @@ export default function JoinPage() {
                           value={formData.expertise}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm"
+                          className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground focus:outline-none focus:border-foreground/50 transition-colors text-base sm:text-sm"
                         >
                           <option value="just-exploring">Just Exploring / New to Quantum</option>
                           <option value="quantum-algorithms">Quantum Algorithms & Computing</option>
@@ -276,13 +293,13 @@ export default function JoinPage() {
                         <label className="block text-xs font-mono text-foreground/70 uppercase tracking-wider mb-2">
                           Quantum Computing Experience Level
                         </label>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                           {['Beginner', 'Intermediate', 'Advanced / Fellow'].map((lvl) => (
                             <button
                               key={lvl}
                               type="button"
                               onClick={() => setFormData({ ...formData, experience: lvl })}
-                              className={`py-3 rounded-xl text-xs font-mono font-semibold border transition-all ${
+                              className={`py-2.5 sm:py-3 px-2 rounded-xl text-xs font-mono font-semibold border transition-all ${
                                 formData.experience === lvl
                                   ? 'bg-foreground text-background border-foreground shadow-md'
                                   : 'border-foreground/15 bg-foreground/5 text-foreground/70 hover:border-foreground/30'
@@ -306,7 +323,7 @@ export default function JoinPage() {
                           onChange={handleChange}
                           placeholder="Tell us a bit about your background and what you're hoping to get out of the community..."
                           rows={4}
-                          className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-sm resize-none"
+                          className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-base sm:text-sm resize-none"
                         />
                       </div>
                     </div>
@@ -340,9 +357,9 @@ export default function JoinPage() {
             </div>
 
             {/* Sidebar Benefits Column */}
-            <div className="lg:col-span-4 space-y-8">
+            <div className="lg:col-span-4 space-y-6 sm:space-y-8">
               {/* Member Privileges Card */}
-              <div className="p-8 rounded-3xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-6">
+              <div className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-5 sm:space-y-6">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-amber-500" />
                   <h3 className="font-display text-xl text-foreground font-bold">Why Join?</h3>
@@ -384,12 +401,12 @@ export default function JoinPage() {
               </div>
 
               {/* Direct Support Box */}
-              <div className="p-6 rounded-3xl border border-foreground/10 bg-background/60 backdrop-blur-md space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-foreground/10 bg-background/60 backdrop-blur-md space-y-4">
                 <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">Need Direct Support?</p>
                 <div className="space-y-3 text-sm">
-                  <a href="mailto:rajan.quantumnexusgobal@gmail.com" className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors">
-                    <Mail className="w-4 h-4 text-foreground/60" />
-                    <span>rajan.quantumnexusgobal@gmail.com</span>
+                  <a href="mailto:rajan.quantumnexusgobal@gmail.com" className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors min-w-0">
+                    <Mail className="w-4 h-4 text-foreground/60 shrink-0" />
+                    <span className="break-all">rajan.quantumnexusgobal@gmail.com</span>
                   </a>
                   <a href="tel:+918860573577" className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors">
                     <Phone className="w-4 h-4 text-foreground/60" />

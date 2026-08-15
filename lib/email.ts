@@ -55,7 +55,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to QNexus</title>
+  <title>Welcome to Quantum Nexus Global</title>
 </head>
 <body style="margin:0;padding:0;background:#0a0a0f;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0f;padding:40px 0;">
@@ -65,18 +65,20 @@ export async function sendWelcomeEmail(to: string, name: string) {
 
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#1a0a2e 0%,#0d1a3a 100%);padding:48px 40px 32px;text-align:center;">
-              <div style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#06b6d4);-webkit-background-clip:text;color:transparent;font-size:28px;font-weight:800;letter-spacing:-0.5px;">QNexus</div>
-              <div style="color:#a78bfa;font-size:13px;letter-spacing:3px;text-transform:uppercase;margin-top:4px;">Quantum Computing Community</div>
+            <td style="background:linear-gradient(135deg,#1a0a2e 0%,#0d1a3a 100%);padding:40px 40px 28px;text-align:center;">
+              <div style="display:inline-block;background:#ffffff;border-radius:14px;padding:14px 20px;">
+                <img src="https://www.quantumnexusglobal.org/logo-mark.png" alt="Quantum Nexus Global" width="160" style="display:block;height:auto;" />
+              </div>
+              <div style="color:#a78bfa;font-size:13px;letter-spacing:3px;text-transform:uppercase;margin-top:14px;">Quantum Computing Community</div>
             </td>
           </tr>
 
           <!-- Body -->
           <tr>
             <td style="padding:40px 40px 32px;">
-              <h1 style="color:#ffffff;font-size:26px;font-weight:700;margin:0 0 8px;">Welcome, ${name}! 🎉</h1>
+              <h1 style="color:#ffffff;font-size:26px;font-weight:700;margin:0 0 8px;">Welcome to Quantum Nexus Global, ${name}! 🎉</h1>
               <p style="color:#a1a1aa;font-size:16px;line-height:1.7;margin:0 0 24px;">
-                We're thrilled to have you as a part of <strong style="color:#8b5cf6;">QNexus</strong> — a global quantum computing community bridging research, innovation, and enterprise.
+                We're thrilled to have you as a part of <strong style="color:#8b5cf6;">Quantum Nexus Global (QNexus)</strong> — a global quantum computing community bridging research, innovation, and enterprise.
               </p>
 
               <p style="color:#a1a1aa;font-size:16px;line-height:1.7;margin:0 0 32px;">
@@ -141,10 +143,10 @@ export async function sendWelcomeEmail(to: string, name: string) {
           <tr>
             <td style="background:#0d0d14;padding:24px 40px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
               <p style="color:#52525b;font-size:12px;margin:0 0 8px;">
-                This email was sent to you because you applied to join QNexus.
+                This email was sent to you because you applied to join Quantum Nexus Global.
               </p>
               <p style="color:#52525b;font-size:12px;margin:0;">
-                © 2025 QNexus · <a href="https://qnexusindia.com" style="color:#6d28d9;text-decoration:none;">qnexusindia.com</a>
+                © 2026 QNexus · <a href="https://www.quantumnexusglobal.org" style="color:#6d28d9;text-decoration:none;">quantumnexusglobal.org</a>
               </p>
             </td>
           </tr>
@@ -157,12 +159,28 @@ export async function sendWelcomeEmail(to: string, name: string) {
 </html>
   `;
 
+  const text = `Welcome to Quantum Nexus Global, ${name}!
+
+We're thrilled to have you as part of Quantum Nexus Global (QNexus) — a global quantum computing community bridging research, innovation, and enterprise.
+
+Your application has been received and is under review. Our team will reach out to you shortly with next steps.
+
+Join our WhatsApp community: ${whatsappLink}
+
+What's next:
+- Our team will review your profile within 2-3 business days.
+- You'll receive a personalized onboarding email with resources and community guidelines.
+- Join our WhatsApp group in the meantime to start networking.
+
+© 2026 QNexus (Quantum Nexus Global) · https://www.quantumnexusglobal.org`;
+
   try {
     await transporter.sendMail({
-      from: `"QNexus" <${from}>`,
+      from: `"Quantum Nexus Global" <${from}>`,
       to,
-      subject: `Welcome to QNexus, ${name}! 🚀`,
+      subject: `Welcome to Quantum Nexus Global, ${name}! 🚀`,
       html,
+      text,
     });
     console.log(`[Email] Welcome email sent to ${to}`);
     return true;
@@ -285,13 +303,25 @@ export async function sendContactNotification(data: {
 </html>
   `;
 
+  const text = `New Contact Inquiry — Quantum Nexus Global
+
+Name: ${data.name}
+Email: ${data.email}
+${data.phone ? `Phone: ${data.phone}\n` : ''}${data.organization ? `Organization: ${data.organization}\n` : ''}Subject: ${data.subject || 'General Inquiry'}
+
+Message:
+${data.message}
+
+— Quantum Nexus Global Admin Dashboard`;
+
   try {
     await transporter.sendMail({
-      from: `"QNexus Contact Form" <${from}>`,
+      from: `"Quantum Nexus Global — Contact Form" <${from}>`,
       to: adminEmail,
       replyTo: `"${data.name}" <${data.email}>`,   // ← reply directly to the person
       subject: `[Contact] ${data.subject || 'General Inquiry'} — from ${data.name}`,
       html,
+      text,
     });
     console.log(`[Email] Contact notification sent to admin for ${data.email}`);
     return true;

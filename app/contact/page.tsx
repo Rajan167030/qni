@@ -36,10 +36,8 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    
-    // Save to Admin Store
+
+    // Save to Admin Store (local, for the admin dashboard)
     saveContact({
       name: formData.name,
       email: formData.email,
@@ -49,13 +47,26 @@ export default function ContactPage() {
       message: formData.message,
     });
 
+    // Save to MongoDB + notify admin by email
+    await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: formData.name,
+        email: formData.email,
+        organization: formData.company,
+        subject: formData.subject,
+        message: formData.message,
+      }),
+    }).catch((err) => console.warn('API POST warn (fallback to local store):', err));
+
     setSubmitSuccess(true);
     setFormData({ name: '', email: '', company: '', inquiryType: 'General Question', subject: '', message: '' });
-    
+
     setTimeout(() => {
       setSubmitSuccess(false);
     }, 4000);
-    
+
     setIsSubmitting(false);
   };
 
