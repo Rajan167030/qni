@@ -54,7 +54,9 @@ export default function ContactPage() {
       body: JSON.stringify({
         name: formData.name,
         email: formData.email,
+        company: formData.company || 'Individual / N/A',
         organization: formData.company,
+        inquiryType: formData.inquiryType,
         subject: formData.subject,
         message: formData.message,
       }),

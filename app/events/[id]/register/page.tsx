@@ -4,47 +4,63 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, User, Mail, Phone, Building2, GraduationCap, ArrowRight } from 'lucide-react';
 
+import { getEvents, EventItem } from '@/lib/events-store';
 import { saveRegistration } from '@/lib/submissions-store';
-
-const eventData: Record<string, { title: string; date: string; location: string; price: string; category: string }> = {
-  '1': { title: 'Intro to Qiskit — Bengaluru Chapter', date: 'Aug 02, 2026', location: 'IISC Campus, Bengaluru', price: 'Free', category: 'Workshop' },
-  '2': { title: 'Variational Algorithms Reading Group', date: 'Aug 16, 2026', location: 'Online (Zoom)', price: 'Free for Members', category: 'Seminar' },
-  '3': { title: 'QNI National Hackathon 2026', date: 'Sep 05–06, 2026', location: 'T-Hub, Hyderabad', price: '₹500/team', category: 'Hackathon' },
-  '4': { title: 'Careers in Quantum — Mentor Panel', date: 'Sep 20, 2026', location: 'Online (Google Meet)', price: 'Free', category: 'Panel' },
-  '5': { title: 'Quantum Error Correction Deep-Dive', date: 'Oct 11, 2026', location: 'IIT Bombay, Mumbai', price: '₹299 (Students: ₹99)', category: 'Workshop' },
-  '6': { title: 'Post-Quantum Cryptography Workshop', date: 'Nov 08, 2026', location: 'Online (Zoom)', price: 'Free for Enterprise Partners', category: 'Workshop' },
-};
 
 export default function EventRegisterPage({ params }: { params: Promise<{ id: string }> }) {
   const [eventId, setEventId] = useState<string | null>(null);
+  const [event, setEvent] = useState<EventItem | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [form, setForm] = useState({
     name: '', email: '', phone: '', organization: '', role: '', background: 'Beginner', teamName: '', message: '',
   });
 
   useEffect(() => {
-    params.then((p) => setEventId(p.id));
+    params.then((p) => {
+      setEventId(p.id);
+      const all = getEvents();
+      const found = all.find((e) => e.id === p.id);
+      if (found) {
+        setEvent(found);
+      }
+    });
     setIsVisible(true);
   }, [params]);
 
-  const event = eventId ? eventData[eventId] : null;
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (event && eventId) {
-      saveRegistration({
-        eventId,
-        eventTitle: event.title,
-        name: form.name,
-        email: form.email,
-        phone: form.phone || 'N/A',
-        organization: form.organization || 'Independent',
-        role: form.role || 'Attendee',
-        background: form.background,
-        teamName: form.teamName || undefined,
+    setIsSubmitting(true);
+    const title = event?.title || 'Quantum Event';
+
+    const regData = {
+      eventId: eventId || '1',
+      eventTitle: title,
+      name: form.name,
+      email: form.email,
+      phone: form.phone || 'N/A',
+      organization: form.organization || 'Independent',
+      role: form.role || 'Attendee',
+      background: form.background,
+      teamName: form.teamName || undefined,
+    };
+
+    // Save to local store
+    saveRegistration(regData);
+
+    // Save to MongoDB API
+    try {
+      await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(regData),
       });
+    } catch (err) {
+      console.warn('MongoDB register API warn:', err);
     }
+
+    setIsSubmitting(false);
     setSubmitted(true);
   };
 
@@ -95,7 +111,7 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
               <div className="space-y-3 text-sm border-t border-foreground/10 pt-6">
                 <div className="flex items-center gap-3 text-foreground/60">
                   <span className="font-mono text-xs w-20 shrink-0">Date</span>
-                  <span className="text-foreground font-medium">{event?.date}</span>
+                  <span className="text-foreground font-medium">{event?.month ? `${event.month} ${event.day}` : 'Upcoming 2026'}</span>
                 </div>
                 <div className="flex items-center gap-3 text-foreground/60">
                   <span className="font-mono text-xs w-20 shrink-0">Location</span>

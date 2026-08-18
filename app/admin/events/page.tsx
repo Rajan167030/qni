@@ -4,157 +4,170 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  Calendar,
   Plus,
   MapPin,
-  Tag,
   Clock,
   User,
-  Image as ImageIcon,
   CheckCircle2,
   Trash2,
   Sparkles,
   RefreshCw,
+  Pencil,
+  X,
+  Calendar,
+  Image as ImageIcon,
+  Tag,
+  ChevronDown,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getEvents, saveEvent, deleteEvent, createBlankEvent, EventItem } from "@/lib/events-store";
 
-interface EventItem {
-  id: string;
-  title: string;
-  category: string;
-  dateTime: string;
-  location: string;
-  price: string;
-  speakers: string;
-  description: string;
-  imageUrl?: string;
-  createdAt?: string;
-}
+const CATEGORIES = ["Workshop", "Hackathon", "Seminar", "Panel", "Conference", "Webinar", "Reading Group"];
+const BADGES = ["In person", "Online", "Flagship", "Enterprise", "Hybrid"];
+const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 
-const initialDemoEvents: EventItem[] = [
-  {
-    id: "e-1",
-    title: "QNG National Hackathon 2026",
-    category: "Hackathon",
-    dateTime: "2026-09-05T09:00",
-    location: "T-Hub, Hyderabad",
-    price: "₹500/team",
-    speakers: "Sharvan Kumar Sharma, Dr. Ananya Sharma",
-    description: "48-hour competitive quantum hackathon focusing on VQE algorithms and Qiskit circuit optimization.",
-    imageUrl: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80",
-  },
-  {
-    id: "e-2",
-    title: "Intro to Qiskit & Quantum Hardware",
+function emptyForm() {
+  return {
+    title: "",
     category: "Workshop",
-    dateTime: "2026-08-20T10:00",
-    location: "IISc, Bengaluru",
+    badge: "In person",
+    month: "AUG",
+    day: "",
+    dayLabel: "",
+    eventDate: "",
+    time: "",
+    location: "",
     price: "Free",
-    speakers: "Rajan Jha, Dr. Ramesh Nair",
-    description: "Hands-on workshop building your first quantum circuit and running on cloud QPU simulators.",
-    imageUrl: "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=600&auto=format&fit=crop&q=80",
-  },
-];
+    attendees: "",
+    speakers: "",
+    description: "",
+    fullDescription: "",
+    imageUrl: "",
+    status: "upcoming" as "upcoming" | "past",
+  };
+}
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
-  const [formData, setFormData] = useState({
-    title: "",
-    category: "Workshop",
-    dateTime: "",
-    location: "",
-    price: "Free",
-    speakers: "",
-    description: "",
-    imageUrl: "",
-  });
+  const [formData, setFormData] = useState(emptyForm());
 
-  // Load initial events from local storage or demo data
+  const loadEvents = () => {
+    setEvents(getEvents());
+  };
+
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("qni_admin_created_events");
-      if (saved) {
-        try {
-          setEvents(JSON.parse(saved));
-        } catch {
-          setEvents(initialDemoEvents);
-        }
-      } else {
-        setEvents(initialDemoEvents);
-      }
-    }
+    loadEvents();
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCreateEvent = async (e: React.FormEvent) => {
+  const handleEdit = (event: EventItem) => {
+    setEditingId(event.id);
+    setFormData({
+      title: event.title,
+      category: event.category,
+      badge: event.badge,
+      month: event.month,
+      day: event.day,
+      dayLabel: event.dayLabel,
+      eventDate: event.eventDate || "",
+      time: event.time,
+      location: event.location,
+      price: event.price,
+      attendees: event.attendees,
+      speakers: event.speakers.join(", "),
+      description: event.description,
+      fullDescription: event.fullDescription,
+      imageUrl: event.imageUrl || "",
+      status: event.status || "upcoming",
+    });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setFormData(emptyForm());
+    setShowForm(false);
+    setSuccessMessage("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSuccessMessage("");
 
-    const newEvent: EventItem = {
-      id: `e-${Date.now()}`,
-      ...formData,
+    const speakersArray = formData.speakers
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const eventPayload: EventItem = {
+      id: editingId || Date.now().toString(),
+      title: formData.title,
+      category: formData.category,
+      badge: formData.badge,
+      month: formData.month,
+      day: formData.day,
+      dayLabel: formData.dayLabel,
+      eventDate: formData.eventDate,
+      time: formData.time,
+      location: formData.location,
+      price: formData.price,
+      attendees: formData.attendees,
+      speakers: speakersArray,
+      description: formData.description,
+      fullDescription: formData.fullDescription,
+      imageUrl: formData.imageUrl,
+      status: formData.status,
+      schedule: [],
       createdAt: new Date().toISOString(),
     };
 
+    // Persist to local store
+    saveEvent(eventPayload);
+
+    // Try API persistence
     try {
-      // Post to API endpoint
-      await fetch("/api/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description,
-          dateTime: formData.dateTime || new Date().toISOString(),
-          location: formData.location,
-          imageUrl: formData.imageUrl,
-          registrationLink: "/events",
-        }),
-      }).catch((err) => console.warn("API POST warn:", err));
-
-      // Update Local State & Storage
-      const updated = [newEvent, ...events];
-      setEvents(updated);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("qni_admin_created_events", JSON.stringify(updated));
+      if (editingId) {
+        await fetch("/api/events", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(eventPayload),
+        }).catch(() => {});
+      } else {
+        await fetch("/api/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(eventPayload),
+        }).catch(() => {});
       }
+    } catch {}
 
-      setSuccessMessage("Event created & published successfully!");
-      setFormData({
-        title: "",
-        category: "Workshop",
-        dateTime: "",
-        location: "",
-        price: "Free",
-        speakers: "",
-        description: "",
-        imageUrl: "",
-      });
-    } catch (err) {
-      console.error("Error creating event:", err);
-    } finally {
-      setIsSubmitting(false);
-    }
+    loadEvents();
+    setSuccessMessage(editingId ? "Event updated successfully!" : "Event created & published!");
+    setEditingId(null);
+    setFormData(emptyForm());
+    setShowForm(false);
+    setIsSubmitting(false);
   };
 
-  const handleDeleteEvent = (id: string) => {
-    const updated = events.filter((ev) => ev.id !== id);
-    setEvents(updated);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("qni_admin_created_events", JSON.stringify(updated));
-    }
+  const handleDelete = (id: string) => {
+    if (!confirm("Permanently delete this event?")) return;
+    deleteEvent(id);
+    fetch(`/api/events?id=${id}`, { method: "DELETE" }).catch(() => {});
+    loadEvents();
   };
 
   return (
@@ -172,258 +185,312 @@ export default function AdminEventsPage() {
             <div>
               <h1 className="font-display text-2xl font-bold flex items-center gap-2">
                 Event Management Portal
-                <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-foreground/10 text-foreground">
+                <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   Admin
                 </span>
               </h1>
               <p className="text-xs text-muted-foreground font-mono">
-                Create, publish, and manage Quantum Nexus Global events
+                Create, edit, and manage Quantum Nexus Global events
               </p>
             </div>
           </div>
 
-          <Link href="/events" target="_blank">
-            <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5">
-              View Public Events Page →
+          <div className="flex items-center gap-3">
+            <Link href="/events" target="_blank">
+              <Button size="sm" variant="outline" className="rounded-full text-xs gap-1.5">
+                View Public Events →
+              </Button>
+            </Link>
+            <Button
+              size="sm"
+              onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm()); }}
+              className="rounded-full text-xs gap-1.5 bg-foreground text-background"
+            >
+              <Plus className="w-3.5 h-3.5" /> New Event
             </Button>
-          </Link>
+          </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-[1400px] mx-auto px-6 lg:px-12 py-8 grid lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Event Form */}
-        <div className="lg:col-span-5 border border-foreground/15 bg-foreground/5 rounded-3xl p-6 lg:p-8 space-y-6 shadow-xl">
-          <div className="flex items-center justify-between border-b border-foreground/10 pb-4">
-            <div className="flex items-center gap-2">
-              <Plus className="w-5 h-5 text-amber-500" />
-              <h2 className="font-display text-xl font-bold">Create New Event</h2>
-            </div>
-            <span className="text-xs font-mono text-muted-foreground">Draft & Publish</span>
+      <main className="max-w-[1400px] mx-auto px-6 lg:px-12 py-8 space-y-8">
+        {/* Success Banner */}
+        {successMessage && (
+          <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-mono flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            <span>{successMessage}</span>
           </div>
+        )}
 
-          {successMessage && (
-            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-              <span>{successMessage}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleCreateEvent} className="space-y-4">
-            <div>
-              <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">
-                Event Title *
-              </label>
-              <input
-                type="text"
-                name="title"
-                required
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="e.g. QNG Quantum Hackathon 2026"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground"
-              />
+        {/* Create / Edit Form */}
+        {showForm && (
+          <div className="border border-foreground/15 bg-foreground/[0.03] rounded-3xl p-6 lg:p-8 space-y-6 shadow-xl">
+            <div className="flex items-center justify-between border-b border-foreground/10 pb-4">
+              <div className="flex items-center gap-2">
+                {editingId ? <Pencil className="w-5 h-5 text-amber-500" /> : <Plus className="w-5 h-5 text-emerald-400" />}
+                <h2 className="font-display text-xl font-bold">
+                  {editingId ? "Edit Event" : "Create New Event"}
+                </h2>
+              </div>
+              <button onClick={handleCancel} className="p-2 rounded-full hover:bg-foreground/10 transition-colors">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="grid sm:grid-cols-2 gap-4">
+              {/* Title */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Event Title *</label>
+                <input
+                  type="text" name="title" required value={formData.title} onChange={handleChange}
+                  placeholder="e.g. QNG National Hackathon 2026"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50 transition-colors"
+                />
+              </div>
+
+              {/* Category + Badge */}
               <div>
-                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">
-                  Category *
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground"
-                >
-                  <option value="Workshop">Workshop</option>
-                  <option value="Hackathon">Hackathon</option>
-                  <option value="Conference">Conference</option>
-                  <option value="Webinar">Webinar</option>
-                  <option value="Reading Group">Reading Group</option>
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Category *</label>
+                <select name="category" value={formData.category} onChange={handleChange}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50">
+                  {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Badge Type</label>
+                <select name="badge" value={formData.badge} onChange={handleChange}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50">
+                  {BADGES.map(b => <option key={b}>{b}</option>)}
                 </select>
               </div>
 
+              {/* Date fields */}
               <div>
-                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">
-                  Ticket / Price
-                </label>
-                <input
-                  type="text"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Event Date (ISO) *</label>
+                <input type="datetime-local" name="eventDate" required value={formData.eventDate} onChange={handleChange}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-xs font-mono text-foreground focus:outline-none focus:border-foreground/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Display Time *</label>
+                <input type="text" name="time" required value={formData.time} onChange={handleChange}
+                  placeholder="10:00 AM – 2:00 PM IST"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
+                />
+              </div>
+
+              {/* Month / Day / DayLabel */}
+              <div>
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Month (Display)</label>
+                <select name="month" value={formData.month} onChange={handleChange}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50">
+                  {MONTHS.map(m => <option key={m}>{m}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Day(s)</label>
+                  <input type="text" name="day" value={formData.day} onChange={handleChange}
+                    placeholder="05 or 05–06"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Day Label</label>
+                  <input type="text" name="dayLabel" value={formData.dayLabel} onChange={handleChange}
+                    placeholder="Sat or Sat–Sun"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
+                  />
+                </div>
+              </div>
+
+              {/* Location + Price */}
+              <div>
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Location *</label>
+                <input type="text" name="location" required value={formData.location} onChange={handleChange}
+                  placeholder="T-Hub, Hyderabad / Online (Zoom)"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Ticket / Price</label>
+                <input type="text" name="price" value={formData.price} onChange={handleChange}
                   placeholder="Free or ₹500/team"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
+              {/* Attendees + Status */}
               <div>
-                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">
-                  Date & Time *
-                </label>
-                <input
-                  type="datetime-local"
-                  name="dateTime"
-                  required
-                  value={formData.dateTime}
-                  onChange={handleChange}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-xs font-mono text-foreground focus:outline-none focus:border-foreground"
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Expected Attendees</label>
+                <input type="text" name="attendees" value={formData.attendees} onChange={handleChange}
+                  placeholder="120 or 500+"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">
-                  Location *
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  required
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="T-Hub Hyderabad / Online"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground"
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Status</label>
+                <select name="status" value={formData.status} onChange={handleChange}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50">
+                  <option value="upcoming">Upcoming</option>
+                  <option value="past">Past</option>
+                </select>
+              </div>
+
+              {/* Speakers */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Speakers (comma-separated)</label>
+                <input type="text" name="speakers" value={formData.speakers} onChange={handleChange}
+                  placeholder="Dr. Ramesh Nair, Rajan Jha"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">
-                Featured Speakers
-              </label>
-              <input
-                type="text"
-                name="speakers"
-                value={formData.speakers}
-                onChange={handleChange}
-                placeholder="Dr. Ramesh Nair, Rajan Jha"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground"
-              />
-            </div>
+              {/* Image URL */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Banner Image URL</label>
+                <input type="url" name="imageUrl" value={formData.imageUrl} onChange={handleChange}
+                  placeholder="https://images.unsplash.com/photo-..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-xs font-mono text-foreground focus:outline-none focus:border-foreground/50"
+                />
+              </div>
 
-            <div>
-              <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">
-                Banner Image URL (Unsplash/Direct)
-              </label>
-              <input
-                type="url"
-                name="imageUrl"
-                value={formData.imageUrl}
-                onChange={handleChange}
-                placeholder="https://images.unsplash.com/photo-..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-xs font-mono text-foreground focus:outline-none focus:border-foreground"
-              />
-            </div>
+              {/* Short description */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Short Description (card preview) *</label>
+                <textarea name="description" required rows={2} value={formData.description} onChange={handleChange}
+                  placeholder="Brief one-liner shown on the card..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
+                />
+              </div>
 
-            <div>
-              <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">
-                Event Description *
-              </label>
-              <textarea
-                name="description"
-                required
-                rows={4}
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Provide event overview, problem statements, or agenda details..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground"
-              />
-            </div>
+              {/* Full description */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Full Description (detail panel)</label>
+                <textarea name="fullDescription" rows={4} value={formData.fullDescription} onChange={handleChange}
+                  placeholder="Detailed event description shown in the slide-in panel..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
+                />
+              </div>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-11 rounded-xl bg-foreground text-background font-semibold text-sm flex items-center justify-center gap-2 hover:bg-foreground/90 transition-all shadow-md"
-            >
-              {isSubmitting ? (
-                <span>Publishing Event...</span>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span>Publish Event</span>
-                </>
-              )}
-            </Button>
-          </form>
-        </div>
+              {/* Submit */}
+              <div className="sm:col-span-2 flex gap-3">
+                <Button
+                  type="submit" disabled={isSubmitting}
+                  className="flex-1 h-11 rounded-xl bg-foreground text-background font-semibold text-sm flex items-center justify-center gap-2 hover:bg-foreground/90 transition-all shadow-md"
+                >
+                  {isSubmitting ? (
+                    <span>Saving...</span>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span>{editingId ? "Update Event" : "Publish Event"}</span>
+                    </>
+                  )}
+                </Button>
+                <Button type="button" variant="outline" onClick={handleCancel} className="h-11 px-5 rounded-xl">
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
 
-        {/* Right Column: Published Events Table/Grid */}
-        <div className="lg:col-span-7 space-y-6">
+        {/* Events List */}
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-2xl font-bold">Published Events</h2>
+              <h2 className="font-display text-2xl font-bold">All Events</h2>
               <p className="text-xs font-mono text-muted-foreground mt-0.5">
-                Total {events.length} active events in database
+                {events.length} event{events.length !== 1 ? "s" : ""} in store
               </p>
             </div>
-
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                const saved = localStorage.getItem("qni_admin_created_events");
-                if (saved) setEvents(JSON.parse(saved));
-              }}
-              className="rounded-full text-xs gap-1.5"
-            >
-              <RefreshCw className="w-3.5 h-3.5" /> Refresh List
+            <Button size="sm" variant="outline" onClick={loadEvents} className="rounded-full text-xs gap-1.5">
+              <RefreshCw className="w-3.5 h-3.5" /> Refresh
             </Button>
           </div>
 
-          <div className="space-y-4">
+          {events.length === 0 && (
+            <div className="text-center py-16 text-muted-foreground font-mono text-sm">
+              No events yet — create your first one above.
+            </div>
+          )}
+
+          <div className="grid gap-4">
             {events.map((ev) => (
               <div
                 key={ev.id}
-                className="p-5 rounded-2xl border border-foreground/15 bg-background flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm hover:border-foreground/30 transition-all"
+                className="p-5 rounded-2xl border border-foreground/15 bg-background flex flex-col sm:flex-row gap-4 shadow-sm hover:border-foreground/30 transition-all group"
               >
-                <div className="space-y-2 flex-1">
+                {/* Image thumbnail */}
+                {ev.imageUrl && (
+                  <div className="w-full sm:w-28 h-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0">
+                    <img src={ev.imageUrl} alt={ev.title} className="w-full h-full object-cover" />
+                  </div>
+                )}
+
+                <div className="flex-1 min-w-0 space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full font-semibold ${
+                      ev.status === 'upcoming' 
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                        : 'bg-foreground/10 text-muted-foreground'
+                    }`}>
+                      {ev.status || 'upcoming'}
+                    </span>
                     <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-foreground/10 text-foreground font-semibold">
                       {ev.category}
                     </span>
                     <span className="text-xs font-mono text-muted-foreground flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {ev.dateTime ? new Date(ev.dateTime).toLocaleString() : "Date TBD"}
-                    </span>
-                    <span className="text-xs font-mono text-emerald-400 flex items-center gap-1">
-                      <Tag className="w-3 h-3" />
-                      {ev.price}
+                      <Calendar className="w-3 h-3" />
+                      {ev.month} {ev.day} {ev.eventDate ? `— ${new Date(ev.eventDate).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'})}` : ''}
                     </span>
                   </div>
 
-                  <h3 className="font-display text-lg font-bold text-foreground leading-tight">
+                  <h3 className="font-display text-lg font-bold text-foreground leading-tight line-clamp-1">
                     {ev.title}
                   </h3>
 
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">
                     {ev.description}
                   </p>
 
-                  <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground pt-1">
+                  <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground pt-0.5">
                     <span className="flex items-center gap-1">
                       <MapPin className="w-3 h-3 text-foreground/50" />
                       {ev.location}
                     </span>
-                    {ev.speakers && (
+                    {ev.attendees && (
                       <span className="flex items-center gap-1">
-                        <User className="w-3 h-3 text-foreground/50" />
-                        {ev.speakers}
+                        <Users className="w-3 h-3 text-foreground/50" />
+                        {ev.attendees}
+                      </span>
+                    )}
+                    {ev.price && (
+                      <span className="flex items-center gap-1 text-emerald-400">
+                        <Tag className="w-3 h-3" />
+                        {ev.price}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleDeleteEvent(ev.id)}
-                  className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full h-9 px-3 gap-1 text-xs"
-                >
-                  <Trash2 className="w-4 h-4" /> Remove
-                </Button>
+                {/* Actions */}
+                <div className="flex sm:flex-col items-center gap-2 flex-shrink-0">
+                  <Button
+                    size="sm" variant="outline"
+                    onClick={() => handleEdit(ev)}
+                    className="rounded-full h-9 px-3 gap-1 text-xs hover:border-amber-500/30 hover:text-amber-400"
+                  >
+                    <Pencil className="w-3.5 h-3.5" /> Edit
+                  </Button>
+                  <Button
+                    size="sm" variant="ghost"
+                    onClick={() => handleDelete(ev.id)}
+                    className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full h-9 px-3 gap-1 text-xs"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

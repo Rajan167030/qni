@@ -26,6 +26,7 @@ import {
   Star,
   Trash2,
   Plus,
+  Pencil,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,6 +42,21 @@ import {
 } from '@/lib/submissions-store';
 import { getBlogs, saveBlog, deleteBlog, BlogPost } from '@/lib/blogs-store';
 
+const emptyBlogForm = () => ({
+  title: '',
+  excerpt: '',
+  content: '',
+  category: 'Quantum Tech',
+  coverImage: '',
+  authorName: '',
+  authorRole: '',
+  authorEmail: '',
+  readTime: '4 min read',
+  status: 'Published' as 'Published' | 'Draft' | 'Archived',
+  featured: false,
+  tags: '',
+});
+
 export default function AdminDashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
@@ -54,6 +70,13 @@ export default function AdminDashboardPage() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDetail, setSelectedDetail] = useState<{ type: 'contact' | 'join' | 'reg' | 'blog'; data: any } | null>(null);
+
+  // Blog editor state
+  const [showBlogEditor, setShowBlogEditor] = useState(false);
+  const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
+  const [blogFormData, setBlogFormData] = useState(emptyBlogForm());
+  const [blogSaving, setBlogSaving] = useState(false);
+  const [blogSaveSuccess, setBlogSaveSuccess] = useState('');
 
   // Check login state on mount
   useEffect(() => {
@@ -86,12 +109,117 @@ export default function AdminDashboardPage() {
     sessionStorage.removeItem('qni_admin_authenticated');
   };
 
-  // Load data & poll from store or API
+  // Load data & poll from store and MongoDB API
   const refreshData = async () => {
-    setContacts(getContacts());
-    setJoins(getJoins());
-    setRegistrations(getRegistrations());
-    setBlogs(getBlogs());
+    // 1. Load initial local storage data
+    const localContacts = getContacts();
+    const localJoins = getJoins();
+    const localRegs = getRegistrations();
+    const localBlogs = getBlogs();
+
+    setContacts(localContacts);
+    setJoins(localJoins);
+    setRegistrations(localRegs);
+    setBlogs(localBlogs);
+
+    // 2. Fetch and merge from MongoDB APIs
+    try {
+      const [resContacts, resJoins, resRegs, resBlogs] = await Promise.allSettled([
+        fetch('/api/contact').then((r) => r.json()),
+        fetch('/api/join').then((r) => r.json()),
+        fetch('/api/register').then((r) => r.json()),
+        fetch('/api/blogs').then((r) => r.json()),
+      ]);
+
+      // Merge Contacts
+      if (resContacts.status === 'fulfilled' && resContacts.value?.success && Array.isArray(resContacts.value?.data)) {
+        const remoteContacts = resContacts.value.data.map((c: any) => ({
+          id: c._id || c.id || `c-${Date.now()}`,
+          name: c.name || 'Anonymous',
+          email: c.email || '',
+          company: c.company || c.organization || 'N/A',
+          inquiryType: c.inquiryType || 'General Inquiry',
+          subject: c.subject || 'No Subject',
+          message: c.message || '',
+          createdAt: c.createdAt || new Date().toISOString(),
+          status: c.status || 'New',
+        }));
+
+        const mergedContacts = [...localContacts];
+        remoteContacts.forEach((rc: ContactSubmission) => {
+          if (!mergedContacts.some((lc) => lc.id === rc.id || (lc.email === rc.email && lc.message === rc.message))) {
+            mergedContacts.push(rc);
+          }
+        });
+        setContacts(mergedContacts);
+      }
+
+      // Merge Joins
+      if (resJoins.status === 'fulfilled' && resJoins.value?.success && Array.isArray(resJoins.value?.data)) {
+        const remoteJoins = resJoins.value.data.map((j: any) => ({
+          id: j._id || j.id || `j-${Date.now()}`,
+          fullName: j.fullName || j.name || 'Anonymous',
+          email: j.email || '',
+          phone: j.phone || '',
+          company: j.company || 'N/A',
+          position: j.position || 'Student / Engineer',
+          expertise: j.expertise || 'general',
+          experience: j.experience || 'Beginner',
+          country: j.country || 'India',
+          message: j.message || '',
+          createdAt: j.createdAt || new Date().toISOString(),
+          status: j.status || 'Pending',
+        }));
+
+        const mergedJoins = [...localJoins];
+        remoteJoins.forEach((rj: JoinSubmission) => {
+          if (!mergedJoins.some((lj) => lj.id === rj.id || lj.email === rj.email)) {
+            mergedJoins.push(rj);
+          }
+        });
+        setJoins(mergedJoins);
+      }
+
+      // Merge Registrations
+      if (resRegs.status === 'fulfilled' && resRegs.value?.success && Array.isArray(resRegs.value?.data)) {
+        const remoteRegs = resRegs.value.data.map((r: any) => ({
+          id: r._id || r.id || `r-${Date.now()}`,
+          eventId: r.eventId || '1',
+          eventTitle: r.eventTitle || 'Quantum Event',
+          name: r.name || 'Attendee',
+          email: r.email || '',
+          phone: r.phone || '',
+          organization: r.organization || 'Independent',
+          role: r.role || 'Attendee',
+          background: r.background || 'Beginner',
+          teamName: r.teamName || undefined,
+          createdAt: r.createdAt || new Date().toISOString(),
+          status: r.status || 'Confirmed',
+        }));
+
+        const mergedRegs = [...localRegs];
+        remoteRegs.forEach((rr: EventRegistration) => {
+          if (!mergedRegs.some((lr) => lr.id === rr.id || (lr.email === rr.email && lr.eventId === rr.eventId))) {
+            mergedRegs.push(rr);
+          }
+        });
+        setRegistrations(mergedRegs);
+      }
+
+      // Merge Blogs
+      if (resBlogs.status === 'fulfilled' && resBlogs.value?.success && Array.isArray(resBlogs.value?.data)) {
+        const remoteBlogs = resBlogs.value.data;
+        const mergedBlogs = [...localBlogs];
+        remoteBlogs.forEach((rb: BlogPost) => {
+          if (!mergedBlogs.some((lb) => lb.id === rb.id || lb.slug === rb.slug)) {
+            mergedBlogs.push(rb);
+          }
+        });
+        setBlogs(mergedBlogs);
+      }
+    } catch (err) {
+      console.warn('API sync warning:', err);
+    }
   };
 
   useEffect(() => {
@@ -130,8 +258,66 @@ export default function AdminDashboardPage() {
   const handleBlogDelete = (id: string) => {
     if (confirm('Delete this blog post permanently?')) {
       deleteBlog(id);
-      refreshBlogs();
+      refreshData();
+      fetch(`/api/blogs?id=${id}`, { method: 'DELETE' }).catch(() => {});
     }
+  };
+
+  const handleBlogEdit = (blog: BlogPost) => {
+    setEditingBlogId(blog.id);
+    setBlogFormData({
+      title: blog.title,
+      excerpt: blog.excerpt,
+      content: blog.content,
+      category: blog.category,
+      coverImage: blog.coverImage,
+      authorName: blog.author.name,
+      authorRole: blog.author.role,
+      authorEmail: blog.author.email || '',
+      readTime: blog.readTime,
+      status: blog.status,
+      featured: blog.featured ?? false,
+      tags: blog.tags.join(', '),
+    });
+    setShowBlogEditor(true);
+  };
+
+  const handleBlogCreate = () => {
+    setEditingBlogId(null);
+    setBlogFormData(emptyBlogForm());
+    setShowBlogEditor(true);
+  };
+
+  const handleBlogSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBlogSaving(true);
+    setBlogSaveSuccess('');
+    const tagsArray = blogFormData.tags.split(',').map(t => t.trim()).filter(Boolean);
+    const blogPayload = {
+      id: editingBlogId || undefined,
+      title: blogFormData.title,
+      excerpt: blogFormData.excerpt,
+      content: blogFormData.content,
+      category: blogFormData.category,
+      coverImage: blogFormData.coverImage || 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80',
+      author: { name: blogFormData.authorName, role: blogFormData.authorRole, email: blogFormData.authorEmail },
+      readTime: blogFormData.readTime,
+      status: blogFormData.status,
+      featured: blogFormData.featured,
+      tags: tagsArray,
+    };
+    const saved = saveBlog(blogPayload);
+    await fetch('/api/blogs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(saved),
+    }).catch(() => {});
+    refreshData();
+    setBlogSaveSuccess(editingBlogId ? 'Blog updated!' : 'Blog created & published!');
+    setShowBlogEditor(false);
+    setEditingBlogId(null);
+    setBlogFormData(emptyBlogForm());
+    setBlogSaving(false);
   };
 
   // Export Data to JSON
@@ -191,15 +377,6 @@ export default function AdminDashboardPage() {
             <p className="text-xs text-muted-foreground font-mono">Authenticate to access QNexus Executive Console</p>
           </div>
 
-          {/* Credentials Info Note */}
-          <div className="p-4 rounded-2xl border border-foreground/10 bg-foreground/5 space-y-1.5 text-xs font-mono">
-            <div className="flex items-center gap-2 font-bold text-foreground font-sans">
-              <KeyRound className="w-3.5 h-3.5 text-amber-500" /> Default Admin Credentials
-            </div>
-            <p className="text-muted-foreground"><strong className="text-foreground">Username / Email:</strong> admin@qnexusindia.com</p>
-            <p className="text-muted-foreground"><strong className="text-foreground">Password:</strong> qni@admin2026</p>
-          </div>
-
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
@@ -210,7 +387,7 @@ export default function AdminDashboardPage() {
                 required
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="admin@qnexusindia.com"
+                placeholder="Enter username or email"
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:border-foreground/50 transition-colors"
               />
             </div>
@@ -739,6 +916,93 @@ export default function AdminDashboardPage() {
           {/* TAB 5: BLOGS MANAGEMENT TABLE */}
           {activeTab === 'blogs' && (
             <div className="space-y-6 animate-in fade-in duration-300">
+              {blogSaveSuccess && (
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> {blogSaveSuccess}
+                </div>
+              )}
+
+              {/* Inline Blog Editor Modal */}
+              {showBlogEditor && (
+                <div className="border border-foreground/15 bg-foreground/[0.03] rounded-3xl p-6 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between border-b border-foreground/10 pb-3">
+                    <div className="flex items-center gap-2">
+                      {editingBlogId ? <Pencil className="w-5 h-5 text-amber-400" /> : <Plus className="w-5 h-5 text-purple-400" />}
+                      <h3 className="font-display text-xl font-bold">{editingBlogId ? 'Edit Blog Post' : 'Create Blog Post'}</h3>
+                    </div>
+                    <button onClick={() => setShowBlogEditor(false)} className="p-1.5 rounded-full hover:bg-foreground/10"><X className="w-4 h-4" /></button>
+                  </div>
+                  <form onSubmit={handleBlogSave} className="grid sm:grid-cols-2 gap-4">
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Title *</label>
+                      <input required type="text" value={blogFormData.title} onChange={e => setBlogFormData(p => ({...p, title: e.target.value}))}
+                        placeholder="Blog post title" className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Category</label>
+                      <input type="text" value={blogFormData.category} onChange={e => setBlogFormData(p => ({...p, category: e.target.value}))}
+                        placeholder="Quantum Algorithms" className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Status</label>
+                      <select value={blogFormData.status} onChange={e => setBlogFormData(p => ({...p, status: e.target.value as any}))}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50">
+                        <option value="Published">Published</option>
+                        <option value="Draft">Draft</option>
+                        <option value="Archived">Archived</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Author Name *</label>
+                      <input required type="text" value={blogFormData.authorName} onChange={e => setBlogFormData(p => ({...p, authorName: e.target.value}))}
+                        placeholder="Dr. Ramesh Nair" className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Author Role</label>
+                      <input type="text" value={blogFormData.authorRole} onChange={e => setBlogFormData(p => ({...p, authorRole: e.target.value}))}
+                        placeholder="CTO & Co-Founder" className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Read Time</label>
+                      <input type="text" value={blogFormData.readTime} onChange={e => setBlogFormData(p => ({...p, readTime: e.target.value}))}
+                        placeholder="6 min read" className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Cover Image URL</label>
+                      <input type="url" value={blogFormData.coverImage} onChange={e => setBlogFormData(p => ({...p, coverImage: e.target.value}))}
+                        placeholder="https://images.unsplash.com/..." className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-xs font-mono text-foreground focus:outline-none focus:border-foreground/50" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Tags (comma-separated)</label>
+                      <input type="text" value={blogFormData.tags} onChange={e => setBlogFormData(p => ({...p, tags: e.target.value}))}
+                        placeholder="VQE, Qiskit, Optimization" className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Excerpt *</label>
+                      <textarea required rows={2} value={blogFormData.excerpt} onChange={e => setBlogFormData(p => ({...p, excerpt: e.target.value}))}
+                        placeholder="Brief description shown on blog listing..." className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Content (Markdown) *</label>
+                      <textarea required rows={10} value={blogFormData.content} onChange={e => setBlogFormData(p => ({...p, content: e.target.value}))}
+                        placeholder="Write your blog content in Markdown..." className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm font-mono text-foreground focus:outline-none focus:border-foreground/50" />
+                    </div>
+                    <div className="sm:col-span-2 flex items-center gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="checkbox" checked={blogFormData.featured} onChange={e => setBlogFormData(p => ({...p, featured: e.target.checked}))} className="rounded" />
+                        <span className="text-muted-foreground font-mono text-xs">Mark as Featured</span>
+                      </label>
+                    </div>
+                    <div className="sm:col-span-2 flex gap-3">
+                      <Button type="submit" disabled={blogSaving} className="flex-1 h-11 rounded-xl bg-foreground text-background font-semibold text-sm">
+                        {blogSaving ? 'Saving...' : editingBlogId ? 'Update Blog' : 'Publish Blog'}
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => setShowBlogEditor(false)} className="h-11 px-5 rounded-xl">Cancel</Button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="font-display text-2xl font-bold text-foreground">Blog Articles Management</h3>
@@ -747,12 +1011,13 @@ export default function AdminDashboardPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Link
-                    href="/team-portal"
-                    target="_blank"
-                    className="px-4 py-2 rounded-xl bg-foreground text-background text-xs font-semibold inline-flex items-center gap-1.5 hover:bg-foreground/90 transition-all"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Write New Blog
+                  <Button onClick={handleBlogCreate}
+                    className="px-4 py-2 rounded-xl bg-foreground text-background text-xs font-semibold inline-flex items-center gap-1.5 hover:bg-foreground/90 transition-all h-9">
+                    <Plus className="w-3.5 h-3.5" /> New Blog
+                  </Button>
+                  <Link href="/team-portal" target="_blank"
+                    className="px-4 py-2 rounded-xl border border-foreground/15 text-xs font-semibold inline-flex items-center gap-1.5 hover:bg-foreground/5 transition-all">
+                    Team Portal →
                   </Link>
                 </div>
               </div>
@@ -813,6 +1078,13 @@ export default function AdminDashboardPage() {
                           </td>
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleBlogEdit(b)}
+                                className="p-1.5 rounded-lg hover:bg-amber-500/10 text-xs text-amber-400"
+                                title="Edit Blog"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
                               <Link
                                 href={`/blog/${b.slug}`}
                                 target="_blank"

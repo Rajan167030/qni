@@ -1,25 +1,23 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import { getMongoDbDatabase } from '@/lib/mongodb';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const db = await getMongoDbDatabase();
 
-    if (!clientPromise) {
+    if (!db) {
       return NextResponse.json(
-        { success: true, message: 'Saved locally (MongoDB URI not configured yet)', data: body },
+        { success: true, message: 'Saved locally (MongoDB URI not active or local fallback)', data: body },
         { status: 200 }
       );
     }
 
-    const client = await clientPromise;
-    const db = client.db('qnexus');
     const collection = db.collection('registrations');
-
     const result = await collection.insertOne({
       ...body,
       createdAt: new Date(),
-      status: 'Confirmed',
+      status: body.status || 'Confirmed',
     });
 
     return NextResponse.json(
@@ -37,14 +35,12 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    if (!clientPromise) {
-      return NextResponse.json({ success: false, message: 'MongoDB URI not set' }, { status: 400 });
+    const db = await getMongoDbDatabase();
+    if (!db) {
+      return NextResponse.json({ success: false, message: 'MongoDB connection not active' }, { status: 400 });
     }
 
-    const client = await clientPromise;
-    const db = client.db('qnexus');
     const registrations = await db.collection('registrations').find({}).sort({ createdAt: -1 }).toArray();
-
     return NextResponse.json({ success: true, data: registrations });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

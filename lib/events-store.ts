@@ -17,6 +17,10 @@ export interface EventItem {
   price: string;
   schedule: { time: string; title: string; speaker: string }[];
   createdAt: string;
+  // Extended fields
+  imageUrl?: string;
+  eventDate?: string; // ISO date string — used to compute upcoming vs past
+  status?: 'upcoming' | 'past';
 }
 
 const STORAGE_KEY = 'qni_events';
@@ -41,6 +45,9 @@ const DEFAULT_EVENTS: EventItem[] = [
       { time: '12:30 PM', title: 'Networking Lunch', speaker: '' },
       { time: '1:30 PM', title: 'Real QPU Run Demo & Q&A', speaker: 'Dr. Ramesh Nair' },
     ],
+    imageUrl: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=800&q=80',
+    eventDate: '2026-08-02T10:00:00Z',
+    status: 'past',
     createdAt: new Date().toISOString(),
   },
   {
@@ -61,6 +68,9 @@ const DEFAULT_EVENTS: EventItem[] = [
       { time: '4:00 PM', title: 'Open Discussion', speaker: 'All Members' },
       { time: '4:45 PM', title: 'Q&A & Next Session Preview', speaker: 'QNexus Team' },
     ],
+    imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80',
+    eventDate: '2026-08-16T15:00:00Z',
+    status: 'past',
     createdAt: new Date().toISOString(),
   },
   {
@@ -82,6 +92,9 @@ const DEFAULT_EVENTS: EventItem[] = [
       { time: 'Sep 6, 12 PM', title: 'Midpoint Mentorship Slots', speaker: 'Expert Panel' },
       { time: 'Sep 6, 9 PM', title: 'Final Submissions & Prize Ceremony', speaker: 'QNI Team' },
     ],
+    imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80',
+    eventDate: '2026-09-05T09:00:00Z',
+    status: 'upcoming',
     createdAt: new Date().toISOString(),
   },
   {
@@ -103,6 +116,9 @@ const DEFAULT_EVENTS: EventItem[] = [
       { time: '6:00 PM', title: 'Open Q&A from Audience', speaker: 'All Panelists' },
       { time: '6:45 PM', title: 'Networking Breakout Rooms', speaker: '' },
     ],
+    imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80',
+    eventDate: '2026-09-20T17:00:00Z',
+    status: 'upcoming',
     createdAt: new Date().toISOString(),
   },
   {
@@ -124,6 +140,9 @@ const DEFAULT_EVENTS: EventItem[] = [
       { time: '1:00 PM', title: 'Lunch Break', speaker: '' },
       { time: '2:00 PM', title: 'Hands-on Lab: Simulating Error Correction', speaker: 'Both Speakers' },
     ],
+    imageUrl: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=800&q=80',
+    eventDate: '2026-10-11T10:00:00Z',
+    status: 'upcoming',
     createdAt: new Date().toISOString(),
   },
   {
@@ -144,6 +163,9 @@ const DEFAULT_EVENTS: EventItem[] = [
       { time: '3:00 PM', title: 'Enterprise Migration Strategies', speaker: 'Industry Expert' },
       { time: '4:00 PM', title: 'Live Q&A', speaker: 'All Speakers' },
     ],
+    imageUrl: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80',
+    eventDate: '2026-11-08T14:00:00Z',
+    status: 'upcoming',
     createdAt: new Date().toISOString(),
   },
 ];
@@ -187,6 +209,15 @@ export function deleteEvent(id: string): void {
   persist(all);
 }
 
+/** Determine if event is upcoming or past based on eventDate field */
+export function resolveEventStatus(event: EventItem): 'upcoming' | 'past' {
+  if (event.status) return event.status;
+  if (event.eventDate) {
+    return new Date(event.eventDate) >= new Date() ? 'upcoming' : 'past';
+  }
+  return 'upcoming';
+}
+
 export function createBlankEvent(): EventItem {
   return {
     id: Date.now().toString(),
@@ -204,6 +235,9 @@ export function createBlankEvent(): EventItem {
     speakers: [''],
     price: 'Free',
     schedule: [{ time: '', title: '', speaker: '' }],
+    imageUrl: '',
+    eventDate: '',
+    status: 'upcoming',
     createdAt: new Date().toISOString(),
   };
 }

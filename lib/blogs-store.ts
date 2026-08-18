@@ -192,7 +192,7 @@ export function getBlogBySlug(slug: string): BlogPost | undefined {
   return blogs.find((b) => b.slug === slug || b.id === slug);
 }
 
-export function saveBlog(blogData: Omit<BlogPost, "id" | "publishedAt"> & { id?: string; publishedAt?: string }): BlogPost {
+export function saveBlog(blogData: Omit<BlogPost, "id" | "publishedAt" | "slug"> & { id?: string; publishedAt?: string; slug?: string }): BlogPost {
   const blogs = getBlogs();
   const now = new Date().toISOString();
   

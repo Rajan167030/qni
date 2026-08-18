@@ -1,148 +1,95 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { X, Calendar, MapPin, Clock, ArrowRight, ExternalLink, ArrowLeft, ChevronRight, Users } from 'lucide-react';
-import { getEvents, EventItem } from '@/lib/events-store';
+import { getEvents, EventItem, resolveEventStatus } from '@/lib/events-store';
 
-const allEvents = [
-  {
-    id: '1',
-    month: 'AUG',
-    day: '02',
-    dayLabel: 'Sat',
-    title: 'Intro to Qiskit — Bengaluru chapter',
-    description: 'Hands-on workshop, no prior quantum background needed.',
-    location: 'IISC Campus, Bengaluru',
-    time: '10:00 AM – 2:00 PM IST',
-    attendees: '120',
-    badge: 'In person',
-    category: 'Workshop',
-    fullDescription: 'An accessible, hands-on introduction to IBM Qiskit. No prior quantum physics background required. You\'ll build your first quantum circuits, run simulations on real QPU hardware, and network with fellow developers from the Bengaluru quantum chapter.',
-    speakers: ['Dr. Ramesh Nair', 'Ankit Verma'],
-    price: 'Free (Registration Required)',
-    schedule: [
-      { time: '10:00 AM', title: 'Introduction to Quantum Bits & Qiskit Setup', speaker: 'Dr. Ramesh Nair' },
-      { time: '11:00 AM', title: 'Hands-on: Your First Quantum Circuit', speaker: 'Ankit Verma' },
-      { time: '12:30 PM', title: 'Networking Lunch', speaker: '' },
-      { time: '1:30 PM', title: 'Real QPU Run Demo & Q&A', speaker: 'Dr. Ramesh Nair' },
-    ],
-  },
-  {
-    id: '2',
-    month: 'AUG',
-    day: '16',
-    dayLabel: 'Sat',
-    title: 'Variational algorithms reading group',
-    description: 'Open to all chapters, hosted online, recording shared after.',
-    location: 'Online (Zoom)',
-    time: '3:00 PM – 5:00 PM IST',
-    attendees: '250+',
-    badge: 'Online',
-    category: 'Seminar',
-    fullDescription: 'A deep-dive reading group session covering the latest advances in Variational Quantum Eigensolvers (VQE) and QAOA. Open to all QNexus chapter members globally. Recording will be shared with all members after the session.',
-    speakers: ['Prof. Shreya Mehta', 'QNexus Research Team'],
-    price: 'Free for Members',
-    schedule: [
-      { time: '3:00 PM', title: 'Paper Review: VQE with Adaptive Circuits', speaker: 'Prof. Shreya Mehta' },
-      { time: '4:00 PM', title: 'Open Discussion', speaker: 'All Members' },
-      { time: '4:45 PM', title: 'Q&A & Next Session Preview', speaker: 'QNexus Team' },
-    ],
-  },
-  {
-    id: '3',
-    month: 'SEP',
-    day: '05–06',
-    dayLabel: 'Sat–Sun',
-    title: 'QNI National Hackathon 2026',
-    description: '48-hour build sprint with real QPU access, hosted in Hyderabad.',
-    location: 'T-Hub, Hyderabad',
-    time: 'Sep 5 9:00 AM – Sep 6 9:00 PM IST',
-    attendees: '500+',
-    badge: 'Flagship',
-    category: 'Hackathon',
-    fullDescription: 'India\'s premier quantum computing hackathon. Build real-world solutions using QNexus\'s quantum cloud platform with direct QPU access on IBM Quantum hardware. Win prizes worth ₹5 Lakhs and gain direct mentorship from top researchers.',
-    speakers: ['Sharvan Kumar Sharma', 'Dr. Ananya Sharma', 'Prof. Rajesh Varma'],
-    price: '₹500/team (up to 4 members)',
-    schedule: [
-      { time: 'Sep 5, 9 AM', title: 'Opening Ceremony & Problem Statements', speaker: 'QNI Leadership' },
-      { time: 'Sep 5, 11 AM', title: 'Hackathon Sprint Begins', speaker: '' },
-      { time: 'Sep 6, 12 PM', title: 'Midpoint Mentorship Slots', speaker: 'Expert Panel' },
-      { time: 'Sep 6, 9 PM', title: 'Final Submissions & Prize Ceremony', speaker: 'QNI Team' },
-    ],
-  },
-  {
-    id: '4',
-    month: 'SEP',
-    day: '20',
-    dayLabel: 'Sun',
-    title: 'Careers in quantum — mentor panel',
-    description: 'Engineers from partner labs answer questions on internships and PhDs.',
-    location: 'Online (Google Meet)',
-    time: '5:00 PM – 7:00 PM IST',
-    attendees: '300+',
-    badge: 'Online',
-    category: 'Panel',
-    fullDescription: 'A candid mentor panel where engineers and researchers from IIT Madras, IISc, IBM Quantum, and TCS Labs answer your questions about careers in quantum computing — internships, PhDs, and industry transitions.',
-    speakers: ['Dr. Ananya Sharma (C-DAC)', 'Prof. Rajesh Varma (IIT Madras)', 'Vikramaditya Singh (TCS)'],
-    price: 'Free',
-    schedule: [
-      { time: '5:00 PM', title: 'Panelist Introductions', speaker: 'Moderator' },
-      { time: '5:15 PM', title: 'Career Pathways in Quantum', speaker: 'All Panelists' },
-      { time: '6:00 PM', title: 'Open Q&A from Audience', speaker: 'All Panelists' },
-      { time: '6:45 PM', title: 'Networking Breakout Rooms', speaker: '' },
-    ],
-  },
-  {
-    id: '5',
-    month: 'OCT',
-    day: '11',
-    dayLabel: 'Sat',
-    title: 'Quantum error correction deep-dive',
-    description: 'Technical masterclass on surface codes and fault-tolerant computing.',
-    location: 'IIT Bombay, Mumbai',
-    time: '10:00 AM – 4:00 PM IST',
-    attendees: '80',
-    badge: 'In person',
-    category: 'Workshop',
-    fullDescription: 'An advanced technical masterclass covering quantum error correction, surface codes, and fault-tolerant quantum computation. Ideal for researchers and developers with a basic quantum mechanics background.',
-    speakers: ['Prof. Deepak Khosla', 'Rajan Jha (QNI CTO)'],
-    price: '₹299 (Students: ₹99)',
-    schedule: [
-      { time: '10:00 AM', title: 'Introduction to Error Correction', speaker: 'Rajan Jha' },
-      { time: '11:30 AM', title: 'Surface Code Deep-Dive', speaker: 'Prof. Deepak Khosla' },
-      { time: '1:00 PM', title: 'Lunch Break', speaker: '' },
-      { time: '2:00 PM', title: 'Hands-on Lab: Simulating Error Correction', speaker: 'Both Speakers' },
-    ],
-  },
-  {
-    id: '6',
-    month: 'NOV',
-    day: '08',
-    dayLabel: 'Sat',
-    title: 'Post-quantum cryptography workshop',
-    description: 'Securing systems for the quantum era — enterprise focus.',
-    location: 'Online (Zoom)',
-    time: '2:00 PM – 5:00 PM IST',
-    attendees: '400+',
-    badge: 'Enterprise',
-    category: 'Workshop',
-    fullDescription: 'An enterprise-focused workshop covering post-quantum cryptography standards (NIST PQC), lattice-based cryptography, and transitioning enterprise security systems to quantum-safe protocols.',
-    speakers: ['QNI Security Team', 'Industry Expert (TBC)'],
-    price: 'Free for Enterprise Partners',
-    schedule: [
-      { time: '2:00 PM', title: 'NIST PQC Standards Overview', speaker: 'QNI Security Team' },
-      { time: '3:00 PM', title: 'Enterprise Migration Strategies', speaker: 'Industry Expert' },
-      { time: '4:00 PM', title: 'Live Q&A', speaker: 'All Speakers' },
-    ],
-  },
+// ─── Category → Washi tape color mapping ───────────────────────────────────
+const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
+  Workshop:       { bg: 'rgba(232, 169, 61, 0.35)',  text: '#7a5a00' },
+  Hackathon:      { bg: 'rgba(228, 87, 46, 0.28)',   text: '#8a2500' },
+  Seminar:        { bg: 'rgba(107, 143, 113, 0.32)', text: '#2d5c35' },
+  Panel:          { bg: 'rgba(139, 92, 246, 0.25)',  text: '#4c1d95' },
+  Conference:     { bg: 'rgba(34, 211, 238, 0.25)',  text: '#0c4a6e' },
+  Webinar:        { bg: 'rgba(232, 169, 61, 0.30)',  text: '#7a5a00' },
+  'Reading Group':{ bg: 'rgba(107, 143, 113, 0.28)', text: '#2d5c35' },
+};
+
+// Gradient placeholders for events without images
+const CATEGORY_GRADIENTS: Record<string, string> = {
+  Workshop:        'linear-gradient(135deg, #E8A93D22, #E8A93D66)',
+  Hackathon:       'linear-gradient(135deg, #E4572E22, #E4572E55)',
+  Seminar:         'linear-gradient(135deg, #6B8F7122, #6B8F7155)',
+  Panel:           'linear-gradient(135deg, #8B5CF622, #8B5CF655)',
+  Conference:      'linear-gradient(135deg, #22D3EE22, #22D3EE44)',
+  Webinar:         'linear-gradient(135deg, #E8A93D22, #E8A93D44)',
+  'Reading Group': 'linear-gradient(135deg, #6B8F7122, #6B8F7144)',
+};
+
+// Washi tab colors
+const TAB_COLORS = [
+  { bg: 'rgba(232,169,61,0.38)',  text: '#7a5a00', rotate: '-2deg'  },
+  { bg: 'rgba(107,143,113,0.38)', text: '#2d5c35', rotate: '1.5deg' },
+  { bg: 'rgba(139,92,246,0.25)',  text: '#4c1d95', rotate: '-1.8deg'},
 ];
+
+// Hand-drawn SVG ellipse for date circle
+function HandCircle() {
+  return (
+    <svg
+      viewBox="0 0 72 42"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      aria-hidden="true"
+    >
+      <ellipse
+        cx="36" cy="21" rx="33" ry="18"
+        stroke="#E4572E"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray="4 2"
+        opacity="0.55"
+        style={{ transform: 'rotate(-3deg)', transformOrigin: 'center' }}
+      />
+    </svg>
+  );
+}
+
+// Tally marks — decorative, one group per ~40 attendees, capped at 5
+function TallyMarks({ count }: { count: string }) {
+  const num = parseInt(count.replace(/\D/g, ''), 10) || 0;
+  const groups = Math.min(Math.ceil(num / 40), 5);
+  if (groups === 0) return null;
+  return (
+    <span className="font-ibm-plex-mono text-xs tracking-tight" style={{ color: 'var(--cork-muted)', letterSpacing: '-0.02em' }} aria-hidden="true">
+      {Array.from({ length: groups }).map((_, i) => (
+        <span key={i} className="mr-1 opacity-70">𝍢</span>
+      ))}
+    </span>
+  );
+}
+
+// Card rotation by index position in 3-cycle
+const ROTATIONS = ['card-rot-0', 'card-rot-1', 'card-rot-2'];
+
+// Filter tabs config
+const FILTERS = [
+  { label: 'all events', value: 'all' },
+  { label: 'upcoming',   value: 'upcoming' },
+  { label: 'past',       value: 'past' },
+] as const;
+
+type FilterValue = 'all' | 'upcoming' | 'past';
 
 export default function EventsListPage() {
   const [allEvents, setAllEvents] = useState<EventItem[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [filter, setFilter] = useState<FilterValue>('all');
 
   useEffect(() => {
     setAllEvents(getEvents());
@@ -165,121 +112,306 @@ export default function EventsListPage() {
     setTimeout(() => setSelectedEvent(null), 350);
   };
 
+  const filteredEvents = useMemo(() => {
+    if (filter === 'all') return allEvents;
+    return allEvents.filter(ev => resolveEventStatus(ev) === filter);
+  }, [allEvents, filter]);
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Top nav */}
-      <div className="fixed top-0 left-0 right-0 z-50 border-b border-foreground/10 bg-background/95 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-sm text-foreground/50 hover:text-foreground transition-colors">
+    <div
+      className="min-h-screen text-[var(--cork-ink)]"
+      style={{ backgroundColor: 'var(--cork-bg)', backgroundImage: 'radial-gradient(var(--cork-dot) 1.5px, transparent 1.5px)', backgroundSize: '22px 22px' }}
+    >
+      {/* ── Top nav ──────────────────────────────────────────────────────── */}
+      <div className="fixed top-0 left-0 right-0 z-50 border-b border-[#1B1B1F]/10 bg-[#FAF7F0]/92 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-sm font-ibm-plex-mono text-[var(--cork-muted)] hover:text-[var(--cork-ink)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--cork-coral)]"
+          >
             <ArrowLeft className="w-4 h-4" />
             Back to home
           </Link>
-          <span className="font-mono text-xs text-foreground/30 tracking-widest">QNI / Events</span>
+          <span className="font-ibm-plex-mono text-xs text-[var(--cork-muted)]/60 tracking-widest uppercase">QNI / Events</span>
         </div>
       </div>
 
-      {/* Page header */}
-      <div className={`pt-28 pb-12 max-w-5xl mx-auto px-6 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-        <span className="font-mono text-xs tracking-widest text-foreground/40 uppercase block mb-3">Community</span>
-        <div className="relative">
-          <h1
-            className="text-5xl lg:text-7xl font-display tracking-tight glitch-heading"
-            data-text="Events"
-          >
-            Events
-          </h1>
-          {/* Terminal cursor blink */}
-          <span
-            className="inline-block w-[3px] h-12 lg:h-16 bg-cyan-400 ml-2 align-bottom"
-            style={{ animation: 'quantum-pulse 1s step-end infinite' }}
-          />
+      {/* ── Page header ───────────────────────────────────────────────────── */}
+      <div className={`pt-28 pb-10 max-w-6xl mx-auto px-6 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <span className="font-ibm-plex-mono text-xs tracking-widest text-[var(--cork-muted)]/60 uppercase block mb-2">Community</span>
+        <h1
+          className="font-space-grotesk text-5xl lg:text-7xl font-bold tracking-tight mb-1"
+          style={{ color: 'var(--cork-ink)' }}
+        >
+          Events
+        </h1>
+        <p className="font-caveat text-xl" style={{ color: 'var(--cork-muted)' }}>
+          — join us, learn together, build the quantum future.
+        </p>
+      </div>
+
+      {/* ── Filter tabs ───────────────────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-6 mb-10">
+        <div className="flex items-center gap-4 flex-wrap" role="group" aria-label="Filter events">
+          {FILTERS.map(({ label, value }, i) => {
+            const col = TAB_COLORS[i % TAB_COLORS.length];
+            const isActive = filter === value;
+            return (
+              <button
+                key={value}
+                id={`filter-tab-${value}`}
+                onClick={() => setFilter(value)}
+                className={`washi-tab ${isActive ? 'active' : ''}`}
+                style={{
+                  backgroundColor: col.bg,
+                  color: col.text,
+                  ...(isActive ? { transform: 'rotate(0deg)' } : { transform: `rotate(${col.rotate})` }),
+                }}
+                aria-pressed={isActive}
+              >
+                {label}
+              </button>
+            );
+          })}
+          <span className="font-ibm-plex-mono text-xs ml-2" style={{ color: 'var(--cork-muted)' }}>
+            {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
+          </span>
         </div>
       </div>
 
-      {/* Events list */}
-      <div className="max-w-5xl mx-auto px-6 pb-24">
-        <div className="divide-y divide-foreground/8">
-          {allEvents.map((event, idx) => (
-            <div
-              key={event.id}
-              onClick={() => setSelectedEvent(event)}
-              className={`group flex items-start gap-10 py-7 cursor-pointer transition-all duration-200 hover:px-3 hover:-mx-3 hover:bg-foreground/[0.03] hover:rounded-xl ${
-                isVisible ? 'scan-in' : 'opacity-0'
-              }`}
-              style={{ animationDelay: `${idx * 80}ms` }}
-            >
-              {/* Date column */}
-              <div className="w-16 shrink-0 text-left select-none">
-                <div className="font-mono text-[11px] text-foreground/35 uppercase tracking-wider leading-tight">{event.month}</div>
-                <div className="font-display text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight my-0.5">{event.day}</div>
-                <div className="font-mono text-[11px] text-foreground/35 leading-tight">{event.dayLabel}</div>
-              </div>
+      {/* ── Corkboard grid ─────────────────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-6 pb-28">
+        {filteredEvents.length === 0 && (
+          <div className="text-center py-20">
+            <p className="font-caveat text-2xl" style={{ color: 'var(--cork-muted)' }}>
+              No events found for this filter.
+            </p>
+          </div>
+        )}
 
-              {/* Content column */}
-              <div className="flex-1 min-w-0 py-0.5">
-                {/* Quantum scan line accent */}
+        <div className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3" style={{ alignItems: 'start' }}>
+          {filteredEvents.map((event, idx) => {
+            const isPast = resolveEventStatus(event) === 'past';
+            const rotClass = ROTATIONS[idx % 3];
+            const catColor = CATEGORY_COLORS[event.category] || CATEGORY_COLORS['Workshop'];
+            const catGradient = CATEGORY_GRADIENTS[event.category] || CATEGORY_GRADIENTS['Workshop'];
+            const attendeeNum = parseInt(event.attendees?.replace(/\D/g, '') || '0', 10);
+
+            return (
+              <article
+                key={event.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`${event.title} — ${event.month} ${event.day}. Click for details.`}
+                onClick={() => setSelectedEvent(event)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedEvent(event); } }}
+                className={`event-card card-enter ${rotClass} bg-white rounded-sm cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-[var(--cork-coral)] focus-visible:outline-offset-4 ${isPast ? 'opacity-75' : ''}`}
+                style={{
+                  boxShadow: '0 4px 18px rgba(27,27,31,0.10), 0 1px 4px rgba(27,27,31,0.07)',
+                  animationDelay: `${idx * 65}ms`,
+                  padding: 0,
+                  overflow: 'visible',
+                }}
+              >
+                {/* Pushpin */}
+                <div className="cork-pin" aria-hidden="true" />
+
+                {/* Washi tape label */}
                 <div
-                  className="h-px w-0 bg-gradient-to-r from-cyan-400/60 to-transparent mb-2 group-hover:w-full transition-all duration-500 ease-out"
-                />
-                <h3 className="text-lg lg:text-xl text-foreground font-medium leading-snug mb-1.5 group-hover:text-foreground/80 transition-colors">
-                  {event.title}
-                </h3>
-                <p className="text-sm text-foreground/45 leading-relaxed">{event.description}</p>
-              </div>
-
-              {/* Badge column */}
-              <div className="shrink-0 flex items-center gap-3 pt-1">
-                <span
-                  className="text-xs font-mono text-foreground/50 border border-foreground/15 px-3 py-1 rounded-full whitespace-nowrap group-hover:border-cyan-400/30 group-hover:text-cyan-500/70 transition-colors duration-300"
+                  className="washi-tape"
+                  style={{ backgroundColor: catColor.bg, color: catColor.text }}
+                  aria-hidden="true"
                 >
-                  {event.badge}
-                </span>
-                <ChevronRight className="w-4 h-4 text-foreground/25 group-hover:text-foreground/50 group-hover:translate-x-0.5 transition-all duration-200" />
-              </div>
-            </div>
-          ))}
+                  {event.category.toLowerCase()}
+                </div>
+
+                <div style={{ padding: '28px 16px 0 16px' }}>
+                  {/* Hand-circled date */}
+                  <div className="relative inline-block mb-3" style={{ minWidth: 72, minHeight: 42 }}>
+                    <div className="relative z-10 text-center" style={{ padding: '2px 8px' }}>
+                      <span
+                        className="font-caveat block leading-none"
+                        style={{ fontSize: 28, fontWeight: 700, color: 'var(--cork-ink)', lineHeight: 1 }}
+                      >
+                        {event.day}
+                      </span>
+                      <span
+                        className="font-caveat block leading-tight"
+                        style={{ fontSize: 13, color: 'var(--cork-muted)' }}
+                      >
+                        {event.month}
+                      </span>
+                    </div>
+                    <HandCircle />
+                  </div>
+                </div>
+
+                {/* Polaroid image frame */}
+                <div className="polaroid-frame mx-4 mb-0 relative">
+                  {/* Stamp badge overlapping bottom-right of photo */}
+                  <div
+                    className="stamp-badge"
+                    style={{ color: isPast ? 'var(--cork-muted)' : 'var(--cork-stamp-green)' }}
+                    aria-label={isPast ? 'Archived event' : 'RSVP Open'}
+                  >
+                    {isPast ? 'ARCHIVED' : 'RSVP OPEN'}
+                  </div>
+
+                  {/* Image or gradient placeholder */}
+                  {event.imageUrl ? (
+                    <img
+                      src={event.imageUrl}
+                      alt={event.title}
+                      loading="lazy"
+                      className={`torn-paper-img w-full object-cover ${isPast ? 'past-event-img' : ''}`}
+                      style={{ height: 160, display: 'block' }}
+                    />
+                  ) : (
+                    <div
+                      className={`torn-paper-img ${isPast ? 'past-event-img' : ''}`}
+                      style={{ height: 160, background: catGradient, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      aria-hidden="true"
+                    >
+                      <span
+                        className="font-space-grotesk font-bold text-4xl opacity-20"
+                        style={{ color: 'var(--cork-ink)' }}
+                      >
+                        {event.category.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card body */}
+                <div style={{ padding: '12px 16px 0 16px' }}>
+                  {/* Attendee meta row */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <TallyMarks count={event.attendees} />
+                    <span className="font-ibm-plex-mono text-xs" style={{ color: 'var(--cork-muted)' }}>
+                      {event.attendees} attending
+                    </span>
+                  </div>
+
+                  {/* Title */}
+                  <h2
+                    className="font-space-grotesk font-bold leading-snug mb-1"
+                    style={{ fontSize: 17, color: 'var(--cork-ink)' }}
+                  >
+                    {event.title}
+                  </h2>
+
+                  {/* Venue */}
+                  <p
+                    className="font-sans text-xs leading-relaxed mb-3"
+                    style={{ color: 'var(--cork-muted)' }}
+                  >
+                    <MapPin className="inline w-3 h-3 mr-0.5 -mt-0.5" aria-hidden="true" />
+                    {event.location}
+                  </p>
+                </div>
+
+                {/* Dashed tear divider */}
+                <div style={{ margin: '0 16px' }}>
+                  <hr className="tear-divider" />
+                </div>
+
+                {/* Footer CTA */}
+                <div style={{ padding: '8px 16px 14px 16px' }}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSelectedEvent(event); }}
+                    className="font-ibm-plex-mono text-xs font-bold uppercase tracking-widest transition-colors focus-visible:outline-2 focus-visible:outline-[var(--cork-coral)] focus-visible:outline-offset-2"
+                    style={{ color: isPast ? 'var(--cork-muted)' : 'var(--cork-coral)' }}
+                    aria-label={`${isPast ? 'View recap' : 'View event'}: ${event.title}`}
+                  >
+                    {isPast ? 'View recap →' : 'View event →'}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
 
-      {/* Slide-in detail panel */}
+      {/* ── Slide-in detail panel ─────────────────────────────────────────── */}
       {selectedEvent && (
         <>
+          {/* Backdrop */}
           <div
             className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-350 ${panelOpen ? 'opacity-100' : 'opacity-0'}`}
             onClick={closePanel}
+            aria-hidden="true"
           />
+
+          {/* Panel */}
           <div
-            className={`fixed top-0 right-0 bottom-0 z-50 w-full max-w-[520px] bg-background border-l border-foreground/10 shadow-2xl overflow-y-auto transition-transform duration-350 ease-out ${panelOpen ? 'translate-x-0' : 'translate-x-full'}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Event details: ${selectedEvent.title}`}
+            className={`fixed top-0 right-0 bottom-0 z-50 w-full max-w-[520px] border-l border-[#1B1B1F]/10 shadow-2xl overflow-y-auto transition-transform duration-350 ease-out ${panelOpen ? 'translate-x-0' : 'translate-x-full'}`}
+            style={{ backgroundColor: 'var(--cork-bg)' }}
           >
             {/* Panel header */}
-            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-foreground/10 px-8 py-5 flex items-center justify-between">
-              <span className="font-mono text-xs text-foreground/35 uppercase tracking-widest">Event Details</span>
+            <div
+              className="sticky top-0 z-10 border-b border-[#1B1B1F]/10 px-8 py-5 flex items-center justify-between backdrop-blur-sm"
+              style={{ backgroundColor: 'rgba(250,247,240,0.95)' }}
+            >
+              <span className="font-ibm-plex-mono text-xs text-[var(--cork-muted)]/60 uppercase tracking-widest">
+                Event Details
+              </span>
               <button
                 onClick={closePanel}
-                className="w-9 h-9 rounded-full border border-foreground/15 flex items-center justify-center hover:bg-foreground/8 transition-colors"
+                aria-label="Close event details"
+                className="w-9 h-9 rounded-full border border-[#1B1B1F]/15 flex items-center justify-center hover:bg-[#1B1B1F]/8 transition-colors focus-visible:outline-2 focus-visible:outline-[var(--cork-coral)]"
               >
-                <X className="w-4 h-4 text-foreground/60" />
+                <X className="w-4 h-4" style={{ color: 'var(--cork-muted)' }} />
               </button>
             </div>
 
-            <div className="px-8 py-8 space-y-8">
+            <div className="px-8 py-8 space-y-7">
               {/* Date + badge */}
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="font-mono text-xs text-foreground/35 uppercase tracking-wider">{selectedEvent.month} {selectedEvent.day}, 2026</div>
-                  <div className="font-mono text-xs text-foreground/30 mt-0.5">{selectedEvent.dayLabel}</div>
+                  <div className="font-ibm-plex-mono text-xs text-[var(--cork-muted)]/60 uppercase tracking-wider">
+                    {selectedEvent.month} {selectedEvent.day}, 2026
+                  </div>
+                  <div className="font-caveat text-xl font-bold mt-0.5" style={{ color: 'var(--cork-ink)' }}>
+                    {selectedEvent.dayLabel}
+                  </div>
                 </div>
-                <span className="text-xs font-mono text-foreground/50 border border-foreground/15 px-3 py-1 rounded-full">
+                <span
+                  className="font-ibm-plex-mono text-xs px-3 py-1 rounded-full border"
+                  style={{
+                    borderColor: 'var(--cork-ink)',
+                    color: 'var(--cork-ink)',
+                    opacity: 0.5,
+                  }}
+                >
                   {selectedEvent.badge}
                 </span>
               </div>
 
+              {/* Cover image */}
+              {selectedEvent.imageUrl && (
+                <div className="rounded-xl overflow-hidden" style={{ height: 200 }}>
+                  <img
+                    src={selectedEvent.imageUrl}
+                    alt={selectedEvent.title}
+                    className={`w-full h-full object-cover ${resolveEventStatus(selectedEvent) === 'past' ? 'past-event-img' : ''}`}
+                  />
+                </div>
+              )}
+
               {/* Title & description */}
               <div>
-                <h2 className="text-2xl lg:text-3xl font-display leading-tight text-foreground mb-3">
+                <h2
+                  className="font-space-grotesk font-bold text-2xl leading-tight mb-3"
+                  style={{ color: 'var(--cork-ink)' }}
+                >
                   {selectedEvent.title}
                 </h2>
-                <p className="text-foreground/55 leading-relaxed text-sm">{selectedEvent.fullDescription}</p>
+                <p className="font-sans text-sm leading-relaxed" style={{ color: 'var(--cork-muted)' }}>
+                  {selectedEvent.fullDescription || selectedEvent.description}
+                </p>
               </div>
 
               {/* Info grid */}
@@ -290,42 +422,74 @@ export default function EventsListPage() {
                   { icon: Users, label: 'Attendees', value: `${selectedEvent.attendees} expected` },
                   { icon: Calendar, label: 'Tickets', value: selectedEvent.price },
                 ].map(({ icon: Icon, label, value }) => (
-                  <div key={label} className="p-4 rounded-2xl border border-foreground/8 bg-foreground/[0.02]">
-                    <div className="flex items-center gap-1.5 text-foreground/35 mb-1.5">
-                      <Icon className="w-3 h-3" />
-                      <span className="font-mono text-[10px] uppercase tracking-widest">{label}</span>
+                  <div
+                    key={label}
+                    className="p-4 rounded-2xl border"
+                    style={{ borderColor: 'rgba(27,27,31,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-1.5" style={{ color: 'var(--cork-muted)' }}>
+                      <Icon className="w-3 h-3" aria-hidden="true" />
+                      <span className="font-ibm-plex-mono text-[10px] uppercase tracking-widest">{label}</span>
                     </div>
-                    <p className="text-foreground text-sm font-medium leading-snug">{value}</p>
+                    <p className="font-sans text-sm font-medium leading-snug" style={{ color: 'var(--cork-ink)' }}>
+                      {value}
+                    </p>
                   </div>
                 ))}
               </div>
 
               {/* Agenda */}
-              <div>
-                <h3 className="font-display text-lg mb-4 text-foreground">Agenda</h3>
-                <div className="border-l border-foreground/15 pl-5 space-y-4">
-                  {selectedEvent.schedule.map((item, idx) => (
-                    <div key={idx} className="relative">
-                      <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-foreground/20 border-2 border-background" />
-                      <div className="font-mono text-[10px] text-foreground/30 uppercase tracking-wider mb-0.5">{item.time}</div>
-                      <div className="text-foreground text-sm font-medium">{item.title}</div>
-                      {item.speaker && <div className="text-xs text-foreground/40 mt-0.5">{item.speaker}</div>}
-                    </div>
-                  ))}
+              {selectedEvent.schedule && selectedEvent.schedule.length > 0 && (
+                <div>
+                  <h3 className="font-space-grotesk font-bold text-lg mb-4" style={{ color: 'var(--cork-ink)' }}>
+                    Agenda
+                  </h3>
+                  <div className="pl-5 space-y-4" style={{ borderLeft: '2px solid rgba(27,27,31,0.12)' }}>
+                    {selectedEvent.schedule.map((item, idx) => (
+                      <div key={idx} className="relative">
+                        <div
+                          className="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full border-2"
+                          style={{ background: 'var(--cork-mustard)', borderColor: 'var(--cork-bg)' }}
+                          aria-hidden="true"
+                        />
+                        <div className="font-ibm-plex-mono text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--cork-muted)' }}>
+                          {item.time}
+                        </div>
+                        <div className="font-sans text-sm font-medium" style={{ color: 'var(--cork-ink)' }}>
+                          {item.title}
+                        </div>
+                        {item.speaker && (
+                          <div className="font-caveat text-sm mt-0.5" style={{ color: 'var(--cork-muted)' }}>
+                            {item.speaker}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Speakers */}
-              {selectedEvent.speakers.length > 0 && (
+              {selectedEvent.speakers && selectedEvent.speakers.filter(Boolean).length > 0 && (
                 <div>
-                  <h3 className="font-display text-lg mb-3 text-foreground">Speakers</h3>
+                  <h3 className="font-space-grotesk font-bold text-lg mb-3" style={{ color: 'var(--cork-ink)' }}>
+                    Speakers
+                  </h3>
                   <div className="space-y-2">
-                    {selectedEvent.speakers.map((s, idx) => (
-                      <div key={idx} className="flex items-center gap-3 p-3 rounded-xl border border-foreground/8 bg-foreground/[0.02]">
-                        <div className="w-8 h-8 rounded-full bg-foreground text-background font-display font-bold text-xs flex items-center justify-center shrink-0">
+                    {selectedEvent.speakers.filter(Boolean).map((s, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-3 p-3 rounded-xl border"
+                        style={{ borderColor: 'rgba(27,27,31,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-space-grotesk font-bold text-xs"
+                          style={{ backgroundColor: 'var(--cork-mustard)', color: '#fff' }}
+                          aria-hidden="true"
+                        >
                           {s.charAt(0)}
                         </div>
-                        <span className="text-sm text-foreground">{s}</span>
+                        <span className="font-sans text-sm" style={{ color: 'var(--cork-ink)' }}>{s}</span>
                       </div>
                     ))}
                   </div>
@@ -334,14 +498,32 @@ export default function EventsListPage() {
 
               {/* Register CTA */}
               <div className="pt-2 space-y-3">
-                <Link href={`/events/${selectedEvent.id}/register`}>
-                  <button className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-foreground text-background rounded-2xl font-semibold text-sm hover:bg-foreground/90 transition-colors group">
-                    Register for This Event
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                {resolveEventStatus(selectedEvent) === 'upcoming' ? (
+                  <Link href={`/events/${selectedEvent.id}/register`} tabIndex={-1}>
+                    <button
+                      className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-space-grotesk font-semibold text-sm transition-colors group focus-visible:outline-2 focus-visible:outline-[var(--cork-coral)]"
+                      style={{ backgroundColor: 'var(--cork-ink)', color: '#FAF7F0' }}
+                    >
+                      Register for This Event
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+                    </button>
+                  </Link>
+                ) : (
+                  <button
+                    className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-space-grotesk font-semibold text-sm cursor-not-allowed opacity-50"
+                    style={{ backgroundColor: 'var(--cork-muted)', color: '#FAF7F0' }}
+                    disabled
+                    aria-label="Registration closed — past event"
+                  >
+                    Registration Closed
                   </button>
-                </Link>
-                <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border border-foreground/12 text-foreground/55 hover:text-foreground hover:border-foreground/25 text-sm font-medium transition-colors">
-                  <ExternalLink className="w-3.5 h-3.5" />
+                )}
+                <button
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-[var(--cork-coral)]"
+                  style={{ borderColor: 'rgba(27,27,31,0.15)', color: 'var(--cork-muted)' }}
+                  onClick={() => {/* calendar add logic */}}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
                   Add to Calendar
                 </button>
               </div>
