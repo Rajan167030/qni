@@ -21,6 +21,9 @@ import {
   FileText,
   AlertTriangle,
   Globe,
+  Upload,
+  Loader2,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getBlogs, saveBlog, deleteBlog, BlogPost } from '@/lib/blogs-store';
@@ -36,6 +39,7 @@ export default function TeamPortalPage() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [activeTab, setActiveTab] = useState<'my-blogs' | 'create'>('my-blogs');
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Form State for Write / Edit Blog
   const [formData, setFormData] = useState({
@@ -51,6 +55,33 @@ export default function TeamPortalPage() {
   });
 
   const [notification, setNotification] = useState<string | null>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const data = new FormData();
+      data.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: data,
+      });
+      const result = await res.json();
+      if (result.success && result.url) {
+        setFormData((prev) => ({ ...prev, coverImage: result.url }));
+      } else {
+        alert(result.error || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('Error uploading blog image:', err);
+      alert('Failed to upload image. Please try again or use direct URL.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Check login on mount
   useEffect(() => {
@@ -545,17 +576,58 @@ export default function TeamPortalPage() {
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-mono uppercase text-muted-foreground block mb-2">
-                Cover Image URL
-              </label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono uppercase text-muted-foreground">
+                  Cover Image (Cloudinary Upload or URL)
+                </label>
+                <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-foreground/10 hover:bg-foreground/15 text-foreground text-xs font-mono transition-colors">
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Upload File (Cloudinary)</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isUploading}
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
               <input
                 type="text"
-                placeholder="https://images.unsplash.com/..."
+                placeholder="https://res.cloudinary.com/... or https://images.unsplash.com/..."
                 value={formData.coverImage}
                 onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
                 className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-foreground/30"
               />
+
+              {formData.coverImage && (
+                <div className="relative mt-2 w-full h-36 rounded-xl overflow-hidden border border-foreground/15 bg-foreground/5">
+                  <img
+                    src={formData.coverImage}
+                    alt="Cover Preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, coverImage: '' }))}
+                    className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                    title="Remove Image"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>

@@ -48,143 +48,22 @@ const STORAGE_KEYS = {
   REGISTRATIONS: "qni_event_registrations",
 };
 
-// Initial Seed Data for Demo & Testing
-const initialContacts: ContactSubmission[] = [
-  {
-    id: "c-101",
-    name: "Dr. Kavita Raman",
-    email: "kavita.raman@iisc.ac.in",
-    company: "IISc Quantum Lab",
-    inquiryType: "Research Grants & Fellowships",
-    subject: "QPU Simulator Cluster Access for VQE Research",
-    message: "We are conducting molecular VQE benchmarking and would like enterprise cluster access for 100+ simulated qubits.",
-    createdAt: "2026-08-06T14:30:00Z",
-    status: "New",
-  },
-  {
-    id: "c-102",
-    name: "Aditya Roy",
-    email: "aditya.roy@tcs.com",
-    company: "TCS Innovation Labs",
-    inquiryType: "Enterprise Quantum Solutions",
-    subject: "QAOA Optimization for Supply Chain Logistics",
-    message: "Interested in co-innovating with QNexus for large-scale combinatorial optimization algorithms.",
-    createdAt: "2026-08-05T11:15:00Z",
-    status: "In Progress",
-  },
-  {
-    id: "c-103",
-    name: "Michael Chang",
-    email: "mchang@stanford.edu",
-    company: "Stanford Quantum Group",
-    inquiryType: "Hardware / QPU Access",
-    subject: "International Chapter Collaboration",
-    message: "Exploring joint webinar series and student exchange programs between Stanford and QNexus.",
-    createdAt: "2026-08-04T09:45:00Z",
-    status: "Resolved",
-  },
-];
+// Live Real Submissions Store (No fake/dummy seed data)
+const initialContacts: ContactSubmission[] = [];
+const initialJoins: JoinSubmission[] = [];
+const initialRegistrations: EventRegistration[] = [];
 
-const initialJoins: JoinSubmission[] = [
-  {
-    id: "j-201",
-    fullName: "Siddharth Malhotra",
-    email: "sid.malhotra@iitm.ac.in",
-    phone: "+91 98765 12345",
-    company: "IIT Madras",
-    position: "PhD Research Scholar",
-    expertise: "quantum-algorithms",
-    experience: "Advanced / Fellow",
-    country: "India",
-    message: "Focused on variational quantum eigensolvers and pulse-level Qiskit control for superconducting qubits.",
-    createdAt: "2026-08-06T16:20:00Z",
-    status: "Pending",
-  },
-  {
-    id: "j-202",
-    fullName: "Elena Rostova",
-    email: "elena.r@tum.de",
-    phone: "+49 89 289 01",
-    company: "TU Munich",
-    position: "Quantum ML Engineer",
-    expertise: "quantum-ml",
-    experience: "Intermediate",
-    country: "Germany",
-    message: "Building hybrid quantum-classical neural network architectures for drug discovery.",
-    createdAt: "2026-08-05T18:00:00Z",
-    status: "Approved",
-  },
-  {
-    id: "j-203",
-    fullName: "Rohan Gupta",
-    email: "rohan.g@bits-pilani.ac.in",
-    phone: "+91 91234 56789",
-    company: "BITS Pilani",
-    position: "Student Lead",
-    expertise: "student-chapter",
-    experience: "Beginner",
-    country: "India",
-    message: "Want to launch a QNexus Student Chapter at BITS Pilani campus.",
-    createdAt: "2026-08-04T12:10:00Z",
-    status: "Pending",
-  },
-];
-
-const initialRegistrations: EventRegistration[] = [
-  {
-    id: "r-301",
-    eventId: "3",
-    eventTitle: "QNI National Hackathon 2026",
-    name: "Vikram Rathi",
-    email: "vikram.rathi@gmail.com",
-    phone: "+91 99887 76655",
-    organization: "IIT Hyderabad",
-    role: "M.Tech Student",
-    background: "Intermediate",
-    teamName: "Quantum Qubits",
-    createdAt: "2026-08-06T19:00:00Z",
-    status: "Confirmed",
-  },
-  {
-    id: "r-302",
-    eventId: "1",
-    eventTitle: "Intro to Qiskit — Bengaluru chapter",
-    name: "Neha Sharma",
-    email: "neha.sharma@wipro.com",
-    phone: "+91 98112 23344",
-    organization: "Wipro Digital",
-    role: "Senior Software Engineer",
-    background: "Beginner",
-    createdAt: "2026-08-06T10:15:00Z",
-    status: "Confirmed",
-  },
-  {
-    id: "r-303",
-    eventId: "2",
-    eventTitle: "Variational algorithms reading group",
-    name: "Dr. Arvind Swaminathan",
-    email: "arvind.s@cdac.in",
-    phone: "+91 94433 22110",
-    organization: "C-DAC Pune",
-    role: "Senior Scientist",
-    background: "Advanced",
-    createdAt: "2026-08-05T15:40:00Z",
-    status: "Attended",
-  },
-];
-
-// Helper functions for LocalStorage management
+// Helper functions for LocalStorage & Live Store management
 export const getContacts = (): ContactSubmission[] => {
-  if (typeof window === "undefined") return initialContacts;
+  if (typeof window === "undefined") return [];
   const saved = localStorage.getItem(STORAGE_KEYS.CONTACT);
-  if (!saved) {
-    localStorage.setItem(STORAGE_KEYS.CONTACT, JSON.stringify(initialContacts));
-    return initialContacts;
-  }
+  if (!saved) return [];
   try {
-    return JSON.parse(saved);
+    const parsed = JSON.parse(saved);
+    // Filter out old demo seed IDs if any existed previously
+    return Array.isArray(parsed) ? parsed.filter((c: ContactSubmission) => !['c-101', 'c-102', 'c-103'].includes(c.id)) : [];
   } catch {
-    return initialContacts;
+    return [];
   }
 };
 
@@ -212,16 +91,15 @@ export const updateContactStatus = (id: string, status: ContactSubmission["statu
 };
 
 export const getJoins = (): JoinSubmission[] => {
-  if (typeof window === "undefined") return initialJoins;
+  if (typeof window === "undefined") return [];
   const saved = localStorage.getItem(STORAGE_KEYS.JOIN);
-  if (!saved) {
-    localStorage.setItem(STORAGE_KEYS.JOIN, JSON.stringify(initialJoins));
-    return initialJoins;
-  }
+  if (!saved) return [];
   try {
-    return JSON.parse(saved);
+    const parsed = JSON.parse(saved);
+    // Filter out old demo seed IDs if any existed previously
+    return Array.isArray(parsed) ? parsed.filter((j: JoinSubmission) => !['j-201', 'j-202', 'j-203'].includes(j.id)) : [];
   } catch {
-    return initialJoins;
+    return [];
   }
 };
 
@@ -249,16 +127,15 @@ export const updateJoinStatus = (id: string, status: JoinSubmission["status"]) =
 };
 
 export const getRegistrations = (): EventRegistration[] => {
-  if (typeof window === "undefined") return initialRegistrations;
+  if (typeof window === "undefined") return [];
   const saved = localStorage.getItem(STORAGE_KEYS.REGISTRATIONS);
-  if (!saved) {
-    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(initialRegistrations));
-    return initialRegistrations;
-  }
+  if (!saved) return [];
   try {
-    return JSON.parse(saved);
+    const parsed = JSON.parse(saved);
+    // Filter out old demo seed IDs if any existed previously
+    return Array.isArray(parsed) ? parsed.filter((r: EventRegistration) => !['r-301', 'r-302', 'r-303'].includes(r.id)) : [];
   } catch {
-    return initialRegistrations;
+    return [];
   }
 };
 
@@ -284,3 +161,4 @@ export const updateRegistrationStatus = (id: string, status: EventRegistration["
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(updated));
   }
 };
+

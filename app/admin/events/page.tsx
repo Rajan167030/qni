@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Plus,
@@ -19,6 +20,8 @@ import {
   Tag,
   ChevronDown,
   Users,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getEvents, saveEvent, deleteEvent, createBlankEvent, EventItem } from "@/lib/events-store";
@@ -49,13 +52,51 @@ function emptyForm() {
 }
 
 export default function AdminEventsPage() {
+  const router = useRouter();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
   const [formData, setFormData] = useState(emptyForm());
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const auth = sessionStorage.getItem("qni_admin_authenticated");
+      if (auth !== "true") {
+        router.push("/admin");
+      }
+    }
+  }, [router]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const data = new FormData();
+      data.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: data,
+      });
+      const result = await res.json();
+      if (result.success && result.url) {
+        setFormData((prev) => ({ ...prev, imageUrl: result.url }));
+      } else {
+        alert(result.error || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('Error uploading file:', err);
+      alert('Failed to upload image. Please try again or use direct URL.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const loadEvents = () => {
     setEvents(getEvents());
@@ -345,13 +386,60 @@ export default function AdminEventsPage() {
                 />
               </div>
 
-              {/* Image URL */}
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Banner Image URL</label>
-                <input type="url" name="imageUrl" value={formData.imageUrl} onChange={handleChange}
-                  placeholder="https://images.unsplash.com/photo-..."
+              {/* Banner Image with Cloudinary Upload */}
+              <div className="sm:col-span-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-mono uppercase text-muted-foreground">
+                    Banner Image (Cloudinary Upload or URL)
+                  </label>
+                  <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-foreground/10 hover:bg-foreground/15 text-foreground text-xs font-mono transition-colors">
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-500" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5 text-sky-500" />
+                        <span>Upload File (Cloudinary)</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isUploading}
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <input
+                  type="url"
+                  name="imageUrl"
+                  value={formData.imageUrl}
+                  onChange={handleChange}
+                  placeholder="https://res.cloudinary.com/... or https://images.unsplash.com/..."
                   className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-xs font-mono text-foreground focus:outline-none focus:border-foreground/50"
                 />
+
+                {formData.imageUrl && (
+                  <div className="relative mt-2 w-full h-32 rounded-xl overflow-hidden border border-foreground/15 bg-foreground/5">
+                    <img
+                      src={formData.imageUrl}
+                      alt="Banner Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, imageUrl: '' }))}
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                      title="Remove Image"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Short description */}

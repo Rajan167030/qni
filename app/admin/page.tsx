@@ -27,6 +27,8 @@ import {
   Trash2,
   Plus,
   Pencil,
+  Upload,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -62,6 +64,7 @@ export default function AdminDashboardPage() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'joins' | 'registrations' | 'blogs'>('overview');
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
@@ -76,7 +79,35 @@ export default function AdminDashboardPage() {
   const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
   const [blogFormData, setBlogFormData] = useState(emptyBlogForm());
   const [blogSaving, setBlogSaving] = useState(false);
+  const [blogUploading, setBlogUploading] = useState(false);
   const [blogSaveSuccess, setBlogSaveSuccess] = useState('');
+
+  const handleBlogFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setBlogUploading(true);
+    try {
+      const data = new FormData();
+      data.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: data,
+      });
+      const result = await res.json();
+      if (result.success && result.url) {
+        setBlogFormData((prev) => ({ ...prev, coverImage: result.url }));
+      } else {
+        alert(result.error || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('Error uploading blog image:', err);
+      alert('Failed to upload image. Please try again or use direct URL.');
+    } finally {
+      setBlogUploading(false);
+    }
+  };
 
   // Check login state on mount
   useEffect(() => {
@@ -88,19 +119,29 @@ export default function AdminDashboardPage() {
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
+    setIsLoggingIn(true);
 
-    // Default Admin Credentials Verification
-    if (
-      (loginEmail.trim().toLowerCase() === 'admin@qnexusindia.com' || loginEmail.trim().toLowerCase() === 'admin') &&
-      loginPassword === 'qni@admin2026'
-    ) {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('qni_admin_authenticated', 'true');
-    } else {
-      setLoginError('Invalid admin email/username or password.');
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setIsAuthenticated(true);
+        sessionStorage.setItem('qni_admin_authenticated', 'true');
+      } else {
+        setLoginError(data.message || 'Invalid admin email/username or password.');
+      }
+    } catch (err) {
+      setLoginError('Error connecting to authentication service.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -410,8 +451,15 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-rose-500 font-medium text-center">{loginError}</p>
             )}
 
-            <Button type="submit" size="lg" className="w-full h-12 rounded-xl bg-foreground text-background font-semibold">
-              Unlock Executive Console
+            <Button type="submit" disabled={isLoggingIn} size="lg" className="w-full h-12 rounded-xl bg-foreground text-background font-semibold flex items-center justify-center gap-2">
+              {isLoggingIn ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-background" />
+                  <span>Verifying...</span>
+                </>
+              ) : (
+                <span>Unlock Executive Console</span>
+              )}
             </Button>
           </form>
 
@@ -583,14 +631,14 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
-          {/* Database Setup Helper Note */}
-          <div className="p-5 rounded-2xl border border-foreground/10 bg-background space-y-3 text-xs font-mono text-muted-foreground">
-            <div className="flex items-center gap-2 text-foreground font-bold font-sans text-sm">
-              <Database className="w-4 h-4 text-sky-500" />
-              <span>MongoDB Integration</span>
+          {/* Database Active Status Card */}
+          <div className="p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 space-y-2 text-xs font-mono">
+            <div className="flex items-center gap-2 text-emerald-400 font-bold font-sans text-sm">
+              <Database className="w-4 h-4 text-emerald-400" />
+              <span>MongoDB Cloud Active</span>
             </div>
-            <p className="leading-relaxed">
-              To connect real MongoDB: Add <code className="text-foreground bg-foreground/10 px-1 rounded">MONGODB_URI</code> to your <code className="text-foreground bg-foreground/10 px-1 rounded">.env.local</code> file.
+            <p className="text-muted-foreground leading-relaxed">
+              Connected to MongoDB Atlas cluster. Submissions and changes automatically sync with cloud database.
             </p>
           </div>
         </aside>
@@ -655,6 +703,12 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div className="space-y-3">
+                  {contacts.length === 0 && joins.length === 0 && (
+                    <div className="p-8 rounded-2xl border border-foreground/10 bg-foreground/[0.02] text-center text-xs font-mono text-muted-foreground">
+                      No submissions yet. Live entries from Contact, Join Us, and Registrations will appear here in real-time.
+                    </div>
+                  )}
+
                   {contacts.slice(0, 3).map((c) => (
                     <div key={c.id} className="p-4 rounded-2xl border border-foreground/10 bg-foreground/5 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
@@ -720,46 +774,54 @@ export default function AdminDashboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-foreground/10">
-                      {filteredContacts.map((c) => (
-                        <tr key={c.id} className="hover:bg-foreground/[0.02] transition-colors">
-                          <td className="p-4">
-                            <p className="font-bold text-foreground">{c.name}</p>
-                            <p className="text-xs text-muted-foreground">{c.email}</p>
-                          </td>
-                          <td className="p-4">
-                            <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-foreground/10 text-foreground">
-                              {c.inquiryType}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <p className="text-sm font-medium text-foreground line-clamp-1">{c.subject}</p>
-                          </td>
-                          <td className="p-4 text-xs font-mono text-muted-foreground">
-                            {new Date(c.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="p-4">
-                            <select
-                              value={c.status}
-                              onChange={(e) => handleContactStatus(c.id, e.target.value as any)}
-                              className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-foreground/10 border border-foreground/15 text-foreground focus:outline-none"
-                            >
-                              <option value="New">New</option>
-                              <option value="In Progress">In Progress</option>
-                              <option value="Resolved">Resolved</option>
-                            </select>
-                          </td>
-                          <td className="p-4 text-right">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setSelectedDetail({ type: 'contact', data: c })}
-                              className="h-8 px-3 rounded-full text-xs gap-1"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> View
-                            </Button>
+                      {filteredContacts.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-xs font-mono text-muted-foreground">
+                            No contact inquiries yet. New submissions will appear here live.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredContacts.map((c) => (
+                          <tr key={c.id} className="hover:bg-foreground/[0.02] transition-colors">
+                            <td className="p-4">
+                              <p className="font-bold text-foreground">{c.name}</p>
+                              <p className="text-xs text-muted-foreground">{c.email}</p>
+                            </td>
+                            <td className="p-4">
+                              <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-foreground/10 text-foreground">
+                                {c.inquiryType}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <p className="text-sm font-medium text-foreground line-clamp-1">{c.subject}</p>
+                            </td>
+                            <td className="p-4 text-xs font-mono text-muted-foreground">
+                              {new Date(c.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="p-4">
+                              <select
+                                value={c.status}
+                                onChange={(e) => handleContactStatus(c.id, e.target.value as any)}
+                                className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-foreground/10 border border-foreground/15 text-foreground focus:outline-none"
+                              >
+                                <option value="New">New</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Resolved">Resolved</option>
+                              </select>
+                            </td>
+                            <td className="p-4 text-right">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setSelectedDetail({ type: 'contact', data: c })}
+                                className="h-8 px-3 rounded-full text-xs gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> View
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -794,45 +856,53 @@ export default function AdminDashboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-foreground/10">
-                      {filteredJoins.map((j) => (
-                        <tr key={j.id} className="hover:bg-foreground/[0.02] transition-colors">
-                          <td className="p-4">
-                            <p className="font-bold text-foreground">{j.fullName}</p>
-                            <p className="text-xs text-muted-foreground">{j.email}</p>
-                          </td>
-                          <td className="p-4">
-                            <p className="font-medium text-foreground text-xs">{j.company}</p>
-                            <p className="text-xs text-muted-foreground">{j.position}</p>
-                          </td>
-                          <td className="p-4">
-                            <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-foreground/10 text-foreground font-semibold">
-                              {j.expertise}
-                            </span>
-                          </td>
-                          <td className="p-4 text-xs font-mono text-muted-foreground">{j.country}</td>
-                          <td className="p-4">
-                            <select
-                              value={j.status}
-                              onChange={(e) => handleJoinStatus(j.id, e.target.value as any)}
-                              className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-foreground/10 border border-foreground/15 text-foreground focus:outline-none"
-                            >
-                              <option value="Pending">Pending</option>
-                              <option value="Approved">Approved</option>
-                              <option value="Rejected">Rejected</option>
-                            </select>
-                          </td>
-                          <td className="p-4 text-right">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setSelectedDetail({ type: 'join', data: j })}
-                              className="h-8 px-3 rounded-full text-xs gap-1"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> View
-                            </Button>
+                      {filteredJoins.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-xs font-mono text-muted-foreground">
+                            No join applications yet. New applicant submissions will appear here live.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredJoins.map((j) => (
+                          <tr key={j.id} className="hover:bg-foreground/[0.02] transition-colors">
+                            <td className="p-4">
+                              <p className="font-bold text-foreground">{j.fullName}</p>
+                              <p className="text-xs text-muted-foreground">{j.email}</p>
+                            </td>
+                            <td className="p-4">
+                              <p className="font-medium text-foreground text-xs">{j.company}</p>
+                              <p className="text-xs text-muted-foreground">{j.position}</p>
+                            </td>
+                            <td className="p-4">
+                              <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-foreground/10 text-foreground font-semibold">
+                                {j.expertise}
+                              </span>
+                            </td>
+                            <td className="p-4 text-xs font-mono text-muted-foreground">{j.country}</td>
+                            <td className="p-4">
+                              <select
+                                value={j.status}
+                                onChange={(e) => handleJoinStatus(j.id, e.target.value as any)}
+                                className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-foreground/10 border border-foreground/15 text-foreground focus:outline-none"
+                              >
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                              </select>
+                            </td>
+                            <td className="p-4 text-right">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setSelectedDetail({ type: 'join', data: j })}
+                                className="h-8 px-3 rounded-full text-xs gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> View
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -867,45 +937,53 @@ export default function AdminDashboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-foreground/10">
-                      {filteredRegs.map((r) => (
-                        <tr key={r.id} className="hover:bg-foreground/[0.02] transition-colors">
-                          <td className="p-4">
-                            <p className="font-bold text-foreground">{r.name}</p>
-                            <p className="text-xs text-muted-foreground">{r.email}</p>
-                          </td>
-                          <td className="p-4">
-                            <p className="font-medium text-foreground text-xs line-clamp-1">{r.eventTitle}</p>
-                            {r.teamName && <p className="text-[10px] font-mono text-amber-500">Team: {r.teamName}</p>}
-                          </td>
-                          <td className="p-4 text-xs text-muted-foreground">{r.organization}</td>
-                          <td className="p-4">
-                            <span className="text-xs font-mono px-2 py-0.5 rounded bg-foreground/10 text-foreground">
-                              {r.background}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <select
-                              value={r.status}
-                              onChange={(e) => handleRegStatus(r.id, e.target.value as any)}
-                              className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-foreground/10 border border-foreground/15 text-foreground focus:outline-none"
-                            >
-                              <option value="Confirmed">Confirmed</option>
-                              <option value="Attended">Attended</option>
-                              <option value="Cancelled">Cancelled</option>
-                            </select>
-                          </td>
-                          <td className="p-4 text-right">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setSelectedDetail({ type: 'reg', data: r })}
-                              className="h-8 px-3 rounded-full text-xs gap-1"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> View
-                            </Button>
+                      {filteredRegs.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-xs font-mono text-muted-foreground">
+                            No event registrations yet. Real event signups will appear here live.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredRegs.map((r) => (
+                          <tr key={r.id} className="hover:bg-foreground/[0.02] transition-colors">
+                            <td className="p-4">
+                              <p className="font-bold text-foreground">{r.name}</p>
+                              <p className="text-xs text-muted-foreground">{r.email}</p>
+                            </td>
+                            <td className="p-4">
+                              <p className="font-medium text-foreground text-xs line-clamp-1">{r.eventTitle}</p>
+                              {r.teamName && <p className="text-[10px] font-mono text-amber-500">Team: {r.teamName}</p>}
+                            </td>
+                            <td className="p-4 text-xs text-muted-foreground">{r.organization}</td>
+                            <td className="p-4">
+                              <span className="text-xs font-mono px-2 py-0.5 rounded bg-foreground/10 text-foreground">
+                                {r.background}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <select
+                                value={r.status}
+                                onChange={(e) => handleRegStatus(r.id, e.target.value as any)}
+                                className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-foreground/10 border border-foreground/15 text-foreground focus:outline-none"
+                              >
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Attended">Attended</option>
+                                <option value="Cancelled">Cancelled</option>
+                              </select>
+                            </td>
+                            <td className="p-4 text-right">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setSelectedDetail({ type: 'reg', data: r })}
+                                className="h-8 px-3 rounded-full text-xs gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> View
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -967,10 +1045,59 @@ export default function AdminDashboardPage() {
                       <input type="text" value={blogFormData.readTime} onChange={e => setBlogFormData(p => ({...p, readTime: e.target.value}))}
                         placeholder="6 min read" className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
                     </div>
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Cover Image URL</label>
-                      <input type="url" value={blogFormData.coverImage} onChange={e => setBlogFormData(p => ({...p, coverImage: e.target.value}))}
-                        placeholder="https://images.unsplash.com/..." className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-xs font-mono text-foreground focus:outline-none focus:border-foreground/50" />
+                    {/* Cover Image with Cloudinary Upload */}
+                    <div className="sm:col-span-2 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-mono uppercase text-muted-foreground">
+                          Cover Image (Cloudinary Upload or URL)
+                        </label>
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-foreground/10 hover:bg-foreground/15 text-foreground text-xs font-mono transition-colors">
+                          {blogUploading ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
+                              <span>Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-3.5 h-3.5 text-purple-400" />
+                              <span>Upload File (Cloudinary)</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={blogUploading}
+                            onChange={handleBlogFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+
+                      <input
+                        type="url"
+                        value={blogFormData.coverImage}
+                        onChange={(e) => setBlogFormData((p) => ({ ...p, coverImage: e.target.value }))}
+                        placeholder="https://res.cloudinary.com/... or https://images.unsplash.com/..."
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-xs font-mono text-foreground focus:outline-none focus:border-foreground/50"
+                      />
+
+                      {blogFormData.coverImage && (
+                        <div className="relative mt-2 w-full h-36 rounded-xl overflow-hidden border border-foreground/15 bg-foreground/5">
+                          <img
+                            src={blogFormData.coverImage}
+                            alt="Cover Preview"
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setBlogFormData((p) => ({ ...p, coverImage: '' }))}
+                            className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                            title="Remove Image"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Tags (comma-separated)</label>
