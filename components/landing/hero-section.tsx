@@ -38,7 +38,7 @@ export function HeroSection() {
       <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] lg:w-[850px] lg:h-[850px] opacity-70 pointer-events-none">
         <AnimatedSphere />
       </div>
-      
+
       {/* Subtle grid lines */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
         {[...Array(8)].map((_, i) => (
@@ -64,13 +64,12 @@ export function HeroSection() {
           />
         ))}
       </div>
-      
+
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-8 py-32 lg:py-40">
         {/* Eyebrow */}
-        <div 
-          className={`mb-8 transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          }`}
+        <div
+          className={`mb-8 transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            }`}
         >
           <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground">
             <span className="w-8 h-px bg-foreground/30" />
@@ -81,15 +80,14 @@ export function HeroSection() {
         {/* Main headline */}
         <div className="mb-12">
           <h1
-            className={`text-[clamp(3rem,13vw,14rem)] font-display leading-[0.9] tracking-tight transition-all duration-1000 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
+            className={`text-[clamp(3rem,13vw,14rem)] font-display leading-[0.9] tracking-tight transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
           >
             <span className="block">Quantum</span>
             <span className="block">
               for{" "}
               <span className="relative inline-block">
-                <span 
+                <span
                   key={wordIndex}
                   className="inline-flex"
                 >
@@ -110,19 +108,17 @@ export function HeroSection() {
             </span>
           </h1>
         </div>
-        
+
         {/* Description */}
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-end">
           <p
-            className={`text-xl lg:text-2xl text-muted-foreground leading-relaxed max-w-xl transition-all duration-700 delay-200 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            }`}
+            className={`text-xl lg:text-2xl text-muted-foreground leading-relaxed max-w-xl transition-all duration-700 delay-200 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              }`}
           >
           </p>
-          
+
           {/* CTAs */}
-            <div className={`flex flex-row flex-nowrap items-center justify-center gap-2 sm:gap-4 mx-auto transition-all duration-700 delay-300 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          <div className={`flex flex-row flex-nowrap items-center justify-center gap-2 sm:gap-4 mx-auto transition-all duration-700 delay-300 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}>
             <SpecularButton
               size={isMobile ? "sm" : "lg"}
@@ -156,14 +152,13 @@ export function HeroSection() {
             </Button>
           </div>
         </div>
-        
+
       </div>
-      
+
       {/* Quantum Stats Marquee - full width loop line */}
-      <div 
-        className={`absolute bottom-10 left-0 right-0 transition-all duration-700 delay-500 ${
-          isVisible ? "opacity-100" : "opacity-0"
-        }`}
+      <div
+        className={`absolute bottom-10 left-0 right-0 transition-all duration-700 delay-500 ${isVisible ? "opacity-100" : "opacity-0"
+          }`}
       >
         <div className="flex gap-16 marquee whitespace-nowrap">
           {[...Array(2)].map((_, i) => (

@@ -1,17 +1,8 @@
 /**
  * QNexus — Email Service (Nodemailer + Gmail SMTP)
  *
- * Setup: Add these to your .env.local file:
- *   EMAIL_FROM=your-gmail@gmail.com
- *   EMAIL_PASS=your-gmail-app-password   (NOT your Gmail login password — use App Password)
- *   EMAIL_TO=admin@qnexusindia.com       (where contact form notifications go)
- *   WHATSAPP_LINK=https://chat.whatsapp.com/your-group-invite-code
- *
- * How to get Gmail App Password:
- *   1. Go to your Google Account → Security
- *   2. Enable 2-Step Verification
- *   3. Go to App Passwords → Create one for "Mail"
- *   4. Copy the 16-character password
+ * Clean, modern white-themed templates designed for maximum readability,
+ * authentic human tone, and email client compatibility.
  */
 
 async function createTransporter() {
@@ -23,21 +14,29 @@ async function createTransporter() {
   }
 
   try {
-    // Dynamic import — prevents build error when nodemailer is not yet installed
     const nodemailer = await import('nodemailer');
     return nodemailer.default.createTransport({
       service: 'gmail',
       auth: { user, pass },
     });
   } catch {
-    console.warn('[Email] nodemailer not installed. Run: npm install');
+    console.warn('[Email] nodemailer not installed or unavailable.');
     return null;
   }
+}
 
+function escapeHtml(str?: string | null): string {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // ─────────────────────────────────────────────────────────────────
-// 1. Welcome Email → sent to user after they fill the Join Us form
+// 1. Welcome Email → Sent to applicant after filling the Join Us form
 // ─────────────────────────────────────────────────────────────────
 export async function sendWelcomeEmail(to: string, name: string) {
   const transporter = await createTransporter();
@@ -46,107 +45,119 @@ export async function sendWelcomeEmail(to: string, name: string) {
     return false;
   }
 
-  const whatsappLink = process.env.WHATSAPP_LINK || 'https://chat.whatsapp.com/';
+  const whatsappLink = process.env.WHATSAPP_LINK || 'https://chat.whatsapp.com/your-group-invite';
   const from = process.env.EMAIL_FROM!;
+  const safeName = escapeHtml(name);
 
-  const html = `
-<!DOCTYPE html>
-<html>
+  const html = `<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome to Quantum Nexus Global</title>
 </head>
-<body style="margin:0;padding:0;background:#0a0a0f;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0f;padding:40px 0;">
+<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 32px 16px;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background:#111118;border-radius:16px;overflow:hidden;border:1px solid rgba(139,92,246,0.2);">
-
+        <!-- Main Card Container -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#1a0a2e 0%,#0d1a3a 100%);padding:40px 40px 28px;text-align:center;">
-              <div style="display:inline-block;background:#ffffff;border-radius:14px;padding:14px 20px;">
-                <img src="https://www.quantumnexusglobal.org/logo-mark.png" alt="Quantum Nexus Global" width="160" style="display:block;height:auto;" />
+            <td style="padding: 32px 36px 24px; border-bottom: 1px solid #f1f5f9;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <img src="https://www.quantumnexusglobal.org/logo-mark.png" alt="Quantum Nexus Global" width="140" style="display: block; max-width: 140px; height: auto;" />
+                  </td>
+                  <td align="right">
+                    <span style="display: inline-block; background-color: #eef2ff; color: #4338ca; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 9999px;">
+                      Community
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 32px 36px 24px;">
+              <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 16px; line-height: 1.3;">
+                Welcome to Quantum Nexus Global, ${safeName}
+              </h1>
+              
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 18px;">
+                Thank you for applying to join <strong>Quantum Nexus Global (QNexus)</strong>. We are a student-first, open quantum computing initiative bringing together learners, researchers, and professionals to build real-world quantum literacy.
+              </p>
+
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 28px;">
+                Your application has been received by our community team. In the meantime, you are warmly invited to connect with members and get real-time updates on upcoming sessions, talks, and research grants.
+              </p>
+
+              <!-- WhatsApp Action Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; margin-bottom: 28px;">
+                <tr>
+                  <td style="padding: 20px 24px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td>
+                          <div style="font-size: 15px; font-weight: 600; color: #166534; margin-bottom: 4px;">
+                            Join our Community Group
+                          </div>
+                          <div style="font-size: 13px; color: #15803d; line-height: 1.5; margin-bottom: 16px;">
+                            Meet other quantum enthusiasts, join live paper discussions, and receive event announcements directly.
+                          </div>
+                          <a href="${whatsappLink}" target="_blank" style="display: inline-block; background-color: #16a34a; color: #ffffff; font-size: 13px; font-weight: 600; text-decoration: none; padding: 10px 20px; border-radius: 6px;">
+                            Join WhatsApp Community &rarr;
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- What's Next Section -->
+              <div style="border-top: 1px solid #f1f5f9; padding-top: 24px;">
+                <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 14px;">
+                  What to expect next
+                </div>
+                
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="vertical-align: top; width: 24px; font-size: 14px; color: #4338ca; font-weight: bold; line-height: 1.6;">1.</td>
+                    <td style="padding-bottom: 12px; font-size: 14px; line-height: 1.6; color: #475569;">
+                      Our team reviews each application within <strong>1–2 business days</strong>.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top; width: 24px; font-size: 14px; color: #4338ca; font-weight: bold; line-height: 1.6;">2.</td>
+                    <td style="padding-bottom: 12px; font-size: 14px; line-height: 1.6; color: #475569;">
+                      You'll receive onboarding details, session invites, and curated learning roadmaps.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top; width: 24px; font-size: 14px; color: #4338ca; font-weight: bold; line-height: 1.6;">3.</td>
+                    <td style="font-size: 14px; line-height: 1.6; color: #475569;">
+                      If you have specific questions or ideas for collaboration, you can reply directly to this email.
+                    </td>
+                  </tr>
+                </table>
               </div>
-              <div style="color:#a78bfa;font-size:13px;letter-spacing:3px;text-transform:uppercase;margin-top:14px;">Quantum Computing Community</div>
-            </td>
-          </tr>
 
-          <!-- Body -->
-          <tr>
-            <td style="padding:40px 40px 32px;">
-              <h1 style="color:#ffffff;font-size:26px;font-weight:700;margin:0 0 8px;">Welcome to Quantum Nexus Global, ${name}! 🎉</h1>
-              <p style="color:#a1a1aa;font-size:16px;line-height:1.7;margin:0 0 24px;">
-                We're thrilled to have you as a part of <strong style="color:#8b5cf6;">Quantum Nexus Global (QNexus)</strong> — a global quantum computing community bridging research, innovation, and enterprise.
-              </p>
-
-              <p style="color:#a1a1aa;font-size:16px;line-height:1.7;margin:0 0 32px;">
-                Your application has been received and is under review. Our team will reach out to you shortly with next steps.
-              </p>
-
-              <!-- WhatsApp CTA -->
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="background:linear-gradient(135deg,#0d2b1f,#0a2010);border:1px solid rgba(34,197,94,0.3);border-radius:12px;padding:24px;">
-                    <div style="display:flex;align-items:center;margin-bottom:12px;">
-                      <span style="font-size:24px;margin-right:10px;">💬</span>
-                      <strong style="color:#22c55e;font-size:16px;">Join our WhatsApp Community</strong>
-                    </div>
-                    <p style="color:#86efac;font-size:14px;margin:0 0 16px;line-height:1.6;">
-                      Connect with fellow quantum enthusiasts, researchers, and developers. Get real-time updates on events, workshops, and opportunities.
-                    </p>
-                    <a href="${whatsappLink}"
-                       style="display:inline-block;background:linear-gradient(135deg,#16a34a,#15803d);color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;letter-spacing:0.5px;">
-                      Join WhatsApp Group →
-                    </a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- What to expect -->
-          <tr>
-            <td style="padding:0 40px 32px;">
-              <h2 style="color:#ffffff;font-size:16px;font-weight:600;margin:0 0 16px;letter-spacing:0.5px;">WHAT'S NEXT</h2>
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="padding:0 0 12px;">
-                    <div style="display:flex;">
-                      <span style="color:#8b5cf6;font-size:18px;margin-right:12px;min-width:24px;">✦</span>
-                      <span style="color:#a1a1aa;font-size:14px;line-height:1.6;">Our team will review your profile within <strong style="color:#e4e4e7;">2–3 business days</strong>.</span>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:0 0 12px;">
-                    <div style="display:flex;">
-                      <span style="color:#8b5cf6;font-size:18px;margin-right:12px;min-width:24px;">✦</span>
-                      <span style="color:#a1a1aa;font-size:14px;line-height:1.6;">You'll receive a personalized onboarding email with resources and community guidelines.</span>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:0 0 12px;">
-                    <div style="display:flex;">
-                      <span style="color:#8b5cf6;font-size:18px;margin-right:12px;min-width:24px;">✦</span>
-                      <span style="color:#a1a1aa;font-size:14px;line-height:1.6;">Join our <a href="${whatsappLink}" style="color:#8b5cf6;">WhatsApp group</a> in the meantime to start networking.</span>
-                    </div>
-                  </td>
-                </tr>
-              </table>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="background:#0d0d14;padding:24px 40px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
-              <p style="color:#52525b;font-size:12px;margin:0 0 8px;">
-                This email was sent to you because you applied to join Quantum Nexus Global.
+            <td style="background-color: #f8fafc; padding: 24px 36px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="font-size: 12px; color: #64748b; margin: 0 0 6px; line-height: 1.5;">
+                You received this email because you submitted an application on <a href="https://www.quantumnexusglobal.org" style="color: #2563eb; text-decoration: none;">quantumnexusglobal.org</a>.
               </p>
-              <p style="color:#52525b;font-size:12px;margin:0;">
-                © 2026 QNexus · <a href="https://www.quantumnexusglobal.org" style="color:#6d28d9;text-decoration:none;">quantumnexusglobal.org</a>
+              <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+                &copy; 2026 Quantum Nexus Global &middot; Advancing Quantum Computing
               </p>
             </td>
           </tr>
@@ -156,29 +167,32 @@ export async function sendWelcomeEmail(to: string, name: string) {
     </tr>
   </table>
 </body>
-</html>
-  `;
+</html>`;
 
   const text = `Welcome to Quantum Nexus Global, ${name}!
 
-We're thrilled to have you as part of Quantum Nexus Global (QNexus) — a global quantum computing community bridging research, innovation, and enterprise.
+Thank you for applying to join Quantum Nexus Global (QNexus). We are a student-first quantum computing community bringing together learners, researchers, and professionals.
 
-Your application has been received and is under review. Our team will reach out to you shortly with next steps.
+Your application has been received and is under review.
 
-Join our WhatsApp community: ${whatsappLink}
+Join our community WhatsApp group here:
+${whatsappLink}
 
-What's next:
-- Our team will review your profile within 2-3 business days.
-- You'll receive a personalized onboarding email with resources and community guidelines.
-- Join our WhatsApp group in the meantime to start networking.
+What to expect next:
+1. Application review within 1-2 business days.
+2. Direct invitations to webinars, mentorship sessions, and workshops.
+3. Access to community projects and collaboration channels.
 
-© 2026 QNexus (Quantum Nexus Global) · https://www.quantumnexusglobal.org`;
+If you have any questions, feel free to reply directly to this email.
+
+— The Quantum Nexus Global Team
+https://www.quantumnexusglobal.org`;
 
   try {
     await transporter.sendMail({
       from: `"Quantum Nexus Global" <${from}>`,
       to,
-      subject: `Welcome to Quantum Nexus Global, ${name}! 🚀`,
+      subject: `Welcome to Quantum Nexus Global, ${name}`,
       html,
       text,
     });
@@ -191,19 +205,27 @@ What's next:
 }
 
 // ─────────────────────────────────────────────────────────────────
-// 2. Contact Notification → sent to admin when someone contacts us
+// 2. Admin Form Submission Notification → Handles both Join & Contact
 // ─────────────────────────────────────────────────────────────────
-export async function sendContactNotification(data: {
+export interface FormSubmissionPayload {
+  formType: 'Join Us Application' | 'Contact Us Inquiry' | 'Research Grant Proposal';
   name: string;
   email: string;
-  subject?: string;
-  message: string;
   phone?: string;
   organization?: string;
-}) {
-  const transporter = createTransporter();
+  position?: string;
+  expertise?: string;
+  experience?: string;
+  country?: string;
+  subject?: string;
+  inquiryType?: string;
+  message?: string;
+}
+
+export async function sendAdminNotification(data: FormSubmissionPayload) {
+  const transporter = await createTransporter();
   if (!transporter) {
-    console.warn('[Email] Skipping contact notification — EMAIL_FROM/EMAIL_PASS not configured.');
+    console.warn('[Email] Skipping admin notification — EMAIL_FROM/EMAIL_PASS not configured.');
     return false;
   }
 
@@ -211,86 +233,165 @@ export async function sendContactNotification(data: {
   const adminEmail = process.env.EMAIL_TO || from;
   const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
-  const html = `
-<!DOCTYPE html>
-<html>
+  // Badge theming per form type
+  const isJoin = data.formType === 'Join Us Application';
+  const isResearch = data.formType === 'Research Grant Proposal';
+  const badgeBg = isJoin ? '#eef2ff' : isResearch ? '#faf5ff' : '#f0fdf4';
+  const badgeColor = isJoin ? '#4338ca' : isResearch ? '#7c3aed' : '#15803d';
+  const badgeBorder = isJoin ? '#c7d2fe' : isResearch ? '#ddd6fe' : '#bbf7d0';
+
+  const safeName = escapeHtml(data.name);
+  const safeEmail = escapeHtml(data.email);
+  const safePhone = escapeHtml(data.phone);
+  const safeOrg = escapeHtml(data.organization);
+  const safePosition = escapeHtml(data.position);
+  const safeExpertise = escapeHtml(data.expertise);
+  const safeExperience = escapeHtml(data.experience);
+  const safeCountry = escapeHtml(data.country);
+  const fallbackSubject = isJoin ? 'Community Application' : isResearch ? 'Research Grant Proposal' : 'Inquiry';
+  const safeSubject = escapeHtml(data.subject || data.inquiryType || fallbackSubject);
+  const safeMessage = escapeHtml(data.message);
+
+  const subjectLine = `[${data.formType}] ${safeSubject} — ${safeName}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>New Contact Inquiry — QNexus</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${data.formType} — Notification</title>
 </head>
-<body style="margin:0;padding:0;background:#0a0a0f;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0f;padding:40px 0;">
+<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 32px 16px;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background:#111118;border-radius:16px;overflow:hidden;border:1px solid rgba(239,68,68,0.2);">
-
+        <!-- Main Card -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#1a0a0a 0%,#1a0d0d 100%);padding:32px 40px;text-align:center;">
-              <div style="color:#ef4444;font-size:12px;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">📬 New Contact Inquiry</div>
-              <div style="color:#ffffff;font-size:22px;font-weight:700;">QNexus — Admin Alert</div>
-              <div style="color:#6b7280;font-size:12px;margin-top:8px;">${timestamp} IST</div>
-            </td>
-          </tr>
-
-          <!-- Sender Info -->
-          <tr>
-            <td style="padding:32px 40px 0;">
-              <h2 style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin:0 0 16px;">SENDER INFORMATION</h2>
-              <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;">
-                <tr style="background:rgba(255,255,255,0.03);">
-                  <td style="padding:12px 16px;color:#9ca3af;font-size:13px;width:120px;border-bottom:1px solid rgba(255,255,255,0.05);">Name</td>
-                  <td style="padding:12px 16px;color:#ffffff;font-size:14px;font-weight:600;border-bottom:1px solid rgba(255,255,255,0.05);">${data.name}</td>
-                </tr>
+            <td style="padding: 28px 36px 20px; border-bottom: 1px solid #f1f5f9;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="padding:12px 16px;color:#9ca3af;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05);">Email</td>
-                  <td style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <a href="mailto:${data.email}" style="color:#60a5fa;text-decoration:none;font-size:14px;">${data.email}</a>
+                  <td>
+                    <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 4px;">
+                      QNexus Admin Alert
+                    </div>
+                    <div style="font-size: 18px; font-weight: 700; color: #0f172a;">
+                      New Submission Received
+                    </div>
                   </td>
-                </tr>
-                ${data.phone ? `
-                <tr style="background:rgba(255,255,255,0.03);">
-                  <td style="padding:12px 16px;color:#9ca3af;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05);">Phone</td>
-                  <td style="padding:12px 16px;color:#e4e4e7;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.05);">${data.phone}</td>
-                </tr>` : ''}
-                ${data.organization ? `
-                <tr>
-                  <td style="padding:12px 16px;color:#9ca3af;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05);">Organization</td>
-                  <td style="padding:12px 16px;color:#e4e4e7;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.05);">${data.organization}</td>
-                </tr>` : ''}
-                <tr style="background:rgba(255,255,255,0.03);">
-                  <td style="padding:12px 16px;color:#9ca3af;font-size:13px;">Subject</td>
-                  <td style="padding:12px 16px;color:#e4e4e7;font-size:14px;">${data.subject || 'General Inquiry'}</td>
+                  <td align="right" style="vertical-align: top;">
+                    <span style="display: inline-block; background-color: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder}; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 5px 10px; border-radius: 9999px;">
+                      ${data.formType}
+                    </span>
+                  </td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Message -->
+          <!-- Summary Meta Box -->
           <tr>
-            <td style="padding:24px 40px 0;">
-              <h2 style="color:#9ca3af;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin:0 0 16px;">MESSAGE</h2>
-              <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:20px;">
-                <p style="color:#d4d4d8;font-size:15px;line-height:1.8;margin:0;white-space:pre-wrap;">${data.message}</p>
+            <td style="padding: 24px 36px 8px;">
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #94a3b8; margin-bottom: 12px;">
+                Submission Details
               </div>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; border-collapse: collapse;">
+                
+                <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #64748b; width: 130px;">Form Source</td>
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 700; color: ${badgeColor};">${data.formType}</td>
+                </tr>
+
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #64748b;">Full Name</td>
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #0f172a;">${safeName}</td>
+                </tr>
+
+                <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #64748b;">Email Address</td>
+                  <td style="padding: 10px 14px; font-size: 13px;">
+                    <a href="mailto:${safeEmail}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${safeEmail}</a>
+                  </td>
+                </tr>
+
+                ${data.phone ? `
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #64748b;">Phone / WhatsApp</td>
+                  <td style="padding: 10px 14px; font-size: 13px; color: #0f172a;">${safePhone}</td>
+                </tr>` : ''}
+
+                ${data.organization ? `
+                <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #64748b;">Organization / College</td>
+                  <td style="padding: 10px 14px; font-size: 13px; color: #0f172a;">${safeOrg}</td>
+                </tr>` : ''}
+
+                ${data.position ? `
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #64748b;">Role / Position</td>
+                  <td style="padding: 10px 14px; font-size: 13px; color: #0f172a;">${safePosition}</td>
+                </tr>` : ''}
+
+                ${data.expertise ? `
+                <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #64748b;">Area of Interest</td>
+                  <td style="padding: 10px 14px; font-size: 13px; color: #0f172a;">${safeExpertise}</td>
+                </tr>` : ''}
+
+                ${data.experience ? `
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #64748b;">Experience Level</td>
+                  <td style="padding: 10px 14px; font-size: 13px; color: #0f172a;">${safeExperience}</td>
+                </tr>` : ''}
+
+                ${data.country ? `
+                <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #64748b;">Country</td>
+                  <td style="padding: 10px 14px; font-size: 13px; color: #0f172a;">${safeCountry}</td>
+                </tr>` : ''}
+
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #64748b;">Subject / Topic</td>
+                  <td style="padding: 10px 14px; font-size: 13px; color: #0f172a;">${safeSubject}</td>
+                </tr>
+
+                <tr>
+                  <td style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #64748b;">Timestamp</td>
+                  <td style="padding: 10px 14px; font-size: 12px; color: #64748b;">${timestamp} IST</td>
+                </tr>
+              </table>
             </td>
           </tr>
 
-          <!-- Reply CTA -->
+          <!-- Message Block (if present) -->
+          ${data.message ? `
           <tr>
-            <td style="padding:24px 40px 32px;">
-              <a href="mailto:${data.email}?subject=Re: ${encodeURIComponent(data.subject || 'Your Inquiry to QNexus')}"
-                 style="display:inline-block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;">
-                Reply to ${data.name} →
+            <td style="padding: 16px 36px 8px;">
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #94a3b8; margin-bottom: 8px;">
+                User Message / Statement
+              </div>
+              <div style="background-color: #f8fafc; border-left: 3px solid #2563eb; border-radius: 0 6px 6px 0; padding: 14px 18px; font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-wrap;">${safeMessage}</div>
+            </td>
+          </tr>` : ''}
+
+          <!-- Quick Action Reply Button -->
+          <tr>
+            <td style="padding: 24px 36px 28px;">
+              <a href="mailto:${safeEmail}?subject=Re: ${encodeURIComponent(data.subject || `Your ${data.formType} with QNexus`)}"
+                 style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; padding: 11px 22px; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                Reply via Email &rarr;
               </a>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="background:#0d0d14;padding:20px 40px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
-              <p style="color:#52525b;font-size:12px;margin:0;">
-                QNexus Admin Dashboard · Auto-generated notification
+            <td style="background-color: #f8fafc; padding: 18px 36px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="font-size: 11px; color: #94a3b8; margin: 0;">
+                Automated admin notification from QNexus Portal &middot; ${data.formType}
               </p>
             </td>
           </tr>
@@ -300,33 +401,232 @@ export async function sendContactNotification(data: {
     </tr>
   </table>
 </body>
-</html>
-  `;
+</html>`;
 
-  const text = `New Contact Inquiry — Quantum Nexus Global
+  const text = `[QNG Notification] New ${data.formType}
 
+Form: ${data.formType}
 Name: ${data.name}
 Email: ${data.email}
-${data.phone ? `Phone: ${data.phone}\n` : ''}${data.organization ? `Organization: ${data.organization}\n` : ''}Subject: ${data.subject || 'General Inquiry'}
+${data.phone ? `Phone: ${data.phone}\n` : ''}${data.organization ? `Organization: ${data.organization}\n` : ''}${data.position ? `Position: ${data.position}\n` : ''}${data.expertise ? `Area: ${data.expertise}\n` : ''}${data.experience ? `Experience: ${data.experience}\n` : ''}${data.country ? `Country: ${data.country}\n` : ''}Subject: ${data.subject || data.inquiryType || 'N/A'}
+Timestamp: ${timestamp} IST
 
 Message:
-${data.message}
+${data.message || 'No additional message provided.'}
 
-— Quantum Nexus Global Admin Dashboard`;
+— Quantum nexus global Admin Notification`;
 
   try {
     await transporter.sendMail({
-      from: `"Quantum Nexus Global — Contact Form" <${from}>`,
+      from: `"Quantum Nexus Global" <${from}>`,
       to: adminEmail,
-      replyTo: `"${data.name}" <${data.email}>`,   // ← reply directly to the person
-      subject: `[Contact] ${data.subject || 'General Inquiry'} — from ${data.name}`,
+      replyTo: `"${data.name}" <${data.email}>`,
+      subject: subjectLine,
       html,
       text,
     });
-    console.log(`[Email] Contact notification sent to admin for ${data.email}`);
+    console.log(`[Email] Admin notification sent for [${data.formType}] from ${data.email}`);
     return true;
   } catch (err) {
-    console.error('[Email] Failed to send contact notification:', err);
+    console.error(`[Email] Failed to send admin notification for ${data.formType}:`, err);
     return false;
   }
 }
+
+// Contact Form Notification alias
+export async function sendContactNotification(data: {
+  name: string;
+  email: string;
+  subject?: string;
+  message: string;
+  phone?: string;
+  organization?: string;
+  inquiryType?: string;
+}) {
+  return sendAdminNotification({
+    formType: 'Contact Us Inquiry',
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    organization: data.organization,
+    subject: data.subject || data.inquiryType || 'Contact Inquiry',
+    inquiryType: data.inquiryType,
+    message: data.message,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// 4. Newsletter Welcome Email → Sent immediately upon email subscription
+// ─────────────────────────────────────────────────────────────────
+export async function sendNewsletterWelcomeEmail(to: string) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping newsletter email — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM!;
+  const safeTo = escapeHtml(to);
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>You're in — QNG</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2328; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 40px 16px;">
+    <tr>
+      <td align="center">
+        <!-- Main Card -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px; background-color: #ffffff; border: 1px solid #d0d7de; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(140, 149, 159, 0.1);">
+          
+          <!-- Header Bar -->
+          <tr>
+            <td style="padding: 28px 32px 20px; border-bottom: 1px solid #eaeef2; background-color: #ffffff;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <div style="font-size: 16px; font-weight: 800; color: #0969da; letter-spacing: -0.3px;">
+                      QNG
+                    </div>
+                    <div style="font-size: 12px; color: #656d76; margin-top: 2px;">
+                      Student-First Quantum Community
+                    </div>
+                  </td>
+                  <td align="right" style="vertical-align: middle;">
+                    <span style="display: inline-block; background-color: #dafbe1; color: #1a7f37; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 9999px;">
+                      Subscribed
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Message Body -->
+          <tr>
+            <td style="padding: 32px 32px 28px;">
+              <p style="font-size: 16px; line-height: 1.5; color: #1f2328; margin: 0 0 18px;">
+                Hey there,
+              </p>
+              
+              <p style="font-size: 15px; line-height: 1.65; color: #32383f; margin: 0 0 16px;">
+                Thanks for dropping your email. You're now on our personal list for everything happening at <strong>QNexus India</strong>.
+              </p>
+
+              <p style="font-size: 15px; line-height: 1.65; color: #32383f; margin: 0 0 20px;">
+                We started this initiative with a straightforward goal: give Indian students and researchers direct, no-cost access to real quantum hardware, practical circuit coding, and experienced mentors.
+              </p>
+
+              <!-- What to expect block -->
+              <div style="background-color: #f8fafc; border: 1px solid #d0d7de; border-radius: 8px; padding: 18px 20px; margin-bottom: 24px;">
+                <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #57606a; margin-bottom: 12px;">
+                  What you will actually get from us:
+                </div>
+                
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="vertical-align: top; width: 20px; font-size: 14px; color: #0969da; line-height: 1.6;">•</td>
+                    <td style="padding-bottom: 10px; font-size: 14px; line-height: 1.6; color: #24292f;">
+                      <strong>Direct invitations</strong> to our 4-Part Online Quantum Masterclasses (Qiskit 1.0, VQE, QML, and real QPU hardware execution).
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top; width: 20px; font-size: 14px; color: #0969da; line-height: 1.6;">•</td>
+                    <td style="padding-bottom: 10px; font-size: 14px; line-height: 1.6; color: #24292f;">
+                      <strong>Compute Grant alerts</strong> for free cloud QPU time and 1-on-1 PhD research mentorship.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top; width: 20px; font-size: 14px; color: #0969da; line-height: 1.6;">•</td>
+                    <td style="font-size: 14px; line-height: 1.6; color: #24292f;">
+                      <strong>Curated breakdowns</strong> of quantum papers and open-source repos — written in plain, practical language.
+                    </td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Quick action links -->
+              <p style="font-size: 15px; line-height: 1.65; color: #32383f; margin: 0 0 24px;">
+                No spam, no promotional junk. Just honest updates and real learning opportunities.
+              </p>
+
+              <div style="margin-bottom: 28px;">
+                <a href="https://www.quantumnexusglobal.org/events" target="_blank" style="display: inline-block; background-color: #0969da; color: #ffffff; font-size: 13px; font-weight: 600; text-decoration: none; padding: 11px 22px; border-radius: 6px;">
+                  View Online Masterclasses &rarr;
+                </a>
+              </div>
+
+              <p style="font-size: 14px; line-height: 1.6; color: #57606a; margin: 0 0 16px;">
+                If you're currently working on a quantum circuit, paper, or just exploring where to start, feel free to reply directly to this email. We read and respond to every note.
+              </p>
+
+              <p style="font-size: 15px; line-height: 1.6; color: #1f2328; margin: 0;">
+                Warmly,<br />
+                <strong>Sharvan Kumar Sharma</strong><br />
+                <span style="font-size: 13px; color: #656d76;">Founder, QNexus India</span>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; padding: 20px 32px; border-top: 1px solid #eaeef2; text-align: center;">
+              <p style="font-size: 12px; color: #656d76; margin: 0 0 4px; line-height: 1.5;">
+                Sent to <strong style="color: #24292f;">${safeTo}</strong> because you joined the QNexus community newsletter.
+              </p>
+              <p style="font-size: 12px; color: #8c959f; margin: 0;">
+                &copy; 2026 QNexus India &middot; Advancing Quantum Computing in India
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hey there,
+
+Thanks for dropping your email. You're now on our personal list for everything happening at QNG.
+
+We started this initiative with a straightforward goal: give students and researchers direct, no-cost access to real quantum hardware, practical circuit coding, and experienced mentors.
+
+What you'll get from us (and only this):
+• Direct invitations to our 4-Part Online Quantum Masterclasses (Qiskit 1.0, VQE, QML, Real QPU Runs).
+• Compute Grant alerts for free cloud QPU time and 1-on-1 PhD mentorship.
+• Curated breakdowns of quantum papers and open-source tools.
+
+No spam, ever.
+
+Explore our upcoming online sessions here:
+https://www.quantumnexusglobal.org/events
+
+If you're working on a quantum project or have questions, simply reply directly to this email. We read every message.
+
+Warmly,
+Sharvan Kumar Sharma
+Founder, QNexus nexus global
+https://www.quantumnexusglobal.org`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Sharvan Kumar Sharma (Quantum nexus global)" <${from}>`,
+      to,
+      subject: `You're in — Welcome to Quantum nexus global`,
+      html,
+      text,
+    });
+    console.log(`[Email] Newsletter welcome email sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error('[Email] Failed to send newsletter welcome email:', err);
+    return false;
+  }
+}
+
+

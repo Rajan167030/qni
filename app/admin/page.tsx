@@ -29,18 +29,27 @@ import {
   Pencil,
   Upload,
   Loader2,
+  GraduationCap,
+  Send,
+  Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   getContacts,
   getJoins,
   getRegistrations,
+  getResearchApplications,
+  getNewsletterSubscribers,
+  deleteNewsletterSubscriber,
   updateContactStatus,
   updateJoinStatus,
   updateRegistrationStatus,
+  updateResearchApplicationStatus,
   ContactSubmission,
   JoinSubmission,
   EventRegistration,
+  ResearchGrantApplication,
+  NewsletterSubscriber,
 } from '@/lib/submissions-store';
 import { getBlogs, saveBlog, deleteBlog, BlogPost } from '@/lib/blogs-store';
 
@@ -66,13 +75,16 @@ export default function AdminDashboardPage() {
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'joins' | 'registrations' | 'blogs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'joins' | 'registrations' | 'research' | 'blogs' | 'newsletter'>('overview');
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
   const [joins, setJoins] = useState<JoinSubmission[]>([]);
   const [registrations, setRegistrations] = useState<EventRegistration[]>([]);
+  const [researchApps, setResearchApps] = useState<ResearchGrantApplication[]>([]);
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
+  const [newsletterSubs, setNewsletterSubs] = useState<NewsletterSubscriber[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDetail, setSelectedDetail] = useState<{ type: 'contact' | 'join' | 'reg' | 'blog'; data: any } | null>(null);
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+  const [selectedDetail, setSelectedDetail] = useState<{ type: 'contact' | 'join' | 'reg' | 'research' | 'blog' | 'newsletter'; data: any } | null>(null);
 
   // Blog editor state
   const [showBlogEditor, setShowBlogEditor] = useState(false);
@@ -156,20 +168,26 @@ export default function AdminDashboardPage() {
     const localContacts = getContacts();
     const localJoins = getJoins();
     const localRegs = getRegistrations();
+    const localResearch = getResearchApplications();
     const localBlogs = getBlogs();
+    const localNewsletter = getNewsletterSubscribers();
 
     setContacts(localContacts);
     setJoins(localJoins);
     setRegistrations(localRegs);
+    setResearchApps(localResearch);
     setBlogs(localBlogs);
+    setNewsletterSubs(localNewsletter);
 
     // 2. Fetch and merge from MongoDB APIs
     try {
-      const [resContacts, resJoins, resRegs, resBlogs] = await Promise.allSettled([
+      const [resContacts, resJoins, resRegs, resResearch, resBlogs, resNewsletter] = await Promise.allSettled([
         fetch('/api/contact').then((r) => r.json()),
         fetch('/api/join').then((r) => r.json()),
         fetch('/api/register').then((r) => r.json()),
+        fetch('/api/research').then((r) => r.json()),
         fetch('/api/blogs').then((r) => r.json()),
+        fetch('/api/newsletter').then((r) => r.json()),
       ]);
 
       // Merge Contacts
@@ -247,6 +265,35 @@ export default function AdminDashboardPage() {
         setRegistrations(mergedRegs);
       }
 
+      // Merge Research Grant Applications
+      if (resResearch.status === 'fulfilled' && resResearch.value?.success && Array.isArray(resResearch.value?.data)) {
+        const remoteResearch = resResearch.value.data.map((r: any) => ({
+          id: r._id || r.id || `rg-${Date.now()}`,
+          fullName: r.fullName || r.name || 'Scholar',
+          email: r.email || '',
+          phone: r.phone || '',
+          institution: r.institution || 'University',
+          programLevel: r.programLevel || 'PhD Scholar',
+          researchDomain: r.researchDomain || 'Quantum Algorithms',
+          projectTitle: r.projectTitle || 'Research Proposal',
+          projectAbstract: r.projectAbstract || '',
+          supportTypes: r.supportTypes || [],
+          currentPaperStatus: r.currentPaperStatus || 'Work In Progress',
+          githubOrArxiv: r.githubOrArxiv || '',
+          computeHoursRequested: r.computeHoursRequested || '',
+          createdAt: r.createdAt || new Date().toISOString(),
+          status: r.status || 'Under Review',
+        }));
+
+        const mergedResearch = [...localResearch];
+        remoteResearch.forEach((rr: ResearchGrantApplication) => {
+          if (!mergedResearch.some((lr) => lr.id === rr.id || (lr.email === rr.email && lr.projectTitle === rr.projectTitle))) {
+            mergedResearch.push(rr);
+          }
+        });
+        setResearchApps(mergedResearch);
+      }
+
       // Merge Blogs
       if (resBlogs.status === 'fulfilled' && resBlogs.value?.success && Array.isArray(resBlogs.value?.data)) {
         const remoteBlogs = resBlogs.value.data;
@@ -257,6 +304,25 @@ export default function AdminDashboardPage() {
           }
         });
         setBlogs(mergedBlogs);
+      }
+
+      // Merge Newsletter Subscribers
+      if (resNewsletter.status === 'fulfilled' && resNewsletter.value?.success && Array.isArray(resNewsletter.value?.data)) {
+        const remoteSubs = resNewsletter.value.data.map((s: any) => ({
+          id: s._id || s.id || `nl-${Date.now()}`,
+          email: s.email || '',
+          source: s.source || 'Website Footer',
+          subscribedAt: s.subscribedAt || s.createdAt || new Date().toISOString(),
+          status: s.status || 'Active',
+        }));
+
+        const mergedSubs = [...localNewsletter];
+        remoteSubs.forEach((rs: NewsletterSubscriber) => {
+          if (!mergedSubs.some((ls) => ls.email.toLowerCase() === rs.email.toLowerCase())) {
+            mergedSubs.push(rs);
+          }
+        });
+        setNewsletterSubs(mergedSubs);
       }
     } catch (err) {
       console.warn('API sync warning:', err);
@@ -282,6 +348,16 @@ export default function AdminDashboardPage() {
 
   const handleRegStatus = (id: string, status: EventRegistration['status']) => {
     updateRegistrationStatus(id, status);
+    refreshData();
+  };
+
+  const handleResearchStatus = async (id: string, status: ResearchGrantApplication['status']) => {
+    updateResearchApplicationStatus(id, status);
+    await fetch('/api/research', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    }).catch(() => {});
     refreshData();
   };
 
@@ -361,6 +437,13 @@ export default function AdminDashboardPage() {
     setBlogSaving(false);
   };
 
+  const handleNewsletterDelete = (id: string) => {
+    if (confirm('Delete this subscriber?')) {
+      deleteNewsletterSubscriber(id);
+      refreshData();
+    }
+  };
+
   // Export Data to JSON
   const handleExportData = () => {
     const exportPayload = {
@@ -368,12 +451,28 @@ export default function AdminDashboardPage() {
       contacts,
       joins,
       registrations,
+      researchApplications: researchApps,
+      newsletterSubscribers: newsletterSubs,
     };
     const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `qni_admin_export_${Date.now()}.json`;
+    a.click();
+  };
+
+  // Export Newsletter Emails as CSV
+  const handleExportNewsletterCSV = () => {
+    if (newsletterSubs.length === 0) {
+      alert('No subscribers to export.');
+      return;
+    }
+    const csvContent = 'data:text/csv;charset=utf-8,' + ['Email,Source,Subscribed Date,Status', ...newsletterSubs.map((s) => `"${s.email}","${s.source}","${new Date(s.subscribedAt).toLocaleString()}","${s.status}"`)].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const a = document.createElement('a');
+    a.href = encodedUri;
+    a.download = `qni_newsletter_subscribers_${Date.now()}.csv`;
     a.click();
   };
 
@@ -400,6 +499,22 @@ export default function AdminDashboardPage() {
       r.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.eventTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.organization.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredResearchApps = researchApps.filter(
+    (r) =>
+      r.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.institution.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.projectTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.researchDomain.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredNewsletter = newsletterSubs.filter(
+    (s) =>
+      s.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.status.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // IF NOT AUTHENTICATED -> SHOW ADMIN LOGIN SCREEN
@@ -591,6 +706,23 @@ export default function AdminDashboardPage() {
             </button>
 
             <button
+              onClick={() => setActiveTab('research')}
+              className={`w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === 'research'
+                  ? 'bg-foreground text-background shadow-md'
+                  : 'text-foreground/70 hover:bg-foreground/10 hover:text-foreground'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <GraduationCap className="w-4 h-4 text-cyan-400" />
+                <span>Research Grants</span>
+              </div>
+              <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 font-bold">
+                {researchApps.length}
+              </span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('blogs')}
               className={`w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === 'blogs'
@@ -604,6 +736,23 @@ export default function AdminDashboardPage() {
               </div>
               <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-foreground/15 font-bold">
                 {blogs.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('newsletter')}
+              className={`w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === 'newsletter'
+                  ? 'bg-foreground text-background shadow-md'
+                  : 'text-foreground/70 hover:bg-foreground/10 hover:text-foreground'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Send className="w-4 h-4 text-emerald-400" />
+                <span>Newsletter</span>
+              </div>
+              <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">
+                {newsletterSubs.length}
               </span>
             </button>
 
@@ -649,48 +798,70 @@ export default function AdminDashboardPage() {
           {activeTab === 'overview' && (
             <div className="space-y-8 animate-in fade-in duration-300">
               {/* KPI Cards */}
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="p-6 rounded-3xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-2">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+                <div className="p-4 rounded-2xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-1.5">
                   <div className="flex items-center justify-between text-muted-foreground">
-                    <span className="font-mono text-xs uppercase tracking-wider">Contact Enquiries</span>
-                    <Mail className="w-4 h-4 text-sky-500" />
+                    <span className="font-mono text-[11px] uppercase tracking-wider">Contacts</span>
+                    <Mail className="w-3.5 h-3.5 text-sky-500" />
                   </div>
-                  <p className="font-display text-4xl font-bold text-foreground">{contacts.length}</p>
-                  <p className="text-xs text-emerald-500 font-mono">
+                  <p className="font-display text-2xl font-bold text-foreground">{contacts.length}</p>
+                  <p className="text-[10px] text-emerald-500 font-mono">
                     {contacts.filter((c) => c.status === 'New').length} Pending
                   </p>
                 </div>
 
-                <div className="p-6 rounded-3xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-2">
+                <div className="p-4 rounded-2xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-1.5">
                   <div className="flex items-center justify-between text-muted-foreground">
-                    <span className="font-mono text-xs uppercase tracking-wider">Join Applications</span>
-                    <Users className="w-4 h-4 text-amber-500" />
+                    <span className="font-mono text-[11px] uppercase tracking-wider">Joins</span>
+                    <Users className="w-3.5 h-3.5 text-amber-500" />
                   </div>
-                  <p className="font-display text-4xl font-bold text-foreground">{joins.length}</p>
-                  <p className="text-xs text-amber-500 font-mono">
+                  <p className="font-display text-2xl font-bold text-foreground">{joins.length}</p>
+                  <p className="text-[10px] text-amber-500 font-mono">
                     {joins.filter((j) => j.status === 'Pending').length} Pending
                   </p>
                 </div>
 
-                <div className="p-6 rounded-3xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-2">
+                <div className="p-4 rounded-2xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-1.5">
                   <div className="flex items-center justify-between text-muted-foreground">
-                    <span className="font-mono text-xs uppercase tracking-wider">Registrations</span>
-                    <CalendarCheck className="w-4 h-4 text-emerald-500" />
+                    <span className="font-mono text-[11px] uppercase tracking-wider">Events</span>
+                    <CalendarCheck className="w-3.5 h-3.5 text-emerald-500" />
                   </div>
-                  <p className="font-display text-4xl font-bold text-foreground">{registrations.length}</p>
-                  <p className="text-xs text-emerald-500 font-mono">
+                  <p className="font-display text-2xl font-bold text-foreground">{registrations.length}</p>
+                  <p className="text-[10px] text-emerald-500 font-mono">
                     {registrations.filter((r) => r.status === 'Confirmed').length} Confirmed
                   </p>
                 </div>
 
-                <div className="p-6 rounded-3xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-2">
+                <div className="p-4 rounded-2xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-1.5">
                   <div className="flex items-center justify-between text-muted-foreground">
-                    <span className="font-mono text-xs uppercase tracking-wider">Blog Articles</span>
-                    <PenSquare className="w-4 h-4 text-purple-400" />
+                    <span className="font-mono text-[11px] uppercase tracking-wider">Grants</span>
+                    <GraduationCap className="w-3.5 h-3.5 text-cyan-400" />
                   </div>
-                  <p className="font-display text-4xl font-bold text-foreground">{blogs.length}</p>
-                  <p className="text-xs text-purple-400 font-mono">
-                    {blogs.filter((b) => b.status === 'Published').length} Published Live
+                  <p className="font-display text-2xl font-bold text-foreground">{researchApps.length}</p>
+                  <p className="text-[10px] text-cyan-400 font-mono">
+                    {researchApps.filter((r) => r.status === 'Under Review').length} Reviewing
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-1.5">
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span className="font-mono text-[11px] uppercase tracking-wider">Newsletter</span>
+                    <Send className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
+                  <p className="font-display text-2xl font-bold text-foreground">{newsletterSubs.length}</p>
+                  <p className="text-[10px] text-emerald-400 font-mono">
+                    {newsletterSubs.filter((s) => s.status === 'Active').length} Active
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-2xl border border-foreground/15 bg-foreground/5 backdrop-blur-md space-y-1.5">
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span className="font-mono text-[11px] uppercase tracking-wider">Blogs</span>
+                    <PenSquare className="w-3.5 h-3.5 text-purple-400" />
+                  </div>
+                  <p className="font-display text-2xl font-bold text-foreground">{blogs.length}</p>
+                  <p className="text-[10px] text-purple-400 font-mono">
+                    {blogs.filter((b) => b.status === 'Published').length} Published
                   </p>
                 </div>
               </div>
@@ -991,6 +1162,103 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
+          {/* TAB 4: RESEARCH GRANT APPLICATIONS TABLE */}
+          {activeTab === 'research' && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-display text-2xl font-bold text-foreground flex items-center gap-2">
+                    <GraduationCap className="w-6 h-6 text-cyan-400" />
+                    <span>Research Grant Proposals</span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    Review and evaluate student and researcher grant proposals.
+                  </p>
+                </div>
+                <span className="text-xs font-mono text-muted-foreground">
+                  Showing {filteredResearchApps.length} of {researchApps.length} entries
+                </span>
+              </div>
+
+              <div className="rounded-3xl border border-foreground/15 bg-background overflow-hidden shadow-xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-foreground/5 text-xs font-mono uppercase tracking-wider text-muted-foreground border-b border-foreground/10">
+                      <tr>
+                        <th className="p-4">Applicant / Institution</th>
+                        <th className="p-4">Project Title & Domain</th>
+                        <th className="p-4">Academic Level</th>
+                        <th className="p-4">Paper Status</th>
+                        <th className="p-4">Date</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-foreground/10">
+                      {filteredResearchApps.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center text-xs font-mono text-muted-foreground">
+                            No research grant applications yet. Submissions from the Research Portal will appear here live.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredResearchApps.map((r) => (
+                          <tr key={r.id} className="hover:bg-foreground/[0.02] transition-colors">
+                            <td className="p-4">
+                              <p className="font-bold text-foreground">{r.fullName}</p>
+                              <p className="text-xs text-muted-foreground">{r.email}</p>
+                              <p className="text-[11px] text-cyan-400 font-mono mt-0.5">{r.institution}</p>
+                            </td>
+                            <td className="p-4 max-w-[280px]">
+                              <p className="font-semibold text-foreground text-xs line-clamp-1">{r.projectTitle}</p>
+                              <p className="text-[11px] text-muted-foreground line-clamp-1">{r.researchDomain}</p>
+                              {r.supportTypes && r.supportTypes.length > 0 && (
+                                <div className="flex gap-1 flex-wrap mt-1">
+                                  {r.supportTypes.slice(0, 2).map((st: string) => (
+                                    <span key={st} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400">
+                                      {st}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-4 text-xs font-mono text-muted-foreground">{r.programLevel}</td>
+                            <td className="p-4 text-xs font-mono text-foreground/80">{r.currentPaperStatus}</td>
+                            <td className="p-4 text-xs font-mono text-muted-foreground">
+                              {new Date(r.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="p-4">
+                              <select
+                                value={r.status}
+                                onChange={(e) => handleResearchStatus(r.id, e.target.value as any)}
+                                className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-foreground/10 border border-foreground/15 text-foreground focus:outline-none"
+                              >
+                                <option value="Under Review">Under Review</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Funded">Funded</option>
+                                <option value="Rejected">Rejected</option>
+                              </select>
+                            </td>
+                            <td className="p-4 text-right">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setSelectedDetail({ type: 'research', data: r })}
+                                className="h-8 px-3 rounded-full text-xs gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> View
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* TAB 5: BLOGS MANAGEMENT TABLE */}
           {activeTab === 'blogs' && (
             <div className="space-y-6 animate-in fade-in duration-300">
@@ -1231,6 +1499,127 @@ export default function AdminDashboardPage() {
                           </td>
                         </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: NEWSLETTER SUBSCRIBERS TABLE */}
+          {activeTab === 'newsletter' && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-display text-2xl font-bold text-foreground">Newsletter Subscribers</h3>
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-xs font-mono font-bold">
+                      {newsletterSubs.length} Live
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    Users who joined via website footer for quantum updates, events & grants.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={() => {
+                      const allEmails = newsletterSubs.map((s) => s.email).join(', ');
+                      navigator.clipboard.writeText(allEmails);
+                      alert(`Copied ${newsletterSubs.length} email addresses to clipboard!`);
+                    }}
+                    variant="outline"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 hover:bg-foreground/5 transition-all h-9"
+                  >
+                    <Copy className="w-3.5 h-3.5" /> Copy All Emails
+                  </Button>
+                  <Button
+                    onClick={handleExportNewsletterCSV}
+                    className="px-4 py-2 rounded-xl bg-foreground text-background text-xs font-semibold inline-flex items-center gap-1.5 hover:bg-foreground/90 transition-all h-9"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Export CSV
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-foreground/15 bg-background overflow-hidden shadow-xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-foreground/5 text-xs font-mono uppercase tracking-wider text-muted-foreground border-b border-foreground/10">
+                      <tr>
+                        <th className="p-4">#</th>
+                        <th className="p-4">Subscriber Email</th>
+                        <th className="p-4">Source</th>
+                        <th className="p-4">Subscribed Date</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-foreground/10">
+                      {filteredNewsletter.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-xs font-mono text-muted-foreground">
+                            {searchQuery ? 'No subscribers match your search query.' : 'No newsletter subscribers yet. Submissions from the website footer will appear here live.'}
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredNewsletter.map((sub, idx) => (
+                          <tr key={sub.id} className="hover:bg-foreground/[0.02] transition-colors">
+                            <td className="p-4 font-mono text-xs text-muted-foreground">{idx + 1}</td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-foreground">{sub.email}</span>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(sub.email);
+                                    setCopiedEmail(sub.id);
+                                    setTimeout(() => setCopiedEmail(null), 2000);
+                                  }}
+                                  className="p-1 rounded hover:bg-foreground/10 text-muted-foreground hover:text-foreground transition-colors"
+                                  title="Copy Email"
+                                >
+                                  {copiedEmail === sub.id ? (
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-foreground/10 text-foreground">
+                                {sub.source || 'Website Footer'}
+                              </span>
+                            </td>
+                            <td className="p-4 text-xs font-mono text-muted-foreground">
+                              {sub.subscribedAt ? new Date(sub.subscribedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'Recent'}
+                            </td>
+                            <td className="p-4">
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                {sub.status || 'Active'}
+                              </span>
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => setSelectedDetail({ type: 'newsletter', data: sub })}
+                                  className="p-1.5 rounded-lg hover:bg-foreground/10 text-xs text-muted-foreground hover:text-foreground"
+                                  title="View Details"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleNewsletterDelete(sub.id)}
+                                  className="p-1.5 rounded-lg hover:bg-rose-500/10 text-xs text-rose-400"
+                                  title="Delete Subscriber"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>

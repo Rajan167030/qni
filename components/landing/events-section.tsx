@@ -4,96 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { X, Calendar, MapPin, Clock, Users, ArrowRight, ExternalLink, ChevronRight } from "lucide-react";
 
-const events = [
-  {
-    id: "1",
-    month: "AUG",
-    day: "02",
-    dayLabel: "Sat",
-    title: "Intro to Qiskit — Bengaluru chapter",
-    description: "Hands-on workshop, no prior quantum background needed.",
-    location: "IISC Campus, Bengaluru",
-    time: "10:00 AM – 2:00 PM IST",
-    attendees: "120",
-    badge: "In person",
-    category: "Workshop",
-    fullDescription: "An accessible, hands-on introduction to IBM Qiskit. No prior quantum physics background required. You'll build your first quantum circuits, run simulations on real QPU hardware, and network with fellow developers.",
-    speakers: ["Dr. Ramesh Nair", "Ankit Verma"],
-    price: "Free (Registration Required)",
-    schedule: [
-      { time: "10:00 AM", title: "Introduction to Quantum Bits & Qiskit Setup" },
-      { time: "11:00 AM", title: "Hands-on: Your First Quantum Circuit" },
-      { time: "1:30 PM", title: "Real QPU Run Demo & Q&A" },
-    ],
-  },
-  {
-    id: "2",
-    month: "AUG",
-    day: "16",
-    dayLabel: "Sat",
-    title: "Variational algorithms reading group",
-    description: "Open to all chapters, hosted online, recording shared after.",
-    location: "Online (Zoom)",
-    time: "3:00 PM – 5:00 PM IST",
-    attendees: "250+",
-    badge: "Online",
-    category: "Seminar",
-    fullDescription: "A deep-dive reading group session covering the latest advances in Variational Quantum Eigensolvers (VQE) and QAOA. Open to all QNexus chapter members globally.",
-    speakers: ["Prof. Shreya Mehta", "QNexus Research Team"],
-    price: "Free for Members",
-    schedule: [
-      { time: "3:00 PM", title: "Paper Review: VQE with Adaptive Circuits" },
-      { time: "4:00 PM", title: "Open Discussion & Q&A" },
-    ],
-  },
-  {
-    id: "3",
-    month: "SEP",
-    day: "05-06",
-    dayLabel: "Sat-Sun",
-    title: "QNI National Hackathon 2026",
-    description: "48-hour build sprint with real QPU access, hosted in Hyderabad.",
-    location: "T-Hub, Hyderabad",
-    time: "Sep 5 9:00 AM – Sep 6 9:00 PM IST",
-    attendees: "500+",
-    badge: "Flagship",
-    category: "Hackathon",
-    fullDescription: "India's premier quantum computing hackathon. Build real-world solutions using QNexus's quantum cloud platform with direct QPU access on IBM Quantum hardware. Win prizes worth ₹5 Lakhs.",
-    speakers: ["Sharvan Kumar Sharma", "Dr. Ananya Sharma", "Prof. Rajesh Varma"],
-    price: "₹500/team (up to 4 members)",
-    schedule: [
-      { time: "Sep 5, 9 AM", title: "Opening Ceremony & Problem Statements" },
-      { time: "Sep 5, 11 AM", title: "Hackathon Sprint Begins" },
-      { time: "Sep 6, 9 PM", title: "Final Submissions & Prize Ceremony" },
-    ],
-  },
-  {
-    id: "4",
-    month: "SEP",
-    day: "20",
-    dayLabel: "Sun",
-    title: "Careers in quantum — mentor panel",
-    description: "Engineers from partner labs answer questions on internships and PhDs.",
-    location: "Online (Google Meet)",
-    time: "5:00 PM – 7:00 PM IST",
-    attendees: "300+",
-    badge: "Online",
-    category: "Panel",
-    fullDescription: "A candid mentor panel where engineers and researchers from IIT Madras, IISc, IBM Quantum, and TCS Labs answer your questions about careers in quantum computing.",
-    speakers: ["Dr. Ananya Sharma", "Prof. Rajesh Varma", "Vikramaditya Singh"],
-    price: "Free",
-    schedule: [
-      { time: "5:00 PM", title: "Panelist Introductions & Pathways discussion" },
-      { time: "6:00 PM", title: "Open Q&A from Audience" },
-    ],
-  },
-];
+import { getEvents, EventItem } from "@/lib/events-store";
 
 export function EventsSection() {
+  const [eventsList, setEventsList] = useState<EventItem[]>([]);
   const [isVisible, setIsVisible] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<typeof events[0] | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setEventsList(getEvents());
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -149,19 +71,19 @@ export function EventsSection() {
           </h2>
         </div>
 
-        {/* Events List — matching exact screenshot style */}
+
         <div className="divide-y divide-foreground/10 border-t border-b border-foreground/10">
-          {events.map((event, index) => (
+          {eventsList.map((event, index) => (
             <div
               key={event.id}
               onClick={() => setSelectedEvent(event)}
-              className={`group flex items-start gap-8 py-8 cursor-pointer transition-all duration-300 hover:px-4 hover:-mx-4 hover:bg-foreground/[0.02] ${
+              className={`group flex flex-col md:flex-row items-start md:items-center gap-6 py-7 cursor-pointer transition-all duration-300 hover:px-4 hover:-mx-4 hover:bg-foreground/[0.02] ${
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
               style={{ transitionDelay: `${index * 80}ms` }}
             >
-              {/* Date column (Exact reference style) */}
-              <div className="w-16 shrink-0 text-left select-none">
+              {/* Date column */}
+              <div className="w-16 shrink-0 text-left select-none hidden sm:block">
                 <div className="font-mono text-xs text-foreground/40 uppercase tracking-widest leading-none">
                   {event.month}
                 </div>
@@ -173,37 +95,53 @@ export function EventsSection() {
                 </div>
               </div>
 
+              {/* Session Image Thumbnail */}
+              {event.imageUrl && (
+                <div className="relative w-full sm:w-44 md:w-36 h-28 sm:h-24 rounded-2xl overflow-hidden shrink-0 border border-foreground/10 bg-foreground/5 shadow-sm group-hover:border-cyan-500/40 transition-all">
+                  <img
+                    src={event.imageUrl}
+                    alt={event.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent sm:hidden" />
+                  <div className="absolute bottom-2 left-2 sm:hidden text-white font-mono text-[11px] font-bold">
+                    {event.month} {event.day} • {event.dayLabel}
+                  </div>
+                </div>
+              )}
+
               {/* Title & description in the center */}
               <div className="flex-1 min-w-0 py-0.5">
-                <h3 className="text-lg lg:text-xl font-medium leading-snug text-foreground mb-1.5 group-hover:text-foreground/80 transition-colors">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full border border-cyan-500/40 text-cyan-400 bg-cyan-950/30">
+                    {event.badge || "Online Masterclass"}
+                  </span>
+                  <span className="text-xs font-mono text-foreground/40">
+                    {event.time}
+                  </span>
+                </div>
+                <h3 className="text-lg lg:text-xl font-medium leading-snug text-foreground group-hover:text-cyan-400 transition-colors">
                   {event.title}
                 </h3>
-                <p className="text-sm text-foreground/50 leading-relaxed">
+                <p className="text-sm text-foreground/50 leading-relaxed mt-1 line-clamp-2">
                   {event.description}
                 </p>
               </div>
 
-              {/* Badge on the right */}
-              <div className="shrink-0 flex items-center gap-3 pt-1">
-                <span className="text-xs font-mono text-foreground/60 border border-foreground/15 px-3 py-1 rounded-full whitespace-nowrap bg-background">
-                  {event.badge}
+              {/* Action on the right */}
+              <div className="shrink-0 flex items-center gap-3 pt-1 self-end md:self-center">
+                <span className="text-xs font-mono text-foreground/60 hidden lg:inline-block">
+                  {event.price}
                 </span>
-                <ChevronRight className="w-4 h-4 text-foreground/25 group-hover:text-foreground/50 group-hover:translate-x-0.5 transition-all duration-200" />
+                <div className="w-9 h-9 rounded-full border border-foreground/15 flex items-center justify-center group-hover:border-cyan-500/40 group-hover:bg-cyan-500/10 transition-all">
+                  <ChevronRight className="w-4 h-4 text-foreground/40 group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all duration-200" />
+                </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* View all button */}
-        <div className="mt-12 text-center">
-          <Link
-            href="/events"
-            className="inline-flex items-center gap-2 text-sm font-mono text-foreground/50 hover:text-foreground transition-colors"
-          >
-            <span>Explore all scheduled events</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+
       </div>
 
       {/* Slide-in detail panel overlay */}
@@ -248,10 +186,21 @@ export function EventsSection() {
                     {selectedEvent.dayLabel}
                   </div>
                 </div>
-                <span className="text-xs font-mono text-foreground/60 border border-foreground/15 px-3 py-1 rounded-full">
+                <span className="text-xs font-mono text-cyan-400 border border-cyan-500/40 bg-cyan-950/20 px-3 py-1 rounded-full">
                   {selectedEvent.badge}
                 </span>
               </div>
+
+              {/* Cover Image */}
+              {selectedEvent.imageUrl && (
+                <div className="w-full h-48 rounded-2xl overflow-hidden border border-foreground/15 bg-foreground/5 shadow-inner">
+                  <img
+                    src={selectedEvent.imageUrl}
+                    alt={selectedEvent.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
 
               {/* Title & Description */}
               <div>

@@ -14,13 +14,16 @@ import {
   Sparkles,
   Heart,
   Mail,
+  Loader2,
 } from "lucide-react";
+import { saveNewsletterSubscriber } from "@/lib/submissions-store";
 import { Button } from "@/components/ui/button";
 import { AnimatedWave } from "./animated-wave";
 
 const footerLinks = {
   Explore: [
     { name: "Events", href: "/events" },
+    { name: "Research Support", href: "/research" },
     { name: "Gallery", href: "/gallery" },
     { name: "Team", href: "/team" },
     { name: "Blog", href: "/blog" },
@@ -46,16 +49,43 @@ const pillars = ["Learn", "Connect", "Build", "Grow"];
 
 export function FooterSection() {
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  const [feedbackMsg, setFeedbackMsg] = useState("");
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    setSubscribed(true);
-    setTimeout(() => {
-      setSubscribed(false);
-      setEmail("");
-    }, 4000);
+    if (!email || isSubmitting) return;
+
+    const submittedEmail = email.trim();
+    setIsSubmitting(true);
+    setFeedbackMsg("");
+
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: submittedEmail }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        saveNewsletterSubscriber(submittedEmail);
+        setSubscribed(true);
+        setFeedbackMsg(data.message || "You're subscribed! Check your inbox.");
+        setEmail("");
+        setTimeout(() => {
+          setSubscribed(false);
+          setFeedbackMsg("");
+        }, 6000);
+      } else {
+        setFeedbackMsg(data.error || "Subscription failed. Please try again.");
+      }
+    } catch {
+      setFeedbackMsg("Failed to subscribe. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const scrollToTop = () => {
@@ -114,33 +144,46 @@ export function FooterSection() {
                 </div>
               </div>
 
-              <form onSubmit={handleSubscribe} className="w-full lg:w-auto flex items-center gap-2 shrink-0">
-                <div className="relative flex-1 lg:w-72">
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full px-4 py-3 rounded-full border border-foreground/20 bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:border-foreground/50 transition-colors"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="bg-foreground hover:bg-foreground/90 text-background rounded-full px-6 h-11 text-sm font-semibold shrink-0"
-                >
-                  {subscribed ? (
-                    <span className="flex items-center gap-1.5 text-emerald-400">
-                      <CheckCircle2 className="w-4 h-4" /> Subscribed
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5">
-                      Subscribe <Send className="w-3.5 h-3.5 ml-1" />
-                    </span>
-                  )}
-                </Button>
-              </form>
+              <div className="w-full lg:w-auto shrink-0 space-y-2">
+                <form onSubmit={handleSubscribe} className="flex items-center gap-2">
+                  <div className="relative flex-1 lg:w-72">
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      disabled={isSubmitting || subscribed}
+                      className="w-full px-4 py-3 rounded-full border border-foreground/20 bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:border-foreground/50 transition-colors disabled:opacity-60"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={isSubmitting || subscribed}
+                    className="bg-foreground hover:bg-foreground/90 text-background rounded-full px-6 h-11 text-sm font-semibold shrink-0 disabled:opacity-70"
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-1.5">
+                        <Loader2 className="w-4 h-4 animate-spin" /> Sending...
+                      </span>
+                    ) : subscribed ? (
+                      <span className="flex items-center gap-1.5 text-emerald-400">
+                        <CheckCircle2 className="w-4 h-4" /> Done!
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5">
+                        Subscribe <Send className="w-3.5 h-3.5 ml-1" />
+                      </span>
+                    )}
+                  </Button>
+                </form>
+                {feedbackMsg && (
+                  <p className={`text-xs font-mono pl-2 ${subscribed ? 'text-emerald-500' : 'text-rose-400'}`}>
+                    {feedbackMsg}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

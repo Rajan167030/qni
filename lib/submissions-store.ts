@@ -42,10 +42,38 @@ export interface EventRegistration {
   status: "Confirmed" | "Attended" | "Cancelled";
 }
 
+export interface ResearchGrantApplication {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  institution: string;
+  programLevel: string;
+  researchDomain: string;
+  projectTitle: string;
+  projectAbstract: string;
+  supportTypes: string[];
+  currentPaperStatus: string;
+  githubOrArxiv?: string;
+  computeHoursRequested?: string;
+  createdAt: string;
+  status: "Under Review" | "Approved" | "Funded" | "Rejected";
+}
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  source: string;
+  subscribedAt: string;
+  status: "Active" | "Unsubscribed";
+}
+
 const STORAGE_KEYS = {
   CONTACT: "qni_contact_submissions",
   JOIN: "qni_join_submissions",
   REGISTRATIONS: "qni_event_registrations",
+  RESEARCH_GRANTS: "qni_research_applications",
+  NEWSLETTER: "qni_newsletter_subscribers",
 };
 
 // Live Real Submissions Store (No fake/dummy seed data)
@@ -161,4 +189,85 @@ export const updateRegistrationStatus = (id: string, status: EventRegistration["
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(updated));
   }
 };
+
+export const getResearchApplications = (): ResearchGrantApplication[] => {
+  if (typeof window === "undefined") return [];
+  const saved = localStorage.getItem(STORAGE_KEYS.RESEARCH_GRANTS);
+  if (!saved) return [];
+  try {
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+export const saveResearchApplication = (
+  app: Omit<ResearchGrantApplication, "id" | "createdAt" | "status">
+): ResearchGrantApplication => {
+  const apps = getResearchApplications();
+  const newApp: ResearchGrantApplication = {
+    ...app,
+    id: `rg-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    status: "Under Review",
+  };
+  const updated = [newApp, ...apps];
+  if (typeof window !== "undefined") {
+    localStorage.setItem(STORAGE_KEYS.RESEARCH_GRANTS, JSON.stringify(updated));
+  }
+  return newApp;
+};
+
+export const updateResearchApplicationStatus = (
+  id: string,
+  status: ResearchGrantApplication["status"]
+) => {
+  const apps = getResearchApplications();
+  const updated = apps.map((a) => (a.id === id ? { ...a, status } : a));
+  if (typeof window !== "undefined") {
+    localStorage.setItem(STORAGE_KEYS.RESEARCH_GRANTS, JSON.stringify(updated));
+  }
+};
+
+export const getNewsletterSubscribers = (): NewsletterSubscriber[] => {
+  if (typeof window === "undefined") return [];
+  const saved = localStorage.getItem(STORAGE_KEYS.NEWSLETTER);
+  if (!saved) return [];
+  try {
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+export const saveNewsletterSubscriber = (email: string): NewsletterSubscriber => {
+  const subscribers = getNewsletterSubscribers();
+  const existing = subscribers.find((s) => s.email.toLowerCase() === email.toLowerCase());
+  if (existing) return existing;
+
+  const newSub: NewsletterSubscriber = {
+    id: `nl-${Date.now()}`,
+    email: email.trim().toLowerCase(),
+    source: "Website Footer",
+    subscribedAt: new Date().toISOString(),
+    status: "Active",
+  };
+  const updated = [newSub, ...subscribers];
+  if (typeof window !== "undefined") {
+    localStorage.setItem(STORAGE_KEYS.NEWSLETTER, JSON.stringify(updated));
+  }
+  return newSub;
+};
+
+export const deleteNewsletterSubscriber = (id: string) => {
+  const subscribers = getNewsletterSubscribers();
+  const updated = subscribers.filter((s) => s.id !== id);
+  if (typeof window !== "undefined") {
+    localStorage.setItem(STORAGE_KEYS.NEWSLETTER, JSON.stringify(updated));
+  }
+};
+
+
 

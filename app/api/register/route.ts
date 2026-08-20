@@ -1,31 +1,39 @@
 import { NextResponse } from 'next/server';
 import { getMongoDbDatabase } from '@/lib/mongodb';
+import { saveServerSubmission, getServerSubmissions } from '@/lib/server-storage';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const db = await getMongoDbDatabase();
+    const regRecord = {
+      ...body,
+      id: body.id || `r-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: body.status || 'Confirmed',
+    };
 
-    if (!db) {
-      return NextResponse.json(
-        { success: true, message: 'Saved locally (MongoDB URI not active or local fallback)', data: body },
-        { status: 200 }
-      );
+    // 1. Save to Server Storage
+    saveServerSubmission('registrations', regRecord);
+
+    // 2. Save to MongoDB
+    let insertedId = null;
+    try {
+      const db = await getMongoDbDatabase();
+      if (db) {
+        const collection = db.collection('registrations');
+        const result = await collection.insertOne(regRecord);
+        insertedId = result.insertedId;
+      }
+    } catch (dbErr) {
+      console.warn('[MongoDB Registration] DB write error:', dbErr);
     }
 
-    const collection = db.collection('registrations');
-    const result = await collection.insertOne({
-      ...body,
-      createdAt: new Date(),
-      status: body.status || 'Confirmed',
-    });
-
     return NextResponse.json(
-      { success: true, message: 'Event registration saved to MongoDB', id: result.insertedId },
+      { success: true, message: 'Event registration saved', id: insertedId || regRecord.id, data: regRecord },
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error saving registration to MongoDB:', error);
+    console.error('Error saving registration:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Internal Server Error' },
       { status: 500 }
@@ -35,13 +43,40 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    const db = await getMongoDbDatabase();
-    if (!db) {
-      return NextResponse.json({ success: false, message: 'MongoDB connection not active' }, { status: 400 });
+    const serverRegs = getServerSubmissions('registrations');
+
+    let mongoRegs: any[] = [];
+    try {
+      const db = await getMongoDbDatabase();
+      if (db) {
+        mongoRegs = await db.collection('registrations').find({}).sort({ createdAt: -1 }).toArray();
+      }
+    } catch (dbErr) {
+      console.warn('[MongoDB GET Registrations] DB read warning:', dbErr);
     }
 
-    const registrations = await db.collection('registrations').find({}).sort({ createdAt: -1 }).toArray();
-    return NextResponse.json({ success: true, data: registrations });
+    const combined: any[] = [...serverRegs];
+    mongoRegs.forEach((mr) => {
+      const formatted = {
+        id: mr._id ? String(mr._id) : mr.id || `r-${Date.now()}`,
+        eventId: mr.eventId || '1',
+        eventTitle: mr.eventTitle || 'Quantum Session',
+        name: mr.name || 'Attendee',
+        email: mr.email || '',
+        phone: mr.phone || '',
+        organization: mr.organization || 'Independent',
+        role: mr.role || 'Attendee',
+        background: mr.background || 'Beginner',
+        teamName: mr.teamName || undefined,
+        createdAt: mr.createdAt ? new Date(mr.createdAt).toISOString() : new Date().toISOString(),
+        status: mr.status || 'Confirmed',
+      };
+      if (!combined.some((c) => (c.email && c.email.toLowerCase() === formatted.email.toLowerCase() && c.eventId === formatted.eventId) || c.id === formatted.id)) {
+        combined.push(formatted);
+      }
+    });
+
+    return NextResponse.json({ success: true, data: combined });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

@@ -4,154 +4,25 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, MapPin, Calendar, Users, Clock, Share2 } from 'lucide-react';
 
-const eventDetails: Record<string, any> = {
-  '1': {
-    id: '1',
-    title: 'Optimus Summit 2024',
-    date: 'October 15 - 17, 2024',
-    time: '9:00 AM - 5:00 PM PST',
-    location: 'San Francisco, CA',
-    venue: 'Moscone Center, San Francisco',
-    description: 'Join industry leaders and innovators for three days of talks, workshops, and networking.',
-    status: 'Upcoming',
-    attendees: '2,500+',
-    fullDescription: `The Optimus Summit 2024 is the premier event for AI infrastructure builders and platform engineers. Over three days, you'll experience cutting-edge talks from industry leaders, hands-on workshops covering real-world implementations, and extensive networking opportunities.
-
-This year's summit features keynotes from top AI researchers, breakout sessions on scaling AI workloads, and exclusive roundtables with enterprise architects. Whether you're building AI applications or managing infrastructure at scale, this summit offers invaluable insights and connections.`,
-    schedule: [
-      {
-        day: 'Day 1: October 15',
-        events: [
-          { time: '9:00 AM', title: 'Opening Keynote: The Future of AI Infrastructure', speaker: 'Sarah Chen' },
-          { time: '10:30 AM', title: 'Coffee Break & Networking', speaker: '' },
-          { time: '11:00 AM', title: 'Parallel Track 1: Scaling LLMs in Production', speaker: 'Alex Chen' },
-          { time: '12:30 PM', title: 'Lunch', speaker: '' },
-          { time: '2:00 PM', title: 'Parallel Track 2: Building Secure AI Systems', speaker: 'Jordan Williams' },
-          { time: '3:30 PM', title: 'Afternoon Break', speaker: '' },
-          { time: '4:00 PM', title: 'Community Showcase', speaker: 'Various' },
-        ]
-      },
-      {
-        day: 'Day 2: October 16',
-        events: [
-          { time: '9:00 AM', title: 'Keynote: Enterprise AI Adoption Strategies', speaker: 'Michael Zhang' },
-          { time: '10:30 AM', title: 'Workshop: Deploying with Optimus', speaker: 'Priya Patel' },
-          { time: '12:00 PM', title: 'Lunch', speaker: '' },
-          { time: '1:00 PM', title: 'Panel Discussion: Challenges in AI Operations', speaker: 'Panel' },
-          { time: '2:30 PM', title: 'Breakout Sessions (Multiple topics)', speaker: 'Various' },
-        ]
-      },
-      {
-        day: 'Day 3: October 17',
-        events: [
-          { time: '9:00 AM', title: 'Advanced Workshop: Performance Optimization', speaker: 'Marcus Rodriguez' },
-          { time: '11:00 AM', title: 'Final Keynote: The Road Ahead', speaker: 'Industry Visionary' },
-          { time: '12:00 PM', title: 'Closing Reception & Networking Lunch', speaker: '' },
-        ]
-      }
-    ],
-    speakers: ['Alex Chen', 'Jordan Williams', 'Priya Patel', 'Marcus Rodriguez'],
-    price: 'Early Bird: $299 | Regular: $399 | VIP: $799',
-  },
-  '2': {
-    id: '2',
-    title: 'Developer Workshop Series',
-    date: 'Every Wednesday',
-    time: '2:00 PM - 3:30 PM PST',
-    location: 'Online',
-    venue: 'Zoom',
-    description: 'Weekly hands-on workshops covering AI workflows, deployment strategies, and best practices.',
-    status: 'Recurring',
-    attendees: '500+',
-    fullDescription: `Join our weekly Developer Workshop Series to master the essentials of building with Optimus. Each week features a different topic, from foundational concepts to advanced techniques. These hands-on sessions are perfect for developers at all levels who want to stay updated with the latest practices.
-
-Recordings are available for all sessions, so you can catch up on any sessions you miss.`,
-    schedule: [
-      {
-        day: 'This Week\'s Topic',
-        events: [
-          { time: '2:00 PM', title: 'Getting Started with Optimus SDK', speaker: 'Priya Patel' },
-          { time: '2:15 PM', title: 'Live Coding Demo', speaker: 'Priya Patel' },
-          { time: '3:00 PM', title: 'Q&A Session', speaker: '' },
-          { time: '3:30 PM', title: 'Session Ends', speaker: '' },
-        ]
-      }
-    ],
-    speakers: ['Priya Patel', 'Marcus Rodriguez', 'Various Engineers'],
-    price: 'Free',
-  },
-  '3': {
-    id: '3',
-    title: 'Enterprise Bootcamp',
-    date: 'November 1 - 5, 2024',
-    time: '9:00 AM - 5:00 PM EST',
-    location: 'New York, NY',
-    venue: 'Enterprise Training Center, Manhattan',
-    description: 'Intensive five-day program for enterprise teams looking to scale their AI operations.',
-    status: 'Limited Seats',
-    attendees: '100',
-    fullDescription: `The Enterprise Bootcamp is an intensive five-day program designed specifically for teams managing AI infrastructure at scale. This immersive experience covers architecture design, deployment strategies, security considerations, and operational best practices.
-
-Participants will work through real-world case studies and leave with actionable implementation plans for their organizations.`,
-    schedule: [
-      {
-        day: 'Day 1-5 Overview',
-        events: [
-          { time: '9:00 AM', title: 'Daily Keynote & Framework', speaker: 'Senior Architects' },
-          { time: '10:00 AM', title: 'Deep Dive Sessions', speaker: 'Various' },
-          { time: '12:30 PM', title: 'Working Lunch & Discussions', speaker: '' },
-          { time: '2:00 PM', title: 'Hands-on Labs', speaker: 'Engineers' },
-          { time: '4:00 PM', title: 'Group Project Work', speaker: '' },
-          { time: '5:00 PM', title: 'Day Ends', speaker: '' },
-        ]
-      }
-    ],
-    speakers: ['Alex Chen', 'Jordan Williams', 'Priya Patel', 'Marcus Rodriguez'],
-    price: 'Team Package (5 people): $4,999',
-  },
-  '4': {
-    id: '4',
-    title: 'Global Community Meetup',
-    date: 'Monthly - Check Schedule',
-    time: '6:00 PM - 8:00 PM Local',
-    location: 'Multiple Cities',
-    venue: 'Various venues worldwide',
-    description: 'Connect with fellow developers and share your experiences using Optimus in production.',
-    status: 'Ongoing',
-    attendees: '1,000+',
-    fullDescription: `Our monthly Global Community Meetups bring together developers from around the world. These casual yet informative gatherings feature local speakers, peer discussions, and plenty of networking opportunities.
-
-Upcoming meetups are scheduled in San Francisco, New York, London, Tokyo, and Singapore. Whether you're experienced or just getting started, these meetups are perfect for connecting with the community.`,
-    schedule: [
-      {
-        day: 'Typical Meetup Format',
-        events: [
-          { time: '6:00 PM', title: 'Welcome & Networking', speaker: '' },
-          { time: '6:30 PM', title: 'Lightning Talks (5 mins each)', speaker: 'Community Members' },
-          { time: '7:00 PM', title: 'Featured Presentation', speaker: 'Local Expert' },
-          { time: '7:30 PM', title: 'Open Discussion & Q&A', speaker: '' },
-          { time: '8:00 PM', title: 'Informal Networking', speaker: '' },
-        ]
-      }
-    ],
-    speakers: ['Community Members', 'Local Experts'],
-    price: 'Free',
-  },
-};
+import { getEvents, EventItem, resolveEventStatus } from '@/lib/events-store';
 
 export default function EventDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const [isVisible, setIsVisible] = useState(false);
   const [eventId, setEventId] = useState<string | null>(null);
+  const [event, setEvent] = useState<EventItem | null>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     (async () => {
       const resolvedParams = await params;
       setEventId(resolvedParams.id);
+      const allEvents = getEvents();
+      const found = allEvents.find((e) => e.id === resolvedParams.id);
+      if (found) {
+        setEvent(found);
+      }
     })();
   }, [params]);
-
-  const event = eventId ? eventDetails[eventId] : null;
 
   useEffect(() => {
     setIsVisible(true);
@@ -159,16 +30,19 @@ export default function EventDetailsPage({ params }: { params: Promise<{ id: str
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-display mb-4">Event not found</h1>
-          <Link href="/" className="text-foreground hover:text-foreground/80">
-            Return to home
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="text-center max-w-md">
+          <h1 className="text-3xl font-display mb-4">Event not found</h1>
+          <p className="text-muted-foreground text-sm mb-6">The event you are looking for might have moved or is not yet scheduled.</p>
+          <Link href="/events" className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-xl font-medium hover:bg-foreground/90 transition-all">
+            <ArrowLeft className="w-4 h-4" /> Return to Events
           </Link>
         </div>
       </div>
     );
   }
+
+  const isUpcoming = resolveEventStatus(event) === 'upcoming';
 
   return (
     <main className="min-h-screen bg-background">
@@ -192,67 +66,65 @@ export default function EventDetailsPage({ params }: { params: Promise<{ id: str
         <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
           {/* Status Badge */}
           <div className="inline-flex items-center gap-2 mb-6">
-            <div className={`w-2 h-2 rounded-full ${
-              event.status === 'Upcoming' 
-                ? 'bg-green-400' 
-                : event.status === 'Limited Seats'
-                ? 'bg-yellow-400'
-                : 'bg-blue-400'
-            }`} />
-            <span className="text-sm font-mono text-foreground/60">{event.status}</span>
+            <div className={`w-2 h-2 rounded-full ${isUpcoming ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-400'}`} />
+            <span className="text-sm font-mono text-foreground/60">{isUpcoming ? 'Upcoming Event' : 'Archived Event'}</span>
+            <span className="text-xs font-mono px-3 py-0.5 rounded-full border border-cyan-500/40 text-cyan-400 bg-cyan-950/20">
+              {event.badge}
+            </span>
           </div>
 
-          <h1 className="text-5xl lg:text-7xl font-display tracking-tight mb-8">
+          <h1 className="text-4xl lg:text-6xl font-display tracking-tight mb-8">
             {event.title}
           </h1>
 
           {/* Quick Info Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             <div className="flex items-start gap-4">
-              <Calendar className="w-5 h-5 text-muted-foreground mt-1 flex-shrink-0" />
+              <Calendar className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
               <div>
                 <p className="text-xs font-mono text-foreground/40 uppercase tracking-wider mb-1">Date</p>
-                <p className="text-foreground">{event.date}</p>
+                <p className="text-foreground font-medium">{event.month} {event.day}, 2026</p>
+                <p className="text-sm text-foreground/60">{event.dayLabel}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <MapPin className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-mono text-foreground/40 uppercase tracking-wider mb-1">Location</p>
+                <p className="text-foreground font-medium">{event.location}</p>
                 <p className="text-sm text-foreground/60">{event.time}</p>
               </div>
             </div>
 
             <div className="flex items-start gap-4">
-              <MapPin className="w-5 h-5 text-muted-foreground mt-1 flex-shrink-0" />
-              <div>
-                <p className="text-xs font-mono text-foreground/40 uppercase tracking-wider mb-1">Location</p>
-                <p className="text-foreground">{event.location}</p>
-                <p className="text-sm text-foreground/60">{event.venue}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <Users className="w-5 h-5 text-muted-foreground mt-1 flex-shrink-0" />
+              <Users className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
               <div>
                 <p className="text-xs font-mono text-foreground/40 uppercase tracking-wider mb-1">Attendees</p>
-                <p className="text-foreground">{event.attendees}</p>
+                <p className="text-foreground font-medium">{event.attendees}</p>
                 <p className="text-sm text-foreground/60">Expected</p>
               </div>
             </div>
 
             <div className="flex items-start gap-4">
-              <Clock className="w-5 h-5 text-muted-foreground mt-1 flex-shrink-0" />
+              <Clock className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
               <div>
-                <p className="text-xs font-mono text-foreground/40 uppercase tracking-wider mb-1">Price</p>
-                <p className="text-foreground text-sm">{event.price}</p>
+                <p className="text-xs font-mono text-foreground/40 uppercase tracking-wider mb-1">Pricing / Access</p>
+                <p className="text-foreground text-sm font-medium">{event.price}</p>
               </div>
             </div>
           </div>
 
           {/* CTA Buttons */}
           <div className="flex flex-wrap gap-4">
-            <button className="px-8 py-3 bg-foreground text-background rounded-lg font-medium hover:bg-foreground/90 transition-all duration-300">
-              Register Now
-            </button>
-            <button className="px-8 py-3 border border-foreground/20 text-foreground rounded-lg font-medium hover:border-foreground/40 transition-all duration-300 flex items-center gap-2">
-              <Share2 className="w-4 h-4" />
-              Share
-            </button>
+            <Link href={`/events/${event.id}/register`}>
+              <button className="px-8 py-3.5 bg-foreground text-background rounded-xl font-medium hover:bg-foreground/90 transition-all duration-300 shadow-lg">
+                Register for Free
+              </button>
+            </Link>
+            <Link href="/events" className="px-8 py-3.5 border border-foreground/20 text-foreground rounded-xl font-medium hover:border-foreground/40 transition-all duration-300">
+              Browse All Events
+            </Link>
           </div>
         </div>
       </div>
@@ -264,44 +136,38 @@ export default function EventDetailsPage({ params }: { params: Promise<{ id: str
           <div className="lg:col-span-2 space-y-12">
             {/* Description */}
             <section>
-              <h2 className="text-3xl font-display mb-6">About This Event</h2>
+              <h2 className="text-3xl font-display mb-6">About This Session</h2>
               <p className="text-lg text-foreground/70 leading-relaxed whitespace-pre-line">
-                {event.fullDescription}
+                {event.fullDescription || event.description}
               </p>
             </section>
 
             {/* Schedule */}
-            <section>
-              <h2 className="text-3xl font-display mb-8">Event Schedule</h2>
-              <div className="space-y-8">
-                {event.schedule.map((scheduleItem: any, index: number) => (
-                  <div key={index} className="border-l-2 border-foreground/20 pl-6">
-                    <h3 className="text-xl font-semibold text-foreground mb-4">{scheduleItem.day}</h3>
-                    <div className="space-y-3">
-                      {scheduleItem.events.map((item: any, eventIndex: number) => (
-                        <div key={eventIndex} className="flex gap-4">
-                          <div className="text-sm font-mono text-foreground/60 min-w-24">{item.time}</div>
-                          <div>
-                            <p className="text-foreground font-medium">{item.title}</p>
-                            {item.speaker && <p className="text-sm text-foreground/60">{item.speaker}</p>}
-                          </div>
-                        </div>
-                      ))}
+            {event.schedule && event.schedule.length > 0 && (
+              <section>
+                <h2 className="text-3xl font-display mb-8">Session Agenda & Syllabus</h2>
+                <div className="border-l-2 border-cyan-500/30 pl-6 space-y-6">
+                  {event.schedule.map((item: any, index: number) => (
+                    <div key={index} className="relative">
+                      <div className="absolute -left-[31px] top-1.5 w-3 h-3 rounded-full bg-cyan-400 border-2 border-background" />
+                      <div className="text-xs font-mono text-cyan-400 uppercase tracking-wider mb-1">{item.time}</div>
+                      <h3 className="text-foreground text-lg font-medium">{item.title}</h3>
+                      {item.speaker && <p className="text-sm text-foreground/50 mt-0.5">{item.speaker}</p>}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Speakers */}
             {event.speakers && event.speakers.length > 0 && (
               <section>
-                <h2 className="text-3xl font-display mb-6">Featured Speakers</h2>
-                <div className="grid md:grid-cols-2 gap-4">
+                <h2 className="text-3xl font-display mb-6">Speakers & Mentors</h2>
+                <div className="grid sm:grid-cols-2 gap-4">
                   {event.speakers.map((speaker: string, index: number) => (
-                    <div key={index} className="p-4 border border-foreground/10 rounded-lg hover:border-foreground/20 transition-colors">
-                      <p className="text-foreground font-medium">{speaker}</p>
-                      <p className="text-sm text-foreground/60">Industry Expert</p>
+                    <div key={index} className="p-5 border border-foreground/10 rounded-2xl bg-foreground/[0.02]">
+                      <p className="text-foreground font-semibold text-lg">{speaker}</p>
+                      <p className="text-xs font-mono text-cyan-400 mt-1">Quantum Research Mentor</p>
                     </div>
                   ))}
                 </div>
@@ -313,34 +179,40 @@ export default function EventDetailsPage({ params }: { params: Promise<{ id: str
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
               {/* Registration Card */}
-              <div className="border border-foreground/10 rounded-lg p-8 bg-foreground/[0.02] backdrop-blur">
-                <h3 className="text-xl font-display mb-4">Ready to join?</h3>
-                <p className="text-foreground/70 mb-6">
-                  Secure your spot now. Early registrants get exclusive benefits and access to pre-event materials.
+              <div className="border border-foreground/10 rounded-2xl p-8 bg-foreground/[0.02] backdrop-blur">
+                <h3 className="text-xl font-display mb-3">Ready to Join?</h3>
+                <p className="text-foreground/70 text-sm mb-6">
+                  Access live interactive notebook environments, cloud QPU hardware execution, and receive a verified certification upon completion.
                 </p>
-                <button className="w-full px-6 py-3 bg-foreground text-background rounded-lg font-medium hover:bg-foreground/90 transition-all duration-300 mb-4">
-                  Register Now
-                </button>
-                <button className="w-full px-6 py-3 border border-foreground/20 text-foreground rounded-lg font-medium hover:border-foreground/40 transition-all duration-300">
-                  Add to Calendar
-                </button>
+                <Link href={`/events/${event.id}/register`} className="block">
+                  <button className="w-full px-6 py-3.5 bg-foreground text-background rounded-xl font-semibold hover:bg-foreground/90 transition-all duration-300 mb-3 shadow-lg">
+                    Register for This Session
+                  </button>
+                </Link>
+                <Link href="/events" className="block text-center text-xs font-mono text-muted-foreground hover:text-foreground transition-colors">
+                  Explore other sessions →
+                </Link>
               </div>
 
               {/* Event Details Card */}
-              <div className="border border-foreground/10 rounded-lg p-6 bg-foreground/[0.02]">
-                <h4 className="font-display mb-4">Event Details</h4>
-                <div className="space-y-4">
+              <div className="border border-foreground/10 rounded-2xl p-6 bg-foreground/[0.02]">
+                <h4 className="font-display mb-4 text-lg">Event Specifications</h4>
+                <div className="space-y-4 text-sm">
                   <div>
-                    <p className="text-xs font-mono text-foreground/40 uppercase mb-1">Format</p>
-                    <p className="text-foreground">{event.location === 'Online' ? 'Virtual Event' : 'In-Person'}</p>
+                    <p className="text-xs font-mono text-foreground/40 uppercase mb-0.5">Format</p>
+                    <p className="text-foreground font-medium">{event.badge}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-mono text-foreground/40 uppercase mb-1">Status</p>
-                    <p className="text-foreground">{event.status}</p>
+                    <p className="text-xs font-mono text-foreground/40 uppercase mb-0.5">Location</p>
+                    <p className="text-foreground font-medium">{event.location}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-mono text-foreground/40 uppercase mb-1">Language</p>
-                    <p className="text-foreground">English</p>
+                    <p className="text-xs font-mono text-foreground/40 uppercase mb-0.5">Category</p>
+                    <p className="text-foreground font-medium">{event.category}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-mono text-foreground/40 uppercase mb-0.5">Target Audience</p>
+                    <p className="text-foreground font-medium">Students, Researchers, Quantum Developers</p>
                   </div>
                 </div>
               </div>
