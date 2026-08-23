@@ -29,6 +29,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { getBlogs, saveBlog, deleteBlog, BlogPost } from '@/lib/blogs-store';
 import { getJoins, JoinSubmission } from '@/lib/submissions-store';
+import { getBlogWriters, BlogWriter } from '@/lib/blog-writers-store';
 
 // Founding team — always has Writer Portal access, independent of Join Us approvals
 const CORE_TEAM = [
@@ -40,6 +41,9 @@ interface TeamIdentity {
   name: string;
   role: string;
   email: string;
+  // Only set for admin-invited blog writers — their exact password is
+  // required at login instead of the shared team passcode.
+  password?: string;
 }
 
 export default function TeamPortalPage() {
@@ -60,34 +64,53 @@ export default function TeamPortalPage() {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Load approved Join Us applicants so they appear as selectable identities
+  // Load approved Join Us applicants + admin-invited blog writers so they all
+  // appear as selectable identities (real names replacing the old placeholder list).
   useEffect(() => {
-    const buildEligibleList = (joins: JoinSubmission[]) => {
-      const approved = joins
-        .filter((j) => j.status === 'Approved')
-        .map((j) => ({ name: j.fullName, role: j.position || 'Community Team Member', email: j.email.toLowerCase() }));
+    let approvedJoins: TeamIdentity[] = [];
+    let invitedWriters: TeamIdentity[] = [];
 
+    const rebuild = () => {
       const merged = [...CORE_TEAM];
-      approved.forEach((m) => {
-        if (m.name && m.email && !merged.some((c) => c.email.toLowerCase() === m.email)) {
+      [...approvedJoins, ...invitedWriters].forEach((m) => {
+        if (!m.name || !m.email) return;
+        const existingIdx = merged.findIndex((c) => c.email.toLowerCase() === m.email.toLowerCase());
+        if (existingIdx >= 0) {
+          // A blog-writer invite (with a password) takes priority over a join entry
+          if (m.password) merged[existingIdx] = m;
+        } else {
           merged.push(m);
         }
       });
       setEligibleMembers(merged);
     };
 
-    buildEligibleList(getJoins());
+    const applyJoins = (joins: JoinSubmission[]) => {
+      approvedJoins = joins
+        .filter((j) => j.status === 'Approved')
+        .map((j) => ({ name: j.fullName, role: j.position || 'Community Team Member', email: j.email.toLowerCase() }));
+      rebuild();
+    };
+
+    const applyWriters = (writers: BlogWriter[]) => {
+      invitedWriters = writers
+        .filter((w) => w.status === 'Active')
+        .map((w) => ({ name: w.name, role: w.role || 'Guest Contributor', email: w.email.toLowerCase(), password: w.password }));
+      rebuild();
+    };
+
+    applyJoins(getJoins());
+    applyWriters(getBlogWriters());
 
     fetch('/api/join')
       .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.data)) {
-          buildEligibleList(data.data as JoinSubmission[]);
-        }
-      })
-      .catch(() => {
-        // API/MongoDB unavailable — keep local + core team list
-      });
+      .then((data) => { if (data.success && Array.isArray(data.data)) applyJoins(data.data as JoinSubmission[]); })
+      .catch(() => {});
+
+    fetch('/api/blog-writers')
+      .then((res) => res.json())
+      .then((data) => { if (data.success && Array.isArray(data.data)) applyWriters(data.data as BlogWriter[]); })
+      .catch(() => {});
   }, []);
 
   // Form State for Write / Edit Blog
@@ -162,19 +185,32 @@ export default function TeamPortalPage() {
     e.preventDefault();
     setLoginError('');
 
-    // Accept the founding team plus anyone whose Join Us application was approved by the admin
-    const validEmails = eligibleMembers.map((m) => m.email.toLowerCase());
+    const identity = eligibleMembers.find(
+      (m) => m.email.toLowerCase() === teamEmail.trim().toLowerCase()
+    );
 
-    if (
-      validEmails.includes(teamEmail.trim().toLowerCase()) &&
-      (teamPassword === 'team2026' || teamPassword === 'qni@team2026' || teamPassword.length >= 4)
-    ) {
+    if (!identity) {
+      setLoginError('Your email must match an approved "Join Us" application, an admin-granted blog invite, or the founding team.');
+      return;
+    }
+
+    // Admin-invited blog writers need their exact, personally-issued password.
+    // Everyone else (core team / approved Join Us members) uses the shared team passcode.
+    const isValid = identity.password
+      ? teamPassword === identity.password
+      : teamPassword === 'team2026' || teamPassword === 'qni@team2026' || teamPassword.length >= 4;
+
+    if (isValid) {
       setIsAuthenticated(true);
       sessionStorage.setItem('qni_team_authenticated', 'true');
       sessionStorage.setItem('qni_team_author_name', authorName);
       sessionStorage.setItem('qni_team_author_role', authorRole);
     } else {
-      setLoginError('Your email must match an approved "Join Us" application (or the founding team). Passcode: team2026');
+      setLoginError(
+        identity.password
+          ? 'Incorrect password. Check the invite email the admin sent you.'
+          : 'Incorrect passcode. Try: team2026'
+      );
     }
   };
 
@@ -303,13 +339,13 @@ export default function TeamPortalPage() {
                 ))}
               </select>
               <p className="text-[11px] text-muted-foreground -mt-2 mb-1">
-                Only the founding team and applicants approved via the "Join Us" form appear here.
+                Only the founding team, approved "Join Us" applicants, and admin-invited blog writers appear here.
               </p>
             </div>
 
             <div>
               <label className="text-xs font-mono text-muted-foreground uppercase block mb-1.5">
-                Email (auto-filled from selected identity — must match your Join Us application)
+                Email (auto-filled from selected identity)
               </label>
               <input
                 type="text"
@@ -334,7 +370,8 @@ export default function TeamPortalPage() {
                 className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-foreground/30"
               />
               <span className="text-[11px] text-muted-foreground mt-1 block">
-                Demo Passcode: <code className="text-foreground font-mono">team2026</code>
+                Founding team / Join Us members — shared passcode: <code className="text-foreground font-mono">team2026</code>.
+                Admin-invited blog writers — use the password from your invite email.
               </span>
             </div>
 

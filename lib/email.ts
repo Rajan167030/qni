@@ -629,4 +629,120 @@ https://www.quantumnexusglobal.org`;
   }
 }
 
+// ─────────────────────────────────────────────────────────────────
+// 5. Blog Writer Invite Email → Sent when admin grants someone blog access
+// ─────────────────────────────────────────────────────────────────
+export async function sendBlogWriterInviteEmail(to: string, name: string, password: string) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping blog writer invite email — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
 
+  const from = process.env.EMAIL_FROM!;
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(to);
+  const safePassword = escapeHtml(password);
+  const portalUrl = 'https://www.quantumnexusglobal.org/team-portal';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>You've been given blog access — QNG</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+          <tr>
+            <td style="padding: 32px 36px 24px; border-bottom: 1px solid #f1f5f9;">
+              <div style="font-size: 16px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; margin-bottom: 8px;">QNG</div>
+              <span style="display: inline-block; background-color: #faf5ff; color: #7c3aed; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 9999px;">
+                Blog Writer Access Granted
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px 36px 8px;">
+              <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 16px; line-height: 1.3;">
+                Hi ${safeName}, you can now write for the QNG Blog
+              </h1>
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 20px;">
+                The QNG admin has given you access to the Team Writer Portal — you can write, edit, and publish blog articles directly to the QNG blog.
+              </p>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 20px 24px;">
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 14px;">
+                      Your Writer Portal Login
+                    </div>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding-bottom: 10px; font-size: 13px; color: #64748b; width: 110px;">Portal URL</td>
+                        <td style="padding-bottom: 10px; font-size: 13px; font-weight: 600;"><a href="${portalUrl}" style="color: #2563eb; text-decoration: none;">quantumnexusglobal.org/team-portal</a></td>
+                      </tr>
+                      <tr>
+                        <td style="padding-bottom: 10px; font-size: 13px; color: #64748b;">Email</td>
+                        <td style="padding-bottom: 10px; font-size: 13px; font-weight: 700; color: #0f172a; font-family: monospace;">${safeEmail}</td>
+                      </tr>
+                      <tr>
+                        <td style="font-size: 13px; color: #64748b;">Password</td>
+                        <td style="font-size: 13px; font-weight: 700; color: #0f172a; font-family: monospace;">${safePassword}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <a href="${portalUrl}" target="_blank" style="display: inline-block; background-color: #7c3aed; color: #ffffff; font-size: 13px; font-weight: 600; text-decoration: none; padding: 11px 22px; border-radius: 6px; margin-bottom: 20px;">
+                Open Writer Portal &rarr;
+              </a>
+
+              <p style="font-size: 13px; line-height: 1.6; color: #94a3b8; margin: 20px 0 0;">
+                Keep this password private. This access can be revoked by the admin at any time.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f8fafc; padding: 20px 36px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="font-size: 12px; color: #94a3b8; margin: 0;">&copy; 2026 QNG</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hi ${name}, you can now write for the QNG Blog
+
+The QNG admin has given you access to the Team Writer Portal.
+
+Portal URL: ${portalUrl}
+Email: ${to}
+Password: ${password}
+
+Keep this password private. This access can be revoked by the admin at any time.
+
+— QNG`;
+
+  try {
+    await transporter.sendMail({
+      from: `"QNG" <${from}>`,
+      to,
+      subject: "You've been given blog access — QNG",
+      html,
+      text,
+    });
+    console.log(`[Email] Blog writer invite sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error('[Email] Failed to send blog writer invite email:', err);
+    return false;
+  }
+}

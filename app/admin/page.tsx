@@ -32,6 +32,8 @@ import {
   GraduationCap,
   Send,
   Copy,
+  UserPlus,
+  ShieldOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,6 +54,7 @@ import {
   NewsletterSubscriber,
 } from '@/lib/submissions-store';
 import { getBlogs, saveBlog, deleteBlog, BlogPost } from '@/lib/blogs-store';
+import { getBlogWriters, saveBlogWriter, deleteBlogWriter, BlogWriter } from '@/lib/blog-writers-store';
 
 const emptyBlogForm = () => ({
   title: '',
@@ -93,6 +96,73 @@ export default function AdminDashboardPage() {
   const [blogSaving, setBlogSaving] = useState(false);
   const [blogUploading, setBlogUploading] = useState(false);
   const [blogSaveSuccess, setBlogSaveSuccess] = useState('');
+
+  // Blog writer invite state — admin grants blog access to anyone by email
+  const [blogWriters, setBlogWriters] = useState<BlogWriter[]>([]);
+  const [showWriterInvite, setShowWriterInvite] = useState(false);
+  const [writerForm, setWriterForm] = useState({ name: '', email: '', role: 'Guest Contributor' });
+  const [writerInviting, setWriterInviting] = useState(false);
+  const [writerInviteResult, setWriterInviteResult] = useState<{ message: string; password?: string } | null>(null);
+
+  const loadBlogWriters = async () => {
+    setBlogWriters(getBlogWriters());
+    try {
+      const res = await fetch('/api/blog-writers');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        const remote: BlogWriter[] = data.data.map((w: any) => ({
+          id: w.id || (w._id ? String(w._id) : `bw-${Date.now()}`),
+          name: w.name || '',
+          email: w.email || '',
+          password: w.password || '',
+          role: w.role || 'Guest Contributor',
+          invitedAt: w.invitedAt || new Date().toISOString(),
+          status: w.status || 'Active',
+        }));
+        setBlogWriters(remote);
+      }
+    } catch {
+      // API/MongoDB unavailable — keep local list
+    }
+  };
+
+  const handleInviteWriter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setWriterInviting(true);
+    setWriterInviteResult(null);
+    try {
+      const res = await fetch('/api/blog-writers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(writerForm),
+      });
+      const data = await res.json();
+      if (data.success) {
+        saveBlogWriter(data.data);
+        setWriterInviteResult({
+          message: data.emailSent
+            ? `Invite sent to ${writerForm.email} — password emailed to them.`
+            : `Writer added, but the invite email could not be sent (SMTP not configured). Share this password manually:`,
+          password: data.emailSent ? undefined : data.data.password,
+        });
+        setWriterForm({ name: '', email: '', role: 'Guest Contributor' });
+        await loadBlogWriters();
+      } else {
+        setWriterInviteResult({ message: data.message || 'Failed to send invite.' });
+      }
+    } catch {
+      setWriterInviteResult({ message: 'Error connecting to the server.' });
+    } finally {
+      setWriterInviting(false);
+    }
+  };
+
+  const handleRevokeWriter = async (writer: BlogWriter) => {
+    if (!confirm(`Revoke blog access for ${writer.name}?`)) return;
+    deleteBlogWriter(writer.id);
+    await fetch(`/api/blog-writers?email=${encodeURIComponent(writer.email)}`, { method: 'DELETE' }).catch(() => {});
+    loadBlogWriters();
+  };
 
   const handleBlogFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -354,6 +424,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (isAuthenticated) {
       refreshData();
+      loadBlogWriters();
     }
   }, [isAuthenticated]);
 
@@ -1435,6 +1506,90 @@ export default function AdminDashboardPage() {
                   </form>
                 </div>
               )}
+
+              {/* Blog Writer Access — admin invites anyone by email, gets an
+                  auto-generated password emailed to them for the Writer Portal */}
+              <div className="border border-purple-500/20 bg-purple-500/5 rounded-3xl p-6 space-y-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="w-5 h-5 text-purple-400" />
+                    <div>
+                      <h3 className="font-display text-lg font-bold text-foreground">Blog Writer Access</h3>
+                      <p className="text-xs text-muted-foreground font-mono">
+                        Give anyone blog-write access — they get an auto-generated password by email.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { setShowWriterInvite((v) => !v); setWriterInviteResult(null); }}
+                    className="rounded-full text-xs gap-1.5"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" /> {showWriterInvite ? 'Close' : 'Invite Writer'}
+                  </Button>
+                </div>
+
+                {showWriterInvite && (
+                  <form onSubmit={handleInviteWriter} className="grid sm:grid-cols-3 gap-3 items-end">
+                    <div>
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Name *</label>
+                      <input required type="text" value={writerForm.name}
+                        onChange={(e) => setWriterForm((p) => ({ ...p, name: e.target.value }))}
+                        placeholder="e.g. Aisha Patel"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Email *</label>
+                      <input required type="email" value={writerForm.email}
+                        onChange={(e) => setWriterForm((p) => ({ ...p, email: e.target.value }))}
+                        placeholder="aisha@example.com"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
+                    </div>
+                    <div className="flex gap-2">
+                      <input type="text" value={writerForm.role}
+                        onChange={(e) => setWriterForm((p) => ({ ...p, role: e.target.value }))}
+                        placeholder="Guest Contributor"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
+                      <Button type="submit" disabled={writerInviting}
+                        className="h-11 px-5 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-semibold text-xs shrink-0">
+                        {writerInviting ? 'Sending...' : 'Send'}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+
+                {writerInviteResult && (
+                  <div className="p-3.5 rounded-xl bg-foreground/5 border border-foreground/10 text-xs font-mono text-foreground flex items-center gap-2 flex-wrap">
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
+                    <span>{writerInviteResult.message}</span>
+                    {writerInviteResult.password && (
+                      <code className="px-2 py-0.5 rounded bg-foreground/10 font-bold">{writerInviteResult.password}</code>
+                    )}
+                  </div>
+                )}
+
+                {blogWriters.length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    {blogWriters.map((w) => (
+                      <div key={w.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-foreground/10 bg-background">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{w.name} <span className="text-xs font-normal text-muted-foreground">({w.role})</span></p>
+                          <p className="text-xs text-muted-foreground font-mono truncate">{w.email}</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRevokeWriter(w)}
+                          className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full h-8 px-3 gap-1 text-xs shrink-0"
+                        >
+                          <ShieldOff className="w-3.5 h-3.5" /> Revoke
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
