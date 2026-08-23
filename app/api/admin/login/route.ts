@@ -2,7 +2,17 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const { email, password, token } = await request.json();
+
+    // Token-based login — a long-lived personal access link (/admin?token=...)
+    // so the same device doesn't need the username/password every time.
+    const envAccessToken = process.env.ADMIN_ACCESS_TOKEN;
+    if (token && envAccessToken && token === envAccessToken) {
+      return NextResponse.json({
+        success: true,
+        message: 'Admin authenticated via access token',
+      });
+    }
 
     const envAdminEmail = (process.env.ADMIN_EMAIL || 'admin@quantumnexusglobal.org').toLowerCase().trim();
     const envAdminPassword = process.env.ADMIN_PASSWORD || 'qng@admin2026';

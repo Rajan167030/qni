@@ -123,7 +123,7 @@ export default function RootLayout({
       logo: 'https://www.quantumnexusglobal.org/logo.png',
       description: siteDescription,
       sameAs: [
-        'https://linkedin.com/company/qnexusglobal',
+        'https://www.linkedin.com/company/quantumnexusglobal/',
         'https://twitter.com/qnexusglobal',
       ],
     },

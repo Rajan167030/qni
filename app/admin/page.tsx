@@ -121,13 +121,35 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Check login state on mount
+  // Check persisted login state on mount, or auto-login via a one-click
+  // access-token link (/admin?token=...) so the same device stays signed in
+  // without re-entering the username/password every visit.
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const auth = sessionStorage.getItem('qni_admin_authenticated');
-      if (auth === 'true') {
-        setIsAuthenticated(true);
-      }
+    if (typeof window === 'undefined') return;
+
+    const persisted = localStorage.getItem('qni_admin_authenticated');
+    if (persisted === 'true') {
+      setIsAuthenticated(true);
+      return;
+    }
+
+    const urlToken = new URLSearchParams(window.location.search).get('token');
+    if (urlToken) {
+      fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: urlToken }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setIsAuthenticated(true);
+            localStorage.setItem('qni_admin_authenticated', 'true');
+            // Remove the token from the visible URL/history once signed in
+            window.history.replaceState({}, '', '/admin');
+          }
+        })
+        .catch(() => {});
     }
   }, []);
 
@@ -146,7 +168,7 @@ export default function AdminDashboardPage() {
 
       if (data.success) {
         setIsAuthenticated(true);
-        sessionStorage.setItem('qni_admin_authenticated', 'true');
+        localStorage.setItem('qni_admin_authenticated', 'true');
       } else {
         setLoginError(data.message || 'Invalid admin email/username or password.');
       }
@@ -159,7 +181,7 @@ export default function AdminDashboardPage() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    sessionStorage.removeItem('qni_admin_authenticated');
+    localStorage.removeItem('qni_admin_authenticated');
   };
 
   // Load data & poll from store and MongoDB API
@@ -341,8 +363,13 @@ export default function AdminDashboardPage() {
     refreshData();
   };
 
-  const handleJoinStatus = (id: string, status: JoinSubmission['status']) => {
+  const handleJoinStatus = async (id: string, status: JoinSubmission['status']) => {
     updateJoinStatus(id, status);
+    await fetch('/api/join', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    }).catch(() => {});
     refreshData();
   };
 
@@ -775,6 +802,17 @@ export default function AdminDashboardPage() {
               <div className="flex items-center gap-3">
                 <CalendarCheck className="w-4 h-4" />
                 <span>+ Create & Manage Events</span>
+              </div>
+              <Sparkles className="w-3.5 h-3.5" />
+            </Link>
+
+            <Link
+              href="/admin/team"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-all mt-1"
+            >
+              <div className="flex items-center gap-3">
+                <Users className="w-4 h-4" />
+                <span>+ Manage Team Page</span>
               </div>
               <Sparkles className="w-3.5 h-3.5" />
             </Link>

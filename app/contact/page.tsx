@@ -181,7 +181,7 @@ export default function ContactPage() {
                 </h4>
                 <div className="flex items-center gap-3">
                   <a
-                    href="https://linkedin.com"
+                    href="https://www.linkedin.com/company/quantumnexusglobal/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 py-3 rounded-2xl border border-foreground/15 bg-foreground/5 hover:bg-foreground/10 flex items-center justify-center gap-2 text-xs font-mono text-foreground font-medium transition-colors"

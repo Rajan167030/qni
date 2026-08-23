@@ -64,7 +64,7 @@ export default function AdminEventsPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const auth = sessionStorage.getItem("qni_admin_authenticated");
+      const auth = localStorage.getItem("qni_admin_authenticated");
       if (auth !== "true") {
         router.push("/admin");
       }

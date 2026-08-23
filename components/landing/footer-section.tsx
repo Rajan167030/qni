@@ -41,7 +41,7 @@ const footerLinks = {
 
 const socialLinks = [
   { name: "GitHub", href: "https://github.com", icon: Github },
-  { name: "LinkedIn", href: "https://linkedin.com", icon: Linkedin },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/quantumnexusglobal/", icon: Linkedin },
   { name: "Twitter / X", href: "https://x.com", icon: Twitter },
 ];
 

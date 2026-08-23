@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { X, ArrowLeft, ZoomIn, Calendar, MapPin, Sparkles } from 'lucide-react';
+import { X, ArrowLeft, ZoomIn, Calendar, MapPin, Sparkles, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 
 export interface GalleryItem {
   id: string | number;
@@ -124,22 +124,24 @@ interface Props {
 
 export default function GalleryPageClient({ detectedImages }: Props) {
   const [isVisible, setIsVisible] = useState(false);
-  const [lightboxImg, setLightboxImg] = useState<GalleryItem | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [isLooping, setIsLooping] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
   useEffect(() => {
-    if (lightboxImg) {
+    if (lightboxIndex !== null) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      setIsLooping(false);
     }
     return () => {
       document.body.style.overflow = '';
     };
-  }, [lightboxImg]);
+  }, [lightboxIndex]);
 
   // Convert auto-detected folder images into Gallery Items
   const autoDetectedItems: GalleryItem[] = detectedImages.map((imgPath, idx) => {
@@ -163,6 +165,34 @@ export default function GalleryPageClient({ detectedImages }: Props) {
 
   // Combine auto-detected local images with default online gallery items
   const allImages = [...autoDetectedItems, ...defaultGalleryImages];
+  const lightboxImg = lightboxIndex !== null ? allImages[lightboxIndex] : null;
+
+  const goNext = useCallback(() => {
+    setLightboxIndex((prev) => (prev === null ? null : (prev + 1) % allImages.length));
+  }, [allImages.length]);
+
+  const goPrev = useCallback(() => {
+    setLightboxIndex((prev) => (prev === null ? null : (prev - 1 + allImages.length) % allImages.length));
+  }, [allImages.length]);
+
+  // Auto-advance in an infinite loop through the gallery when enabled
+  useEffect(() => {
+    if (!isLooping || lightboxIndex === null) return;
+    const timer = setInterval(goNext, 3500);
+    return () => clearInterval(timer);
+  }, [isLooping, lightboxIndex, goNext]);
+
+  // Arrow-key navigation while the lightbox is open
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') goNext();
+      else if (e.key === 'ArrowLeft') goPrev();
+      else if (e.key === 'Escape') setLightboxIndex(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [lightboxIndex, goNext, goPrev]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -206,7 +236,7 @@ export default function GalleryPageClient({ detectedImages }: Props) {
           {allImages.map((img, idx) => (
             <div
               key={img.id}
-              onClick={() => setLightboxImg(img)}
+              onClick={() => setLightboxIndex(idx)}
               className={`relative group overflow-hidden rounded-2xl cursor-pointer ${img.span} ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               } transition-all duration-500`}
@@ -243,24 +273,52 @@ export default function GalleryPageClient({ detectedImages }: Props) {
         </div>
       </div>
 
-      {/* Lightbox */}
+      {/* Lightbox — loops through every photo, forward and back */}
       {lightboxImg && (
         <div
           className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-200"
-          onClick={() => setLightboxImg(null)}
+          onClick={() => setLightboxIndex(null)}
         >
           <button
-            onClick={() => setLightboxImg(null)}
+            onClick={() => setLightboxIndex(null)}
             className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
+
+          {/* Loop / autoplay toggle */}
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsLooping((v) => !v); }}
+            className="absolute top-5 left-5 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-mono transition-colors"
+            title={isLooping ? 'Pause slideshow' : 'Auto-loop through gallery'}
+          >
+            {isLooping ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+            {isLooping ? 'Looping…' : 'Auto-loop'}
+          </button>
+
+          {/* Prev / Next — wrap around infinitely */}
+          <button
+            onClick={(e) => { e.stopPropagation(); goPrev(); }}
+            className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            aria-label="Previous photo"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); goNext(); }}
+            className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            aria-label="Next photo"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+
           <div
             className="max-w-5xl w-full max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              key={lightboxImg.id}
               src={lightboxImg.src}
               alt={lightboxImg.alt}
               className="rounded-2xl object-contain max-h-[75vh] w-full"
@@ -275,6 +333,9 @@ export default function GalleryPageClient({ detectedImages }: Props) {
                 <span className="flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5" />
                   {lightboxImg.location}
+                </span>
+                <span className="text-white/40 font-mono text-xs">
+                  {(lightboxIndex ?? 0) + 1} / {allImages.length}
                 </span>
               </div>
             </div>

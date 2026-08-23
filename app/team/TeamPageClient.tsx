@@ -15,86 +15,11 @@ import {
   Send,
 } from "lucide-react";
 import { saveJoin } from "@/lib/submissions-store";
+import { getTeamMembers, TeamMember } from "@/lib/team-store";
 
-// Helper: derive a display name from a filename
-function nameFromFile(filename: string): string {
-  return filename
-    .replace(/\.[^.]+$/, "") // remove extension
-    .replace(/[-_]/g, " ") // dashes/underscores → spaces
-    .replace(/\b\w/g, (c) => c.toUpperCase()); // title-case
-}
-
-// Custom data for top team members (Sharvan, Saurabh, Rajan, Mayank)
-const memberMetadata: Record<
-  string,
-  { name?: string; role: string; bio: string; linkedin: string; twitter?: string }
-> = {
-  "sharvan sharma": {
-    name: "Sharvan Kumar Sharma",
-    role: "Founder & CEO",
-    bio: "Quantum computing researcher and visionary leading QNG's mission to build a global quantum computing ecosystem.",
-    linkedin: "https://www.linkedin.com/in/shravan-kumar-sharma-947a3512b",
-    twitter: "https://twitter.com/sharvansharma",
-  },
-  "sharvan-sharma": {
-    name: "Sharvan Kumar Sharma",
-    role: "Founder & CEO",
-    bio: "Quantum computing researcher and visionary leading QNG's mission to build a global quantum computing ecosystem.",
-    linkedin: "https://linkedin.com/in/sharvankumarsharma",
-    twitter: "https://twitter.com/sharvansharma",
-  },
-  "saurabh": {
-    name: "Saurabh",
-    role: "Founding Member",
-    bio: "Quantum algorithm researcher specializing in variational eigensolvers, circuit compilation, and pulse control.",
-    linkedin: "https://in.linkedin.com/in/saurabh-sharma-59910b18b",
-    twitter: "https://twitter.com/saurabh_quantum",
-  },
-  "rajan jha": {
-    name: "Rajan Jha",
-    role: "Co-Founder",
-    bio: "Systems architect specializing in hybrid quantum-classical algorithms and pulse-level Qiskit optimization.",
-    linkedin: "https://in.linkedin.com/in/rajan-jha-4a921828a",
-    twitter: "https://twitter.com/rajanjha",
-  },
-  "rajan-jha": {
-    name: "Rajan Jha",
-    role: "Co-Founder",
-    bio: "Systems architect specializing in hybrid quantum-classical algorithms and pulse-level Qiskit optimization.",
-    linkedin: "https://linkedin.com/in/rajanjha",
-    twitter: "https://twitter.com/rajanjha",
-  },
-  myank: {
-    name: "Mayank",
-    role: "Founding Member",
-    bio: "Building intuitive interfaces, SDK tooling, and cloud execution portals for quantum developers worldwide.",
-    linkedin: "https://www.linkedin.com/in/mayank-sharma-aa3648287/",
-    twitter: "https://twitter.com/mayank_product",
-  },
-  mayank: {
-    name: "Mayank",
-    role: "Founding Member",
-    bio: "Building intuitive interfaces, SDK tooling, and cloud execution portals for quantum developers worldwide.",
-    linkedin: "https://www.linkedin.com/in/mayank-sharma-aa3648287/",
-    twitter: "https://twitter.com/mayank_product",
-  },
-};
-
-function getMemberWeight(filename: string): number {
-  const lower = filename.toLowerCase();
-  if (lower.includes("sharvan")) return 1;
-  if (lower.includes("saurabh")) return 2;
-  if (lower.includes("rajan")) return 3;
-  if (lower.includes("myank") || lower.includes("mayank")) return 4;
-  return 10;
-}
-
-interface Props {
-  imageFiles: string[];
-}
-
-export default function TeamPageClient({ imageFiles }: Props) {
+export default function TeamPageClient() {
   const [isVisible, setIsVisible] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [activeCard, setActiveCard] = useState<string | null>(null);
   const [selectedTeamMember, setSelectedTeamMember] = useState<{
     name: string;
@@ -125,10 +50,32 @@ export default function TeamPageClient({ imageFiles }: Props) {
 
   useEffect(() => {
     setIsVisible(true);
-  }, []);
+    setTeamMembers(getTeamMembers());
 
-  // Enforce requested display order: Sharvan -> Saurabh -> Rajan -> Mayank
-  const displayFiles = [...imageFiles].sort((a, b) => getMemberWeight(a) - getMemberWeight(b));
+    // Merge in any admin-edited members synced to MongoDB so changes made
+    // through the admin dashboard are visible to every visitor.
+    fetch("/api/team")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          const remote: TeamMember[] = data.data.map((m: any) => ({
+            id: m.id,
+            name: m.name || "",
+            role: m.role || "",
+            bio: m.bio || "",
+            imageUrl: m.imageUrl || "",
+            linkedin: m.linkedin || "",
+            twitter: m.twitter || "",
+            order: typeof m.order === "number" ? m.order : 99,
+            createdAt: m.createdAt || new Date().toISOString(),
+          }));
+          setTeamMembers([...remote].sort((a, b) => a.order - b.order));
+        }
+      })
+      .catch(() => {
+        // MongoDB not configured / offline — keep local defaults
+      });
+  }, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -272,7 +219,7 @@ export default function TeamPageClient({ imageFiles }: Props) {
           <div>
             <h2 className="text-2xl font-display font-semibold">Core Leadership & Team</h2>
             <p className="text-xs font-mono text-muted-foreground mt-1">
-              Showing key leadership profiles ({displayFiles.length} members)
+              Showing key leadership profiles ({teamMembers.length} members)
             </p>
           </div>
 
@@ -284,28 +231,18 @@ export default function TeamPageClient({ imageFiles }: Props) {
           </button>
         </div>
 
-        {displayFiles.length === 0 ? (
+        {teamMembers.length === 0 ? (
           <p className="text-muted-foreground text-center py-20 font-mono text-sm">
-            No team member images found in <code>/public/team</code>.
+            No team members found.
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-            {displayFiles.map((filename, index) => {
-              const slug = filename.replace(/\.[^.]+$/, "").toLowerCase();
-              const meta = memberMetadata[slug] || {
-                role: "Quantum Research Lead",
-                bio: `Key team member driving quantum algorithm innovation and system architecture at QNG.`,
-                linkedin: `https://linkedin.com/search/results/all/?keywords=${encodeURIComponent(
-                  filename
-                )}`,
-              };
-              const name = meta.name || nameFromFile(filename);
-
-              const isRevealed = activeCard === filename;
+            {teamMembers.map((member, index) => {
+              const isRevealed = activeCard === member.id;
 
               return (
                 <div
-                  key={filename}
+                  key={member.id}
                   className={`group relative rounded-2xl overflow-hidden border border-foreground/10 bg-foreground/5 cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-foreground/30 ${
                     isVisible
                       ? "opacity-100 translate-y-0"
@@ -314,20 +251,20 @@ export default function TeamPageClient({ imageFiles }: Props) {
                   style={{ transitionDelay: `${index * 80}ms` }}
                   onClick={() =>
                     setSelectedTeamMember({
-                      name,
-                      src: `/team/${filename}`,
-                      role: meta.role,
-                      bio: meta.bio,
-                      linkedin: meta.linkedin,
-                      twitter: meta.twitter,
+                      name: member.name,
+                      src: member.imageUrl,
+                      role: member.role,
+                      bio: member.bio,
+                      linkedin: member.linkedin,
+                      twitter: member.twitter,
                     })
                   }
                 >
                   {/* Image Container */}
                   <div className="relative aspect-[3/4] w-full overflow-hidden">
                     <Image
-                      src={`/team/${filename}`}
-                      alt={name}
+                      src={member.imageUrl}
+                      alt={member.name}
                       fill
                       className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -345,14 +282,16 @@ export default function TeamPageClient({ imageFiles }: Props) {
                       }`}
                     >
                       <div>
-                        <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider rounded-full bg-white/10 text-white mb-3 border border-white/15">
-                          {meta.role}
-                        </span>
+                        {member.role && (
+                          <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider rounded-full bg-white/10 text-white mb-3 border border-white/15">
+                            {member.role}
+                          </span>
+                        )}
                         <h4 className="text-xl font-display font-medium text-white mb-2 leading-tight">
-                          {name}
+                          {member.name}
                         </h4>
                         <p className="text-xs text-white/80 leading-relaxed font-sans">
-                          {meta.bio}
+                          {member.bio}
                         </p>
                       </div>
 
@@ -361,9 +300,9 @@ export default function TeamPageClient({ imageFiles }: Props) {
                           Click to view profile →
                         </p>
                         <div className="flex items-center gap-3">
-                          {meta.linkedin && (
+                          {member.linkedin && (
                             <a
-                              href={meta.linkedin}
+                              href={member.linkedin}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -375,9 +314,9 @@ export default function TeamPageClient({ imageFiles }: Props) {
                               <span>LinkedIn</span>
                             </a>
                           )}
-                          {meta.twitter && (
+                          {member.twitter && (
                             <a
-                              href={meta.twitter}
+                              href={member.twitter}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -406,22 +345,24 @@ export default function TeamPageClient({ imageFiles }: Props) {
                   <div className="p-4 bg-background border-t border-foreground/5 flex items-center justify-between">
                     <div>
                       <h3 className="text-base font-display font-medium text-foreground leading-tight">
-                        {name}
+                        {member.name}
                       </h3>
-                      <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                        {meta.role}
-                      </p>
+                      {member.role && (
+                        <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                          {member.role}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {meta.linkedin && (
+                      {member.linkedin && (
                         <a
-                          href={meta.linkedin}
+                          href={member.linkedin}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           className="p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 text-foreground transition-colors"
-                          title={`LinkedIn profile for ${name}`}
+                          title={`LinkedIn profile for ${member.name}`}
                         >
                           <Linkedin className="w-3.5 h-3.5 fill-current" />
                         </a>
@@ -680,9 +621,11 @@ export default function TeamPageClient({ imageFiles }: Props) {
                 <span className="bg-foreground text-background font-mono text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md uppercase">
                   CORE TEAM MEMBER
                 </span>
-                <span className="bg-background/90 backdrop-blur-md text-foreground font-mono text-xs font-bold px-3 py-1 rounded-full border border-border shadow-md">
-                  {selectedTeamMember.role}
-                </span>
+                {selectedTeamMember.role && (
+                  <span className="bg-background/90 backdrop-blur-md text-foreground font-mono text-xs font-bold px-3 py-1 rounded-full border border-border shadow-md">
+                    {selectedTeamMember.role}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -694,9 +637,11 @@ export default function TeamPageClient({ imageFiles }: Props) {
                   <h3 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
                     {selectedTeamMember.name}
                   </h3>
-                  <p className="text-sm font-medium text-muted-foreground mt-0.5">
-                    {selectedTeamMember.role}
-                  </p>
+                  {selectedTeamMember.role && (
+                    <p className="text-sm font-medium text-muted-foreground mt-0.5">
+                      {selectedTeamMember.role}
+                    </p>
+                  )}
                   <p className="text-xs font-mono text-foreground/80 mt-1">
                     QNexus
                   </p>

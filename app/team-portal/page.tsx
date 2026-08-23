@@ -24,22 +24,71 @@ import {
   Upload,
   Loader2,
   X,
+  FolderOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getBlogs, saveBlog, deleteBlog, BlogPost } from '@/lib/blogs-store';
+import { getJoins, JoinSubmission } from '@/lib/submissions-store';
+
+// Founding team — always has Writer Portal access, independent of Join Us approvals
+const CORE_TEAM = [
+  { name: 'Sharvan Kumar Sharma', role: 'Founder & President', email: 'sharvanksharma97@gmail.com' },
+  { name: 'Rajan Jha', role: 'Co-Founder', email: 'rajan.jha@qnexusindia.com' },
+];
+
+interface TeamIdentity {
+  name: string;
+  role: string;
+  email: string;
+}
 
 export default function TeamPortalPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [teamEmail, setTeamEmail] = useState('');
+  const [teamEmail, setTeamEmail] = useState(CORE_TEAM[0].email);
   const [teamPassword, setTeamPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [authorName, setAuthorName] = useState('Sharvan Kumar Sharma');
-  const [authorRole, setAuthorRole] = useState('Quantum Researcher');
+  const [authorRole, setAuthorRole] = useState('Founder & President');
+
+  // Members eligible to log in — the core team plus everyone whose "Join Us"
+  // application the admin has approved (so their real name/role shows here
+  // instead of a placeholder list).
+  const [eligibleMembers, setEligibleMembers] = useState<TeamIdentity[]>(CORE_TEAM);
 
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
-  const [activeTab, setActiveTab] = useState<'my-blogs' | 'create'>('my-blogs');
+  const [activeTab, setActiveTab] = useState<'my-blogs' | 'create' | 'resources'>('my-blogs');
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Load approved Join Us applicants so they appear as selectable identities
+  useEffect(() => {
+    const buildEligibleList = (joins: JoinSubmission[]) => {
+      const approved = joins
+        .filter((j) => j.status === 'Approved')
+        .map((j) => ({ name: j.fullName, role: j.position || 'Community Team Member', email: j.email.toLowerCase() }));
+
+      const merged = [...CORE_TEAM];
+      approved.forEach((m) => {
+        if (m.name && m.email && !merged.some((c) => c.email.toLowerCase() === m.email)) {
+          merged.push(m);
+        }
+      });
+      setEligibleMembers(merged);
+    };
+
+    buildEligibleList(getJoins());
+
+    fetch('/api/join')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data)) {
+          buildEligibleList(data.data as JoinSubmission[]);
+        }
+      })
+      .catch(() => {
+        // API/MongoDB unavailable — keep local + core team list
+      });
+  }, []);
 
   // Form State for Write / Edit Blog
   const [formData, setFormData] = useState({
@@ -113,15 +162,8 @@ export default function TeamPortalPage() {
     e.preventDefault();
     setLoginError('');
 
-    // Accept team credentials or team emails
-    const validEmails = [
-      'team@qnexusindia.com',
-      'sharvan.sharma@qnexusindia.com',
-      'rajan.jha@qnexusindia.com',
-      'subham@qnexusindia.com',
-      'aisha.patel@qnexusindia.com',
-      'team',
-    ];
+    // Accept the founding team plus anyone whose Join Us application was approved by the admin
+    const validEmails = eligibleMembers.map((m) => m.email.toLowerCase());
 
     if (
       validEmails.includes(teamEmail.trim().toLowerCase()) &&
@@ -132,7 +174,7 @@ export default function TeamPortalPage() {
       sessionStorage.setItem('qni_team_author_name', authorName);
       sessionStorage.setItem('qni_team_author_role', authorRole);
     } else {
-      setLoginError('Invalid team email/username or passcode. Try: team@qnexusindia.com / team2026');
+      setLoginError('Your email must match an approved "Join Us" application (or the founding team). Passcode: team2026');
     }
   };
 
@@ -247,29 +289,31 @@ export default function TeamPortalPage() {
               <select
                 value={authorName}
                 onChange={(e) => {
+                  const selected = eligibleMembers.find((m) => m.name === e.target.value);
                   setAuthorName(e.target.value);
-                  if (e.target.value === 'Rajan Jha') setAuthorRole('CTO & Co-Founder');
-                  else if (e.target.value === 'Sharvan Kumar Sharma') setAuthorRole('CEO & Co-Founder');
-                  else if (e.target.value === 'Subham') setAuthorRole('Lead Quantum Algorithm Engineer');
-                  else setAuthorRole('Senior Quantum Researcher');
+                  setAuthorRole(selected?.role || 'Community Team Member');
+                  setTeamEmail(selected?.email || '');
                 }}
                 className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-foreground/30 mb-3"
               >
-                <option value="Sharvan Kumar Sharma">Sharvan Kumar Sharma (CEO)</option>
-                <option value="Rajan Jha">Rajan Jha (CTO)</option>
-                <option value="Subham">Subham (Lead Quantum Engineer)</option>
-                <option value="Aisha Patel">Aisha Patel (Senior Researcher)</option>
-                <option value="Team Researcher">Other QNG Team Member</option>
+                {eligibleMembers.map((m) => (
+                  <option key={m.email} value={m.name}>
+                    {m.name} {m.role ? `(${m.role})` : ''}
+                  </option>
+                ))}
               </select>
+              <p className="text-[11px] text-muted-foreground -mt-2 mb-1">
+                Only the founding team and applicants approved via the "Join Us" form appear here.
+              </p>
             </div>
 
             <div>
               <label className="text-xs font-mono text-muted-foreground uppercase block mb-1.5">
-                Team Email
+                Email (auto-filled from selected identity — must match your Join Us application)
               </label>
               <input
                 type="text"
-                placeholder="team@qnexusindia.com"
+                placeholder="you@example.com"
                 value={teamEmail}
                 onChange={(e) => setTeamEmail(e.target.value)}
                 required
@@ -355,7 +399,7 @@ export default function TeamPortalPage() {
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>
-              <strong>Role Access Status:</strong> You are logged in as a Team Member. You can write, edit, and publish blogs. Admin Dashboard (<code className="text-amber-200">/admin</code>) is strictly restricted to Admin credentials.
+              <strong>Role Access Status:</strong> You are logged in as a Team Member. You can write, edit, and publish blogs, and you have Resources access. Admin Dashboard (<code className="text-amber-200">/admin</code>) is strictly restricted to Admin credentials.
             </span>
           </div>
         </div>
@@ -405,6 +449,20 @@ export default function TeamPortalPage() {
           >
             <Plus className="w-4 h-4" />
             {editingPostId ? 'Edit Article' : 'Write New Article'}
+          </button>
+          <button
+            onClick={() => setActiveTab('resources')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all inline-flex items-center gap-2 ${
+              activeTab === 'resources'
+                ? 'bg-foreground text-background font-semibold'
+                : 'bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground'
+            }`}
+          >
+            <FolderOpen className="w-4 h-4" />
+            Resources
+            <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[9px] font-mono uppercase tracking-wider border border-amber-500/20">
+              Soon
+            </span>
           </button>
         </div>
 
@@ -687,6 +745,23 @@ export default function TeamPortalPage() {
               </Button>
             </div>
           </form>
+        )}
+
+        {/* Tab 3: Resources (Upcoming Feature) */}
+        {activeTab === 'resources' && (
+          <div className="text-center py-20 bg-foreground/5 rounded-3xl border border-foreground/10">
+            <FolderOpen className="w-12 h-12 mx-auto mb-4 text-amber-400 opacity-80" />
+            <h3 className="text-xl font-display mb-2">Team Resources — Coming Soon</h3>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+              A shared library of research papers, templates, and internal docs for approved QNG team
+              members is on the way. As a logged-in team member, you'll get access here automatically
+              once it launches — no extra approval needed.
+            </p>
+            <div className="inline-flex items-center gap-1.5 mt-6 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-mono">
+              <Sparkles className="w-3.5 h-3.5" />
+              Access reserved for {authorName}
+            </div>
+          </div>
         )}
       </div>
     </main>

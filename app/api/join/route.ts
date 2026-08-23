@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getMongoDbDatabase } from '@/lib/mongodb';
 import { sendWelcomeEmail, sendAdminNotification } from '@/lib/email';
-import { saveServerSubmission, getServerSubmissions } from '@/lib/server-storage';
+import { saveServerSubmission, getServerSubmissions, updateServerSubmissionStatus } from '@/lib/server-storage';
 
 export async function POST(request: Request) {
   try {
@@ -139,5 +139,41 @@ export async function GET() {
     return NextResponse.json({ success: true, data: combined });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, status } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: 'Application ID is required' },
+        { status: 400 }
+      );
+    }
+
+    updateServerSubmissionStatus('joins', id, status || 'Pending');
+
+    try {
+      const db = await getMongoDbDatabase();
+      if (db) {
+        await db.collection('joins').updateOne(
+          { $or: [{ id }, { _id: id }] },
+          { $set: { status, updatedAt: new Date() } }
+        );
+      }
+    } catch (dbErr) {
+      console.warn('[MongoDB PUT Join] DB update error:', dbErr);
+    }
+
+    return NextResponse.json({ success: true, message: 'Status updated' });
+  } catch (error: any) {
+    console.error('Error in /api/join PUT:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }

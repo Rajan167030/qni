@@ -160,52 +160,53 @@ export function GallerySection() {
           </Link>
         </div>
 
-        {/* Rich bento grid */}
-        <div
-          className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 auto-rows-[180px] md:auto-rows-[200px] transition-all duration-700 delay-100 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          {galleryImages.map((img, idx) => (
-            <div
-              key={img.id}
-              onClick={() => setLightboxImg(img)}
-              className={`relative group overflow-hidden rounded-2xl cursor-pointer bg-foreground/5 ${img.cols} ${img.rows}`}
-              style={{ transitionDelay: `${idx * 30}ms` }}
-            >
-              <img
-                src={img.src}
-                alt={img.alt}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              {/* Always-visible subtle bottom gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
+      </div>
 
-              {/* Hover overlay content */}
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                <ZoomIn className="absolute top-3 right-3 w-4 h-4 text-white/70" />
-                <p className="text-white font-semibold text-sm leading-tight">{img.event}</p>
-                <div className="flex items-center gap-3 mt-1.5">
-                  <span className="text-white/60 text-xs flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />{img.date}
-                  </span>
-                  <span className="text-white/60 text-xs flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />{img.location}
-                  </span>
-                </div>
-              </div>
+      {/* Infinite horizontal photo loop — moves left to right, pauses on hover */}
+      <div
+        className={`w-full overflow-hidden py-2 transition-all duration-700 delay-100 ${
+          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}
+      >
+        <div className="flex gap-4 marquee-reverse whitespace-nowrap hover:[animation-play-state:paused] cursor-grab active:cursor-grabbing">
+          {[...Array(2)].map((_, loopIdx) => (
+            <div key={loopIdx} className="flex gap-4 shrink-0">
+              {galleryImages.map((img) => (
+                <div
+                  key={`${loopIdx}-${img.id}`}
+                  onClick={() => setLightboxImg(img)}
+                  className="relative group overflow-hidden rounded-2xl cursor-pointer bg-foreground/5 w-[260px] md:w-[320px] h-[190px] md:h-[220px] shrink-0"
+                >
+                  <img
+                    src={img.src}
+                    alt={img.alt}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    draggable={false}
+                  />
+                  {/* Always-visible subtle bottom gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
 
-              {/* Always-visible bottom caption on large spans */}
-              {(img.cols === 'col-span-2' && img.rows === 'row-span-2') && (
-                <div className="absolute bottom-4 left-4">
-                  <p className="text-white/90 font-semibold text-base leading-tight drop-shadow">{img.event}</p>
-                  <p className="text-white/60 text-xs mt-0.5">{img.location} · {img.date}</p>
+                  {/* Hover overlay content */}
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                    <ZoomIn className="absolute top-3 right-3 w-4 h-4 text-white/70" />
+                    <p className="text-white font-semibold text-sm leading-tight whitespace-normal">{img.event}</p>
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <span className="text-white/60 text-xs flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />{img.date}
+                      </span>
+                      <span className="text-white/60 text-xs flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />{img.location}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           ))}
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
         {/* Stats row */}
         <div
           className={`mt-10 pt-8 border-t border-foreground/10 grid grid-cols-2 md:grid-cols-4 gap-6 transition-all duration-700 delay-300 ${
