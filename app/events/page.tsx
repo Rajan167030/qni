@@ -92,7 +92,7 @@ export default function EventsListPage() {
   const [filter, setFilter] = useState<FilterValue>('all');
 
   useEffect(() => {
-    setAllEvents(getEvents());
+    getEvents().then(setAllEvents);
     setIsVisible(true);
   }, []);
 

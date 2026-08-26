@@ -334,7 +334,7 @@ export default function ResearchPage() {
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+91 9876543210"
+                        placeholder="+1 555 123 4567"
                         className="w-full px-4 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/40"
                       />
                     </div>

@@ -7,8 +7,10 @@ import { Mail, Phone, ArrowRight, CheckCircle2, Globe2, Award, Sparkles, ShieldC
 import { Button } from '@/components/ui/button';
 
 import { saveJoin } from '@/lib/submissions-store';
+import { getSettings, SiteSettings } from '@/lib/settings-store';
 
 export default function JoinPage() {
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -28,6 +30,7 @@ export default function JoinPage() {
 
   useEffect(() => {
     setIsVisible(true);
+    getSettings().then(setSettings);
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -212,7 +215,7 @@ export default function JoinPage() {
                             name="phone"
                             value={formData.phone}
                             onChange={handleChange}
-                            placeholder="+91 8860573577"
+                            placeholder="+1 555 123 4567"
                             className="w-full px-4 py-3.5 rounded-2xl bg-foreground/5 border border-foreground/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/50 transition-colors text-base sm:text-sm"
                           />
                         </div>
@@ -404,13 +407,13 @@ export default function JoinPage() {
               <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-foreground/10 bg-background/60 backdrop-blur-md space-y-4">
                 <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">Need Direct Support?</p>
                 <div className="space-y-3 text-sm">
-                  <a href="mailto:rajan.quantumnexusgobal@gmail.com" className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors min-w-0">
+                  <a href={`mailto:${settings?.mentorshipEmail || 'rajan.quantumnexusgobal@gmail.com'}`} className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors min-w-0">
                     <Mail className="w-4 h-4 text-foreground/60 shrink-0" />
-                    <span className="break-all">rajan.quantumnexusgobal@gmail.com</span>
+                    <span className="break-all">{settings?.mentorshipEmail || 'rajan.quantumnexusgobal@gmail.com'}</span>
                   </a>
-                  <a href="tel:+918860573577" className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors">
+                  <a href={`tel:${settings?.phoneLink || '+918860573577'}`} className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors">
                     <Phone className="w-4 h-4 text-foreground/60" />
-                    <span>+91 8860573577</span>
+                    <span>{settings?.phoneDisplay || '+91 8860573577'}</span>
                   </a>
                 </div>
               </div>

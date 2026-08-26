@@ -48,7 +48,7 @@ const metrics = [
   {
     value: 0,
     suffix: "",
-    prefix: "₹",
+    prefix: "$",
     label: "Cost to join — free, always",
   },
   {

@@ -469,7 +469,7 @@ export default function TeamPageClient() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        placeholder="+91 8860573577"
+                        placeholder="+1 555 123 4567"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground"
                       />
                     </div>

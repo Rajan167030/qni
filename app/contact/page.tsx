@@ -6,8 +6,10 @@ import Image from 'next/image';
 import { Mail, Phone, Linkedin, Twitter, Send, CheckCircle2, Globe2, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveContact } from '@/lib/submissions-store';
+import { getSettings, SiteSettings } from '@/lib/settings-store';
 
 export default function ContactPage() {
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -23,6 +25,7 @@ export default function ContactPage() {
 
   useEffect(() => {
     setIsVisible(true);
+    getSettings().then(setSettings);
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -72,26 +75,28 @@ export default function ContactPage() {
     setIsSubmitting(false);
   };
 
-  const contactChannels = [
-    {
-      icon: Mail,
-      title: 'General Questions',
-      content: 'rajan.quantumnexusgobal@gmail.com',
-      link: 'mailto:rajan.quantumnexusgobal@gmail.com',
-    },
-    {
-      icon: Mail,
-      title: 'Mentorship & Opportunities',
-      content: 'rajan.quantumnexusgobal@gmail.com',
-      link: 'mailto:rajan.quantumnexusgobal@gmail.com',
-    },
-    {
-      icon: Phone,
-      title: 'Direct Phone',
-      content: '+91 8860573577',
-      link: 'tel:+918860573577',
-    },
-  ];
+  const contactChannels = settings
+    ? [
+        {
+          icon: Mail,
+          title: 'General Questions',
+          content: settings.generalEmail,
+          link: `mailto:${settings.generalEmail}`,
+        },
+        {
+          icon: Mail,
+          title: 'Mentorship & Opportunities',
+          content: settings.mentorshipEmail,
+          link: `mailto:${settings.mentorshipEmail}`,
+        },
+        {
+          icon: Phone,
+          title: 'Direct Phone',
+          content: settings.phoneDisplay,
+          link: `tel:${settings.phoneLink}`,
+        },
+      ]
+    : [];
 
   return (
     <div ref={pageRef} className="min-h-screen bg-background text-foreground overflow-x-hidden">
@@ -181,7 +186,7 @@ export default function ContactPage() {
                 </h4>
                 <div className="flex items-center gap-3">
                   <a
-                    href="https://www.linkedin.com/company/quantumnexusglobal/"
+                    href={settings?.linkedin || 'https://www.linkedin.com/company/quantumnexusglobal/'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 py-3 rounded-2xl border border-foreground/15 bg-foreground/5 hover:bg-foreground/10 flex items-center justify-center gap-2 text-xs font-mono text-foreground font-medium transition-colors"
@@ -190,7 +195,7 @@ export default function ContactPage() {
                     <span>LinkedIn</span>
                   </a>
                   <a
-                    href="https://x.com"
+                    href={settings?.twitter || 'https://x.com'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 py-3 rounded-2xl border border-foreground/15 bg-foreground/5 hover:bg-foreground/10 flex items-center justify-center gap-2 text-xs font-mono text-foreground font-medium transition-colors"

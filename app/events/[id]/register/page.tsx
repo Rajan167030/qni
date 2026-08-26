@@ -18,9 +18,9 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
   });
 
   useEffect(() => {
-    params.then((p) => {
+    params.then(async (p) => {
       setEventId(p.id);
-      const all = getEvents();
+      const all = await getEvents();
       const found = all.find((e) => e.id === p.id);
       if (found) {
         setEvent(found);
@@ -179,7 +179,7 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
                     type="tel"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+91 8860573577"
+                    placeholder="+1 555 123 4567"
                     className="w-full px-4 py-3 rounded-xl border border-foreground/15 bg-background text-foreground placeholder:text-foreground/30 text-sm focus:outline-none focus:border-foreground/40 transition-colors"
                   />
                 </div>

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { X, Calendar, MapPin, Clock, Users, ArrowRight, ExternalLink, ChevronRight } from "lucide-react";
 
-import { getEvents, EventItem } from "@/lib/events-store";
+import { getEvents, EventItem, resolveEventStatus } from "@/lib/events-store";
 
 export function EventsSection() {
   const [eventsList, setEventsList] = useState<EventItem[]>([]);
@@ -14,7 +14,7 @@ export function EventsSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setEventsList(getEvents());
+    getEvents().then(setEventsList);
   }, []);
 
   useEffect(() => {
@@ -73,7 +73,9 @@ export function EventsSection() {
 
 
         <div className="divide-y divide-foreground/10 border-t border-b border-foreground/10">
-          {eventsList.map((event, index) => (
+          {eventsList.map((event, index) => {
+            const isUpcoming = resolveEventStatus(event) === "upcoming";
+            return (
             <div
               key={event.id}
               onClick={() => setSelectedEvent(event)}
@@ -113,6 +115,15 @@ export function EventsSection() {
               {/* Title & description in the center */}
               <div className="flex-1 min-w-0 py-0.5">
                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <span
+                    className={`text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full border font-semibold ${
+                      isUpcoming
+                        ? "border-emerald-500/40 text-emerald-400 bg-emerald-950/30"
+                        : "border-foreground/15 text-foreground/40 bg-foreground/5"
+                    }`}
+                  >
+                    {isUpcoming ? "Upcoming" : "Past"}
+                  </span>
                   <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full border border-cyan-500/40 text-cyan-400 bg-cyan-950/30">
                     {event.badge || "Online Masterclass"}
                   </span>
@@ -138,7 +149,8 @@ export function EventsSection() {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
 

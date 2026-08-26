@@ -98,8 +98,8 @@ export default function AdminEventsPage() {
     }
   };
 
-  const loadEvents = () => {
-    setEvents(getEvents());
+  const loadEvents = async () => {
+    setEvents(await getEvents());
   };
 
   useEffect(() => {
@@ -355,7 +355,7 @@ export default function AdminEventsPage() {
               <div>
                 <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Ticket / Price</label>
                 <input type="text" name="price" value={formData.price} onChange={handleChange}
-                  placeholder="Free or ₹500/team"
+                  placeholder="Free or $500/team"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
                 />
               </div>

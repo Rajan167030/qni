@@ -16,7 +16,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ id: str
     (async () => {
       const resolvedParams = await params;
       setEventId(resolvedParams.id);
-      const allEvents = getEvents();
+      const allEvents = await getEvents();
       const found = allEvents.find((e) => e.id === resolvedParams.id);
       if (found) {
         setEvent(found);
