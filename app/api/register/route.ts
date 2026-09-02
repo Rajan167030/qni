@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getMongoDbDatabase } from '@/lib/mongodb';
 import { saveServerSubmission, getServerSubmissions } from '@/lib/server-storage';
+import { sendEventRegistrationEmail, sendAdminNotification } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -26,6 +27,37 @@ export async function POST(request: Request) {
       }
     } catch (dbErr) {
       console.warn('[MongoDB Registration] DB write error:', dbErr);
+    }
+
+    // 3. Send confirmation email to the registrant
+    if (regRecord.email && regRecord.name) {
+      const formattedDate = regRecord.eventDate
+        ? new Date(regRecord.eventDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+        : undefined;
+      await sendEventRegistrationEmail(
+        regRecord.email,
+        regRecord.name,
+        regRecord.eventTitle || 'Quantum Event',
+        { date: formattedDate, time: regRecord.time, location: regRecord.location },
+        regRecord.token || regRecord.id
+      ).catch((err) => {
+        console.warn('[Email] Registration confirmation error:', err);
+      });
+    }
+
+    // 4. Notify admin of the new registration
+    if (regRecord.email && regRecord.name) {
+      await sendAdminNotification({
+        formType: 'Event Registration',
+        name: regRecord.name,
+        email: regRecord.email,
+        phone: regRecord.phone,
+        organization: regRecord.organization,
+        subject: `New Event Registration — ${regRecord.eventTitle || 'Quantum Event'}`,
+        message: `Registered for: ${regRecord.eventTitle || 'Quantum Event'}\nToken: ${regRecord.token || regRecord.id}`,
+      }).catch((err) => {
+        console.warn('[Email] Admin notification error:', err);
+      });
     }
 
     return NextResponse.json(

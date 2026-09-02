@@ -38,6 +38,10 @@ export interface EventRegistration {
   role: string;
   background: string;
   teamName?: string;
+  token?: string;
+  eventDate?: string;
+  time?: string;
+  location?: string;
   createdAt: string;
   status: "Confirmed" | "Attended" | "Cancelled";
 }

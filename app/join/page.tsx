@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 
 import { saveJoin } from '@/lib/submissions-store';
 import { getSettings, SiteSettings } from '@/lib/settings-store';
+import { saveUserIdentity, generateToken } from '@/lib/user-identity';
 
 export default function JoinPage() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
@@ -24,6 +25,7 @@ export default function JoinPage() {
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [memberToken, setMemberToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -76,6 +78,18 @@ export default function JoinPage() {
           message: formData.message,
         }),
       }).catch((err) => console.warn('API POST warn (fallback to local store):', err));
+
+      // Identify this visitor on their own device — replaces the "Join Us" nav
+      // button with their name and persists across future visits.
+      const token = generateToken('QNI-MEMBER');
+      saveUserIdentity({
+        name: formData.fullName,
+        email: formData.email,
+        token,
+        source: 'join',
+        createdAt: new Date().toISOString(),
+      });
+      setMemberToken(token);
 
       setIsSubmitted(true);
     } catch (error) {
@@ -151,9 +165,14 @@ export default function JoinPage() {
                       <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                     </div>
                     <h3 className="text-2xl sm:text-3xl font-display text-foreground mb-3">You're In!</h3>
-                    <p className="text-sm sm:text-base text-muted-foreground max-w-md mb-8 leading-relaxed">
-                      Thank you for joining QNexus. We'll be in touch soon with details on upcoming talks, workshops, and how to get involved.
+                    <p className="text-sm sm:text-base text-muted-foreground max-w-md mb-2 leading-relaxed">
+                      Thank you for joining QNexus. We've emailed a confirmation to <strong>{formData.email}</strong> — we'll be in touch soon with details on upcoming talks, workshops, and how to get involved.
                     </p>
+                    {memberToken && (
+                      <p className="text-xs font-mono text-muted-foreground/70 mb-8">
+                        Your member ID: <span className="text-foreground/70">{memberToken}</span>
+                      </p>
+                    )}
                     <Button
                       onClick={() => setIsSubmitted(false)}
                       variant="outline"

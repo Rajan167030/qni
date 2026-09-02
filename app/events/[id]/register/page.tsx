@@ -6,11 +6,13 @@ import { ArrowLeft, CheckCircle2, User, Mail, Phone, Building2, GraduationCap, A
 
 import { getEvents, EventItem } from '@/lib/events-store';
 import { saveRegistration } from '@/lib/submissions-store';
+import { saveUserIdentity, generateToken } from '@/lib/user-identity';
 
 export default function EventRegisterPage({ params }: { params: Promise<{ id: string }> }) {
   const [eventId, setEventId] = useState<string | null>(null);
   const [event, setEvent] = useState<EventItem | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [regToken, setRegToken] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [form, setForm] = useState({
@@ -34,6 +36,8 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
     setIsSubmitting(true);
     const title = event?.title || 'Quantum Event';
 
+    const token = generateToken('QNI-EVT');
+
     const regData = {
       eventId: eventId || '1',
       eventTitle: title,
@@ -44,12 +48,16 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
       role: form.role || 'Attendee',
       background: form.background,
       teamName: form.teamName || undefined,
+      token,
+      eventDate: event?.eventDate,
+      time: event?.time,
+      location: event?.location,
     };
 
     // Save to local store
     saveRegistration(regData);
 
-    // Save to MongoDB API
+    // Save to MongoDB API + trigger confirmation email
     try {
       await fetch('/api/register', {
         method: 'POST',
@@ -59,6 +67,18 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
     } catch (err) {
       console.warn('MongoDB register API warn:', err);
     }
+
+    // Identify this visitor on their own device — replaces the "Join Us" nav
+    // button with their name and persists across future visits.
+    saveUserIdentity({
+      name: form.name,
+      email: form.email,
+      token,
+      source: 'event-register',
+      eventTitle: title,
+      createdAt: new Date().toISOString(),
+    });
+    setRegToken(token);
 
     setIsSubmitting(false);
     setSubmitted(true);
@@ -74,13 +94,18 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
           <h1 className="text-3xl font-display mb-3">You're Registered!</h1>
           <p className="text-foreground/60 mb-2">{form.name}, your registration for</p>
           <p className="font-semibold text-foreground mb-6">"{event?.title}"</p>
-          <p className="text-sm text-foreground/50 mb-8">A confirmation email will be sent to <strong>{form.email}</strong>. Check your inbox for event details and access links.</p>
+          <p className="text-sm text-foreground/50 mb-2">A confirmation email will be sent to <strong>{form.email}</strong>. Check your inbox for event details and access links.</p>
+          {regToken && (
+            <p className="text-xs font-mono text-foreground/40 mb-8">
+              Your registration token: <span className="text-foreground/70">{regToken}</span>
+            </p>
+          )}
           <div className="flex flex-col gap-3">
-            <Link href="/events" className="px-8 py-3 bg-foreground text-background rounded-xl font-medium hover:bg-foreground/90 transition-colors text-center">
-              Browse More Events
+            <Link href="/dashboard" className="px-8 py-3 bg-foreground text-background rounded-xl font-medium hover:bg-foreground/90 transition-colors text-center">
+              View My Dashboard
             </Link>
-            <Link href="/" className="px-8 py-3 border border-foreground/15 rounded-xl text-foreground/60 hover:text-foreground transition-colors text-center text-sm">
-              Back to Home
+            <Link href="/events" className="px-8 py-3 border border-foreground/15 rounded-xl text-foreground/60 hover:text-foreground transition-colors text-center text-sm">
+              Browse More Events
             </Link>
           </div>
         </div>

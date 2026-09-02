@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles, ArrowRight } from "lucide-react";
+import { Menu, X, Sparkles, ArrowRight, User, LogOut } from "lucide-react";
 import SpecularButton from "@/components/ui/SpecularButton";
+import { getUserIdentity, clearUserIdentity, IDENTITY_EVENT, UserIdentity } from "@/lib/user-identity";
 
 const navLinks = [
   { name: "Events", href: "/events" },
@@ -19,6 +20,7 @@ const navLinks = [
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [identity, setIdentity] = useState<UserIdentity | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,6 +29,19 @@ export function Navigation() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const refreshIdentity = () => setIdentity(getUserIdentity());
+    refreshIdentity();
+    window.addEventListener(IDENTITY_EVENT, refreshIdentity);
+    window.addEventListener("storage", refreshIdentity);
+    return () => {
+      window.removeEventListener(IDENTITY_EVENT, refreshIdentity);
+      window.removeEventListener("storage", refreshIdentity);
+    };
+  }, []);
+
+  const firstName = identity?.name?.trim().split(/\s+/)[0] || "";
 
   return (
     <header
@@ -74,31 +89,50 @@ export function Navigation() {
             ))}
           </div>
 
-          {/* Desktop CTA - Improved Join Us Button */}
+          {/* Desktop CTA - Join Us Button, or the visitor's name once identified */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/join">
-              <SpecularButton
-                size={isScrolled ? "sm" : "md"}
-                radius={18}
-                tint="#ffffff"
-                tintOpacity={0}
-                blur={0}
-                textColor="#f5f5f5"
-                lineColor="#ffffff"
-                baseColor="#262626"
-                intensity={1}
-                shineSize={10}
-                shineFade={40}
-                thickness={1}
-                speed={0.35}
-                followMouse
-                proximity={250}
-                autoAnimate={false}
-              >
-                <span>Join Us</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </SpecularButton>
-            </Link>
+            {identity ? (
+              <div className="group relative flex items-center gap-2 pl-1.5 pr-2 py-1.5 rounded-full border border-foreground/15 bg-foreground/5 text-foreground">
+                <Link href="/dashboard" className="flex items-center gap-2" title="Go to my dashboard">
+                  <div className="w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center shrink-0">
+                    <User className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-sm font-medium">Hi, {firstName}</span>
+                </Link>
+                <button
+                  onClick={clearUserIdentity}
+                  aria-label="Sign out"
+                  title="Sign out"
+                  className="ml-1 p-1 rounded-full text-foreground/40 opacity-0 group-hover:opacity-100 hover:text-foreground hover:bg-foreground/10 transition-all"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <Link href="/join">
+                <SpecularButton
+                  size={isScrolled ? "sm" : "md"}
+                  radius={18}
+                  tint="#ffffff"
+                  tintOpacity={0}
+                  blur={0}
+                  textColor="#f5f5f5"
+                  lineColor="#ffffff"
+                  baseColor="#262626"
+                  intensity={1}
+                  shineSize={10}
+                  shineFade={40}
+                  thickness={1}
+                  speed={0.35}
+                  followMouse
+                  proximity={250}
+                  autoAnimate={false}
+                >
+                  <span>Join Us</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </SpecularButton>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -179,16 +213,40 @@ export function Navigation() {
           }`}
           style={{ transitionDelay: isMobileMenuOpen ? "600ms" : "0ms" }}
           >
-            <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4 text-center">
-              Ready to start?
-            </p>
-            <Link 
-              href="/join"
-              className="w-full bg-foreground text-background rounded-full h-14 text-lg font-semibold flex items-center justify-center hover:bg-foreground/90 transition-all shadow-xl shadow-foreground/10"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Join Us
-            </Link>
+            {identity ? (
+              <>
+                <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4 text-center">
+                  Signed in as
+                </p>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full bg-foreground/5 border border-foreground/15 rounded-full h-14 text-lg font-semibold flex items-center justify-center gap-3 text-foreground hover:bg-foreground/10 transition-colors"
+                >
+                  <User className="w-5 h-5" />
+                  <span>{firstName}</span>
+                </Link>
+                <button
+                  onClick={() => { clearUserIdentity(); setIsMobileMenuOpen(false); }}
+                  className="w-full mt-3 flex items-center justify-center gap-2 text-sm text-foreground/50 hover:text-foreground transition-colors"
+                >
+                  <LogOut className="w-3.5 h-3.5" /> Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-4 text-center">
+                  Ready to start?
+                </p>
+                <Link
+                  href="/join"
+                  className="w-full bg-foreground text-background rounded-full h-14 text-lg font-semibold flex items-center justify-center hover:bg-foreground/90 transition-all shadow-xl shadow-foreground/10"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Join Us
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

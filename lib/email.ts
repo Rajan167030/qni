@@ -205,10 +205,181 @@ https://www.quantumnexusglobal.org`;
 }
 
 // ─────────────────────────────────────────────────────────────────
+// 1b. Event Registration Confirmation → Sent after registering for an event
+// ─────────────────────────────────────────────────────────────────
+export async function sendEventRegistrationEmail(
+  to: string,
+  name: string,
+  eventTitle: string,
+  eventMeta: { date?: string; time?: string; location?: string },
+  token: string
+) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping registration email — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM!;
+  const safeName = escapeHtml(name);
+  const safeEventTitle = escapeHtml(eventTitle);
+  const safeDate = escapeHtml(eventMeta.date || 'To be confirmed');
+  const safeTime = escapeHtml(eventMeta.time || 'To be confirmed');
+  const safeLocation = escapeHtml(eventMeta.location || 'Online');
+  const safeToken = escapeHtml(token);
+  const dashboardLink = `https://www.quantumnexusglobal.org/dashboard?email=${encodeURIComponent(to)}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registration Confirmed — Quantum Nexus Global</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 36px 24px; border-bottom: 1px solid #f1f5f9;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <img src="https://www.quantumnexusglobal.org/logo-mark.png" alt="Quantum Nexus Global" width="140" style="display: block; max-width: 140px; height: auto;" />
+                  </td>
+                  <td align="right">
+                    <span style="display: inline-block; background-color: #f0fdf4; color: #15803d; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 9999px;">
+                      Registration Confirmed
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 32px 36px 24px;">
+              <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 16px; line-height: 1.3;">
+                You're registered, ${safeName}
+              </h1>
+
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 24px;">
+                Your seat for <strong>${safeEventTitle}</strong> is confirmed. Your virtual event pass is below — save this email or add it to your dashboard.
+              </p>
+
+              <!-- Virtual Pass -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border: 2px dashed #a5f3fc; border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+                <tr>
+                  <td style="background-color: #ecfeff; padding: 12px 20px; border-bottom: 2px dashed #a5f3fc;">
+                    <span style="font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #0e7490;">Quantum Nexus &middot; Virtual Event Pass</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 20px;">
+                    <div style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">${safeName}</div>
+                    <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">${safeEventTitle}</div>
+
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding-bottom: 10px; font-size: 13px; color: #64748b; width: 90px;">Date</td>
+                        <td style="padding-bottom: 10px; font-size: 13px; color: #0f172a; font-weight: 600;">${safeDate}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding-bottom: 10px; font-size: 13px; color: #64748b;">Time</td>
+                        <td style="padding-bottom: 10px; font-size: 13px; color: #0f172a; font-weight: 600;">${safeTime}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding-bottom: 14px; font-size: 13px; color: #64748b;">Location</td>
+                        <td style="padding-bottom: 14px; font-size: 13px; color: #0f172a; font-weight: 600;">${safeLocation}</td>
+                      </tr>
+                    </table>
+
+                    <div style="border-top: 1px dashed #cbd5e1; padding-top: 14px;">
+                      <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 4px;">Pass ID</div>
+                      <div style="font-size: 15px; font-weight: 700; letter-spacing: 0.5px; color: #0e7490; font-family: monospace;">${safeToken}</div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Dashboard CTA -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td align="center">
+                    <a href="${dashboardLink}" target="_blank" style="display: inline-block; background-color: #0e7490; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 8px;">
+                      View My Dashboard &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size: 13px; line-height: 1.6; color: #64748b; margin: 0;">
+                Your dashboard tracks all your registered and attended events in one place. Questions about this event? Just reply to this email and our team will help.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; padding: 24px 36px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="font-size: 12px; color: #64748b; margin: 0 0 6px; line-height: 1.5;">
+                You received this email because you registered for an event on <a href="https://www.quantumnexusglobal.org" style="color: #2563eb; text-decoration: none;">quantumnexusglobal.org</a>.
+              </p>
+              <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+                &copy; 2026 Quantum Nexus Global &middot; Advancing Quantum Computing
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `You're registered, ${name}!
+
+Your seat for "${eventTitle}" is confirmed. Here is your virtual event pass:
+
+Date: ${eventMeta.date || 'To be confirmed'}
+Time: ${eventMeta.time || 'To be confirmed'}
+Location: ${eventMeta.location || 'Online'}
+Pass ID: ${token}
+
+View your dashboard (all your registered & attended events):
+${dashboardLink}
+
+Questions? Reply directly to this email.
+
+— The Quantum Nexus Global Team
+https://www.quantumnexusglobal.org`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Quantum Nexus Global" <${from}>`,
+      to,
+      subject: `Registration Confirmed: ${eventTitle}`,
+      html,
+      text,
+    });
+    console.log(`[Email] Registration confirmation sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error('[Email] Failed to send registration confirmation:', err);
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
 // 2. Admin Form Submission Notification → Handles both Join & Contact
 // ─────────────────────────────────────────────────────────────────
 export interface FormSubmissionPayload {
-  formType: 'Join Us Application' | 'Contact Us Inquiry' | 'Research Grant Proposal';
+  formType: 'Join Us Application' | 'Contact Us Inquiry' | 'Research Grant Proposal' | 'Event Registration';
   name: string;
   email: string;
   phone?: string;
@@ -236,9 +407,10 @@ export async function sendAdminNotification(data: FormSubmissionPayload) {
   // Badge theming per form type
   const isJoin = data.formType === 'Join Us Application';
   const isResearch = data.formType === 'Research Grant Proposal';
-  const badgeBg = isJoin ? '#eef2ff' : isResearch ? '#faf5ff' : '#f0fdf4';
-  const badgeColor = isJoin ? '#4338ca' : isResearch ? '#7c3aed' : '#15803d';
-  const badgeBorder = isJoin ? '#c7d2fe' : isResearch ? '#ddd6fe' : '#bbf7d0';
+  const isEvent = data.formType === 'Event Registration';
+  const badgeBg = isJoin ? '#eef2ff' : isResearch ? '#faf5ff' : isEvent ? '#ecfeff' : '#f0fdf4';
+  const badgeColor = isJoin ? '#4338ca' : isResearch ? '#7c3aed' : isEvent ? '#0e7490' : '#15803d';
+  const badgeBorder = isJoin ? '#c7d2fe' : isResearch ? '#ddd6fe' : isEvent ? '#a5f3fc' : '#bbf7d0';
 
   const safeName = escapeHtml(data.name);
   const safeEmail = escapeHtml(data.email);
