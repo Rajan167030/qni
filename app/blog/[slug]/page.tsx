@@ -150,12 +150,12 @@ export default function SingleBlogPostPage() {
       {/* Cover Image */}
       <section className="px-6 lg:px-12 py-10">
         <div className="max-w-4xl mx-auto">
-          <div className="relative h-[300px] sm:h-[450px] rounded-3xl overflow-hidden border border-foreground/10 shadow-2xl">
+          <div className="relative rounded-3xl overflow-hidden border border-foreground/10 shadow-2xl bg-foreground/5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={post.coverImage}
               alt={post.title}
-              className="w-full h-full object-cover"
+              className="w-full h-auto max-h-[70vh] object-contain mx-auto"
             />
           </div>
         </div>

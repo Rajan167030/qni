@@ -38,12 +38,12 @@ const speakers = [
   {
     id: "3",
     name: "Smriti Bajaj",
-    role: "Technology Strategist",
+    role: "Quantum Research Scientist",
     company: "Dell Technologies",
-    bio: "Driving enterprise digital transformation at scale",
+    bio: "Advancing quantum research and next-generation computing at Dell",
     image: "/speakers/smriti bajaj.jpg",
-    fullBio: "Smriti leads strategic technology initiatives at Dell Technologies, helping enterprises navigate digital transformation and adopt cutting-edge infrastructure solutions.",
-    expertise: ["Strategy", "Enterprise Tech", "Cloud"],
+    fullBio: "Smriti is a Quantum Research Scientist at Dell Technologies, researching the fundamentals of quantum computation and helping the next generation of learners break into the field.",
+    expertise: ["Quantum Computing", "Research", "Quantum Algorithms"],
     social: {
       twitter: "#",
       linkedin: "https://www.linkedin.com/in/smriti-bajaj",
