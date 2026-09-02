@@ -141,14 +141,14 @@ export default function BlogPage() {
 
             <div className="grid md:grid-cols-12 gap-8 bg-foreground/5 border border-foreground/10 rounded-3xl overflow-hidden hover:border-foreground/20 transition-all group">
               {/* Cover Image */}
-              <div className="md:col-span-7 relative min-h-[320px] md:min-h-[420px] overflow-hidden">
+              <div className="md:col-span-7 relative min-h-[320px] md:min-h-[420px] overflow-hidden bg-foreground/5 flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={featuredPost.coverImage}
                   alt={featuredPost.title}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent md:hidden" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent md:hidden pointer-events-none" />
               </div>
 
               {/* Text Content */}
@@ -243,12 +243,12 @@ export default function BlogPage() {
                   className="bg-foreground/[0.02] border border-foreground/10 rounded-2xl overflow-hidden hover:border-foreground/25 hover:bg-foreground/[0.04] transition-all flex flex-col group"
                 >
                   {/* Cover */}
-                  <Link href={`/blog/${post.slug}`} className="relative h-52 overflow-hidden block">
+                  <Link href={`/blog/${post.slug}`} className="relative h-52 overflow-hidden flex items-center justify-center bg-foreground/5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={post.coverImage}
                       alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-background/80 backdrop-blur-md text-[11px] font-mono font-medium border border-foreground/10">
                       {post.category}
