@@ -2,16 +2,37 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { X, Calendar, MapPin, Clock, Users, ArrowRight, ExternalLink, ChevronRight } from "lucide-react";
+import { X, Calendar, MapPin, Clock, Users, User, ArrowRight, ExternalLink, ChevronRight, Share2, Check } from "lucide-react";
 
 import { getEvents, EventItem, resolveEventStatus } from "@/lib/events-store";
+import { getEventShareUrl } from "@/components/events/event-pass";
 
 export function EventsSection() {
   const [eventsList, setEventsList] = useState<EventItem[]>([]);
   const [isVisible, setIsVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
+
+  const handleShare = async (event: EventItem) => {
+    const url = getEventShareUrl(event.id);
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: event.title, text: event.description, url });
+        return;
+      } catch {
+        // user cancelled or share failed — fall through to clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      // ignore — clipboard unavailable
+    }
+  };
 
   useEffect(() => {
     getEvents().then(setEventsList);
@@ -99,11 +120,11 @@ export function EventsSection() {
 
               {/* Session Image Thumbnail */}
               {event.imageUrl && (
-                <div className="relative w-full sm:w-44 md:w-36 h-28 sm:h-24 rounded-2xl overflow-hidden shrink-0 border border-foreground/10 bg-foreground/5 shadow-sm group-hover:border-cyan-500/40 transition-all">
+                <div className="relative w-full sm:w-32 md:w-36 h-28 sm:h-40 md:h-44 rounded-2xl overflow-hidden shrink-0 border border-foreground/10 bg-foreground/5 shadow-sm group-hover:border-cyan-500/40 transition-all flex items-center justify-center">
                   <img
                     src={event.imageUrl}
                     alt={event.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent sm:hidden" />
                   <div className="absolute bottom-2 left-2 sm:hidden text-white font-mono text-[11px] font-bold">
@@ -118,20 +139,20 @@ export function EventsSection() {
                   <span
                     className={`text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full border font-semibold ${
                       isUpcoming
-                        ? "border-emerald-500/40 text-emerald-400 bg-emerald-950/30"
-                        : "border-foreground/15 text-foreground/40 bg-foreground/5"
+                        ? "border-emerald-300 text-emerald-700 bg-emerald-100"
+                        : "border-foreground/15 text-foreground/50 bg-foreground/5"
                     }`}
                   >
                     {isUpcoming ? "Upcoming" : "Past"}
                   </span>
-                  <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full border border-cyan-500/40 text-cyan-400 bg-cyan-950/30">
+                  <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full border border-cyan-300 text-cyan-700 bg-cyan-100">
                     {event.badge || "Online Masterclass"}
                   </span>
                   <span className="text-xs font-mono text-foreground/40">
                     {event.time}
                   </span>
                 </div>
-                <h3 className="text-lg lg:text-xl font-medium leading-snug text-foreground group-hover:text-cyan-400 transition-colors">
+                <h3 className="text-lg lg:text-xl font-medium leading-snug text-foreground group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors">
                   {event.title}
                 </h3>
                 <p className="text-sm text-foreground/50 leading-relaxed mt-1 line-clamp-2">
@@ -145,7 +166,7 @@ export function EventsSection() {
                   {event.price}
                 </span>
                 <div className="w-9 h-9 rounded-full border border-foreground/15 flex items-center justify-center group-hover:border-cyan-500/40 group-hover:bg-cyan-500/10 transition-all">
-                  <ChevronRight className="w-4 h-4 text-foreground/40 group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all duration-200" />
+                  <ChevronRight className="w-4 h-4 text-foreground/40 group-hover:text-cyan-700 dark:group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all duration-200" />
                 </div>
               </div>
             </div>
@@ -178,12 +199,27 @@ export function EventsSection() {
               <span className="font-mono text-xs text-foreground/40 uppercase tracking-widest">
                 Event Overview
               </span>
-              <button
-                onClick={closePanel}
-                className="w-9 h-9 rounded-full border border-foreground/15 flex items-center justify-center hover:bg-foreground/10 transition-colors"
-              >
-                <X className="w-4 h-4 text-foreground/60" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleShare(selectedEvent)}
+                  aria-label="Share this event"
+                  title={shareCopied ? "Link copied!" : "Share this event"}
+                  className="w-9 h-9 rounded-full border border-foreground/15 flex items-center justify-center hover:bg-foreground/10 transition-colors"
+                >
+                  {shareCopied ? (
+                    <Check className="w-4 h-4 text-emerald-500" />
+                  ) : (
+                    <Share2 className="w-4 h-4 text-foreground/60" />
+                  )}
+                </button>
+                <button
+                  onClick={closePanel}
+                  aria-label="Close event details"
+                  className="w-9 h-9 rounded-full border border-foreground/15 flex items-center justify-center hover:bg-foreground/10 transition-colors"
+                >
+                  <X className="w-4 h-4 text-foreground/60" />
+                </button>
+              </div>
             </div>
 
             {/* Content */}
@@ -194,22 +230,22 @@ export function EventsSection() {
                   <div className="font-mono text-xs text-foreground/40 uppercase tracking-wider">
                     {selectedEvent.month} {selectedEvent.day}, 2026
                   </div>
-                  <div className="font-mono text-xs text-foreground/30 mt-0.5">
+                  <div className="font-mono text-xs text-foreground/50 mt-0.5">
                     {selectedEvent.dayLabel}
                   </div>
                 </div>
-                <span className="text-xs font-mono text-cyan-400 border border-cyan-500/40 bg-cyan-950/20 px-3 py-1 rounded-full">
+                <span className="text-xs font-mono text-cyan-700 border border-cyan-300 bg-cyan-100 px-3 py-1 rounded-full">
                   {selectedEvent.badge}
                 </span>
               </div>
 
               {/* Cover Image */}
               {selectedEvent.imageUrl && (
-                <div className="w-full h-48 rounded-2xl overflow-hidden border border-foreground/15 bg-foreground/5 shadow-inner">
+                <div className="w-full rounded-2xl overflow-hidden border border-foreground/15 bg-foreground/5 shadow-inner flex items-center justify-center">
                   <img
                     src={selectedEvent.imageUrl}
                     alt={selectedEvent.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-auto max-h-[60vh] object-contain"
                   />
                 </div>
               )}
@@ -219,18 +255,16 @@ export function EventsSection() {
                 <h2 className="text-2xl lg:text-3xl font-display leading-tight text-foreground mb-4">
                   {selectedEvent.title}
                 </h2>
-                <p className="text-foreground/60 leading-relaxed text-sm">
+                <p className="text-foreground/60 leading-relaxed text-sm whitespace-pre-line">
                   {selectedEvent.fullDescription}
                 </p>
               </div>
 
               {/* Info grid */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
                 {[
                   { icon: MapPin, label: "Location", value: selectedEvent.location },
                   { icon: Clock, label: "Time", value: selectedEvent.time },
-                  { icon: Users, label: "Attendees", value: `${selectedEvent.attendees} expected` },
-                  { icon: Calendar, label: "Tickets", value: selectedEvent.price },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="p-4 rounded-2xl border border-foreground/10 bg-foreground/[0.015]">
                     <div className="flex items-center gap-1.5 text-foreground/45 mb-1.5">
@@ -240,23 +274,55 @@ export function EventsSection() {
                     <p className="text-foreground text-sm font-medium leading-snug">{value}</p>
                   </div>
                 ))}
+
+                {/* Attendees — with stacked person icons */}
+                <div className="p-4 rounded-2xl border border-foreground/10 bg-foreground/[0.015]">
+                  <div className="flex items-center gap-1.5 text-foreground/45 mb-1.5">
+                    <Users className="w-3.5 h-3.5" />
+                    <span className="font-mono text-[10px] uppercase tracking-widest">Attendees</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center -space-x-1.5" aria-hidden="true">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-5 h-5 rounded-full flex items-center justify-center border-2 border-background bg-cyan-500"
+                          style={{ opacity: 1 - i * 0.18 }}
+                        >
+                          <User className="w-2.5 h-2.5 text-white" />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-foreground text-sm font-medium leading-snug">{selectedEvent.attendees} attending</p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl border border-foreground/10 bg-foreground/[0.015]">
+                  <div className="flex items-center gap-1.5 text-foreground/45 mb-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span className="font-mono text-[10px] uppercase tracking-widest">Tickets</span>
+                  </div>
+                  <p className="text-foreground text-sm font-medium leading-snug">{selectedEvent.price}</p>
+                </div>
               </div>
 
               {/* Agenda */}
-              <div>
-                <h3 className="font-display text-lg mb-4 text-foreground">Agenda</h3>
-                <div className="border-l border-foreground/15 pl-5 space-y-4">
-                  {selectedEvent.schedule.map((item, idx) => (
-                    <div key={idx} className="relative">
-                      <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-foreground/20 border-2 border-background" />
-                      <div className="font-mono text-[10px] text-foreground/30 uppercase tracking-wider mb-0.5">
-                        {item.time}
+              {selectedEvent.schedule && selectedEvent.schedule.length > 0 && (
+                <div>
+                  <h3 className="font-display text-lg mb-4 text-foreground">Agenda</h3>
+                  <div className="border-l border-foreground/15 pl-5 space-y-4">
+                    {selectedEvent.schedule.map((item, idx) => (
+                      <div key={idx} className="relative">
+                        <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-foreground/20 border-2 border-background" />
+                        <div className="font-mono text-[10px] text-foreground/30 uppercase tracking-wider mb-0.5">
+                          {item.time}
+                        </div>
+                        <div className="text-foreground text-sm font-medium">{item.title}</div>
                       </div>
-                      <div className="text-foreground text-sm font-medium">{item.title}</div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* CTA Register Button */}
               <div className="pt-2 space-y-3">

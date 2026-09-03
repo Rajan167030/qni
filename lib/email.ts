@@ -212,7 +212,8 @@ export async function sendEventRegistrationEmail(
   name: string,
   eventTitle: string,
   eventMeta: { date?: string; time?: string; location?: string },
-  token: string
+  token: string,
+  eventId?: string
 ) {
   const transporter = await createTransporter();
   if (!transporter) {
@@ -228,6 +229,8 @@ export async function sendEventRegistrationEmail(
   const safeLocation = escapeHtml(eventMeta.location || 'Online');
   const safeToken = escapeHtml(token);
   const dashboardLink = `https://www.quantumnexusglobal.org/dashboard?email=${encodeURIComponent(to)}`;
+  const eventPageUrl = `https://www.quantumnexusglobal.org/events/${eventId || ''}`;
+  const linkedInShareLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(eventPageUrl)}`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -306,12 +309,19 @@ export async function sendEventRegistrationEmail(
                 </tr>
               </table>
 
-              <!-- Dashboard CTA -->
+              <!-- Dashboard + Share CTAs -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
                 <tr>
-                  <td align="center">
+                  <td align="center" style="padding-bottom: 12px;">
                     <a href="${dashboardLink}" target="_blank" style="display: inline-block; background-color: #0e7490; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 8px;">
                       View My Dashboard &rarr;
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <a href="${linkedInShareLink}" target="_blank" style="display: inline-block; background-color: #0A66C2; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 8px;">
+                      Share on LinkedIn
                     </a>
                   </td>
                 </tr>
@@ -353,6 +363,9 @@ Pass ID: ${token}
 
 View your dashboard (all your registered & attended events):
 ${dashboardLink}
+
+Share on LinkedIn:
+${linkedInShareLink}
 
 Questions? Reply directly to this email.
 

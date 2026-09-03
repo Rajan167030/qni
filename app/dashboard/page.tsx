@@ -5,10 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   ArrowLeft, CalendarCheck, MapPin, Clock, Ticket, ArrowRight, Sparkles,
-  Award, Users2, MessageSquare, LineChart, LogOut,
+  Award, Users2, MessageSquare, LineChart, LogOut, Linkedin,
 } from 'lucide-react';
 import { getUserIdentity, clearUserIdentity, UserIdentity } from '@/lib/user-identity';
 import { getEvents, EventItem, resolveEventStatus } from '@/lib/events-store';
+import { getLinkedInShareUrl } from '@/components/events/event-pass';
 
 interface MyRegistration {
   id: string;
@@ -155,21 +156,30 @@ export default function DashboardPage() {
                 <h2 className="text-lg font-display font-bold mb-4">Your Upcoming Registrations</h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {upcomingRegistered.map((event) => (
-                    <Link
+                    <div
                       key={event.id}
-                      href={`/events/${event.id}`}
-                      className="group p-5 rounded-2xl border border-foreground/10 bg-foreground/[0.02] hover:border-cyan-500/40 transition-all"
+                      className="group p-5 rounded-2xl border border-foreground/10 bg-foreground/[0.02] hover:border-cyan-500/40 transition-all flex flex-col"
                     >
-                      <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full border border-cyan-500/40 text-cyan-400 bg-cyan-950/20">
-                        {event.category}
-                      </span>
-                      <h3 className="text-base font-medium mt-3 mb-2 leading-snug group-hover:text-cyan-400 transition-colors">
-                        {event.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <MapPin className="w-3 h-3" /> {event.location}
-                      </p>
-                    </Link>
+                      <Link href={`/events/${event.id}`} className="flex-1">
+                        <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full border border-cyan-300 text-cyan-700 bg-cyan-100">
+                          {event.category}
+                        </span>
+                        <h3 className="text-base font-medium mt-3 mb-2 leading-snug group-hover:text-cyan-700 transition-colors">
+                          {event.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <MapPin className="w-3 h-3" /> {event.location}
+                        </p>
+                      </Link>
+                      <a
+                        href={getLinkedInShareUrl(event.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 pt-3 border-t border-foreground/10 inline-flex items-center gap-1.5 text-xs font-semibold text-[#0A66C2] hover:underline w-fit"
+                      >
+                        <Linkedin className="w-3.5 h-3.5" /> Share on LinkedIn
+                      </a>
+                    </div>
                   ))}
                 </div>
               </section>

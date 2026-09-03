@@ -39,7 +39,8 @@ export async function POST(request: Request) {
         regRecord.name,
         regRecord.eventTitle || 'Quantum Event',
         { date: formattedDate, time: regRecord.time, location: regRecord.location },
-        regRecord.token || regRecord.id
+        regRecord.token || regRecord.id,
+        regRecord.eventId
       ).catch((err) => {
         console.warn('[Email] Registration confirmation error:', err);
       });

@@ -346,7 +346,7 @@
   /* Ink stamp badge */
   .stamp-badge {
     position: absolute;
-    bottom: 108px;
+    top: 34px;
     right: 12px;
     padding: 3px 8px;
     border: 2px solid currentColor;

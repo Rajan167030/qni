@@ -857,7 +857,7 @@ export default function AdminDashboardPage() {
             <Link
               href="/team-portal"
               target="_blank"
-              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 transition-all mt-2"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-purple-700 dark:text-purple-300 bg-purple-500/15 dark:bg-purple-500/10 hover:bg-purple-500/25 dark:hover:bg-purple-500/20 border border-purple-500/30 dark:border-purple-500/20 transition-all mt-2"
             >
               <div className="flex items-center gap-3">
                 <Globe className="w-4 h-4" />
@@ -868,7 +868,7 @@ export default function AdminDashboardPage() {
 
             <Link
               href="/admin/events"
-              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all mt-1"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 dark:bg-emerald-500/10 hover:bg-emerald-500/25 dark:hover:bg-emerald-500/20 border border-emerald-500/30 dark:border-emerald-500/20 transition-all mt-1"
             >
               <div className="flex items-center gap-3">
                 <CalendarCheck className="w-4 h-4" />
@@ -879,7 +879,7 @@ export default function AdminDashboardPage() {
 
             <Link
               href="/admin/team"
-              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-all mt-1"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/15 dark:bg-amber-500/10 hover:bg-amber-500/25 dark:hover:bg-amber-500/20 border border-amber-500/30 dark:border-amber-500/20 transition-all mt-1"
             >
               <div className="flex items-center gap-3">
                 <Users className="w-4 h-4" />
@@ -890,7 +890,7 @@ export default function AdminDashboardPage() {
 
             <Link
               href="/admin/settings"
-              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/20 transition-all mt-1"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-sky-700 dark:text-sky-400 bg-sky-500/15 dark:bg-sky-500/10 hover:bg-sky-500/25 dark:hover:bg-sky-500/20 border border-sky-500/30 dark:border-sky-500/20 transition-all mt-1"
             >
               <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4" />
@@ -902,8 +902,8 @@ export default function AdminDashboardPage() {
 
           {/* Database Active Status Card */}
           <div className="p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 space-y-2 text-xs font-mono">
-            <div className="flex items-center gap-2 text-emerald-400 font-bold font-sans text-sm">
-              <Database className="w-4 h-4 text-emerald-400" />
+            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold font-sans text-sm">
+              <Database className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
               <span>MongoDB Cloud Active</span>
             </div>
             <p className="text-muted-foreground leading-relaxed">

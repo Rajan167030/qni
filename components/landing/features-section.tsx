@@ -262,17 +262,20 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
   return (
     <div
       ref={cardRef}
-      className={`group relative transition-all duration-700 ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
-      }`}
-      style={{ transitionDelay: `${index * 100}ms` }}
+      className="sticky"
+      style={{ top: "96px", zIndex: index + 1 }}
     >
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 py-12 lg:py-20 border-b border-foreground/10">
+      <div
+        className={`group relative flex flex-col lg:flex-row gap-8 lg:gap-16 py-12 lg:py-20 border-b border-foreground/10 bg-background transition-all duration-700 ${
+          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+        }`}
+        style={{ transitionDelay: `${index * 100}ms` }}
+      >
         {/* Number */}
         <div className="shrink-0">
           <span className="font-mono text-sm text-muted-foreground">{feature.number}</span>
         </div>
-        
+
         {/* Content */}
         <div className="flex-1 grid lg:grid-cols-2 gap-8 items-center">
           <div>
@@ -283,7 +286,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
               {feature.description}
             </p>
           </div>
-          
+
           {/* Visual */}
           <div className="flex justify-center lg:justify-end">
             <div className="w-48 h-40 text-foreground">

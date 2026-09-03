@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { X, Calendar, MapPin, Clock, ArrowRight, ExternalLink, ArrowLeft, ChevronRight, Users } from 'lucide-react';
+import { X, Calendar, MapPin, Clock, ArrowRight, ExternalLink, ArrowLeft, ChevronRight, Users, User, Share2, Check } from 'lucide-react';
 import { getEvents, EventItem, resolveEventStatus } from '@/lib/events-store';
+import { getEventShareUrl } from '@/components/events/event-pass';
+import { getSpeakerPhoto } from '@/lib/speaker-photos';
 
 // ─── Category → Washi tape color mapping ───────────────────────────────────
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
@@ -61,12 +63,18 @@ function HandCircle() {
 // Tally marks — decorative, one group per ~40 attendees, capped at 5
 function TallyMarks({ count }: { count: string }) {
   const num = parseInt(count.replace(/\D/g, ''), 10) || 0;
-  const groups = Math.min(Math.ceil(num / 40), 5);
+  const groups = Math.min(Math.ceil(num / 40), 3);
   if (groups === 0) return null;
   return (
-    <span className="font-ibm-plex-mono text-xs tracking-tight" style={{ color: 'var(--cork-muted)', letterSpacing: '-0.02em' }} aria-hidden="true">
+    <span className="inline-flex items-center -space-x-1.5" aria-hidden="true">
       {Array.from({ length: groups }).map((_, i) => (
-        <span key={i} className="mr-1 opacity-70">𝍢</span>
+        <span
+          key={i}
+          className="w-4 h-4 rounded-full flex items-center justify-center border"
+          style={{ backgroundColor: 'var(--cork-mustard)', borderColor: '#fff', opacity: 1 - i * 0.18 }}
+        >
+          <User className="w-2.5 h-2.5 text-white" />
+        </span>
       ))}
     </span>
   );
@@ -90,11 +98,31 @@ export default function EventsListPage() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [filter, setFilter] = useState<FilterValue>('all');
+  const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => {
     getEvents().then(setAllEvents);
     setIsVisible(true);
   }, []);
+
+  const handleShare = async (event: EventItem) => {
+    const url = getEventShareUrl(event.id);
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title: event.title, text: event.description, url });
+        return;
+      } catch {
+        // user cancelled or share failed — fall through to clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      // ignore — clipboard unavailable
+    }
+  };
 
   useEffect(() => {
     if (selectedEvent) {
@@ -225,6 +253,15 @@ export default function EventsListPage() {
                   {event.category.toLowerCase()}
                 </div>
 
+                {/* Stamp badge — sits on the card itself, not on the photo */}
+                <div
+                  className="stamp-badge"
+                  style={{ color: isPast ? 'var(--cork-muted)' : 'var(--cork-stamp-green)' }}
+                  aria-label={isPast ? 'Archived event' : 'RSVP Open'}
+                >
+                  {isPast ? 'ARCHIVED' : 'RSVP OPEN'}
+                </div>
+
                 <div style={{ padding: '28px 16px 0 16px' }}>
                   {/* Hand-circled date */}
                   <div className="relative inline-block mb-3" style={{ minWidth: 72, minHeight: 42 }}>
@@ -248,24 +285,23 @@ export default function EventsListPage() {
 
                 {/* Polaroid image frame */}
                 <div className="polaroid-frame mx-4 mb-0 relative">
-                  {/* Stamp badge overlapping bottom-right of photo */}
-                  <div
-                    className="stamp-badge"
-                    style={{ color: isPast ? 'var(--cork-muted)' : 'var(--cork-stamp-green)' }}
-                    aria-label={isPast ? 'Archived event' : 'RSVP Open'}
-                  >
-                    {isPast ? 'ARCHIVED' : 'RSVP OPEN'}
-                  </div>
-
                   {/* Image or gradient placeholder */}
                   {event.imageUrl ? (
-                    <img
-                      src={event.imageUrl}
-                      alt={event.title}
-                      loading="lazy"
-                      className={`torn-paper-img w-full object-cover ${isPast ? 'past-event-img' : ''}`}
-                      style={{ height: 160, display: 'block' }}
-                    />
+                    <div
+                      className="torn-paper-img aspect-[4/5]"
+                      style={{ backgroundColor: '#fff', overflow: 'hidden' }}
+                    >
+                      {/* Reserve a bottom margin (~14% of the box) so the jagged
+                          torn-paper clip below never eats into the photo itself. */}
+                      <div style={{ height: '86%', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img
+                          src={event.imageUrl}
+                          alt={event.title}
+                          loading="lazy"
+                          className={`w-full h-full object-contain ${isPast ? 'past-event-img' : ''}`}
+                        />
+                      </div>
+                    </div>
                   ) : (
                     <div
                       className={`torn-paper-img ${isPast ? 'past-event-img' : ''}`}
@@ -358,13 +394,27 @@ export default function EventsListPage() {
               <span className="font-ibm-plex-mono text-xs text-[var(--cork-muted)]/60 uppercase tracking-widest">
                 Event Details
               </span>
-              <button
-                onClick={closePanel}
-                aria-label="Close event details"
-                className="w-9 h-9 rounded-full border border-[#1B1B1F]/15 flex items-center justify-center hover:bg-[#1B1B1F]/8 transition-colors focus-visible:outline-2 focus-visible:outline-[var(--cork-coral)]"
-              >
-                <X className="w-4 h-4" style={{ color: 'var(--cork-muted)' }} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleShare(selectedEvent)}
+                  aria-label="Share this event"
+                  title={shareCopied ? 'Link copied!' : 'Share this event'}
+                  className="w-9 h-9 rounded-full border border-[#1B1B1F]/15 flex items-center justify-center hover:bg-[#1B1B1F]/8 transition-colors focus-visible:outline-2 focus-visible:outline-[var(--cork-coral)]"
+                >
+                  {shareCopied ? (
+                    <Check className="w-4 h-4 text-emerald-600" />
+                  ) : (
+                    <Share2 className="w-4 h-4" style={{ color: 'var(--cork-muted)' }} />
+                  )}
+                </button>
+                <button
+                  onClick={closePanel}
+                  aria-label="Close event details"
+                  className="w-9 h-9 rounded-full border border-[#1B1B1F]/15 flex items-center justify-center hover:bg-[#1B1B1F]/8 transition-colors focus-visible:outline-2 focus-visible:outline-[var(--cork-coral)]"
+                >
+                  <X className="w-4 h-4" style={{ color: 'var(--cork-muted)' }} />
+                </button>
+              </div>
             </div>
 
             <div className="px-8 py-8 space-y-7">
@@ -392,11 +442,11 @@ export default function EventsListPage() {
 
               {/* Cover image */}
               {selectedEvent.imageUrl && (
-                <div className="rounded-xl overflow-hidden" style={{ height: 200 }}>
+                <div className="rounded-xl overflow-hidden flex items-center justify-center bg-[var(--cork-ink)]/5">
                   <img
                     src={selectedEvent.imageUrl}
                     alt={selectedEvent.title}
-                    className={`w-full h-full object-cover ${resolveEventStatus(selectedEvent) === 'past' ? 'past-event-img' : ''}`}
+                    className={`w-full h-auto max-h-[60vh] object-contain ${resolveEventStatus(selectedEvent) === 'past' ? 'past-event-img' : ''}`}
                   />
                 </div>
               )}
@@ -409,18 +459,16 @@ export default function EventsListPage() {
                 >
                   {selectedEvent.title}
                 </h2>
-                <p className="font-sans text-sm leading-relaxed" style={{ color: 'var(--cork-muted)' }}>
+                <p className="font-sans text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--cork-muted)' }}>
                   {selectedEvent.fullDescription || selectedEvent.description}
                 </p>
               </div>
 
               {/* Info grid */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
                 {[
                   { icon: MapPin, label: 'Location', value: selectedEvent.location },
                   { icon: Clock, label: 'Time', value: selectedEvent.time },
-                  { icon: Users, label: 'Attendees', value: `${selectedEvent.attendees} expected` },
-                  { icon: Calendar, label: 'Tickets', value: selectedEvent.price },
                 ].map(({ icon: Icon, label, value }) => (
                   <div
                     key={label}
@@ -436,6 +484,46 @@ export default function EventsListPage() {
                     </p>
                   </div>
                 ))}
+
+                {/* Attendees — with stacked person icons */}
+                <div
+                  className="p-4 rounded-2xl border"
+                  style={{ borderColor: 'rgba(27,27,31,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1.5" style={{ color: 'var(--cork-muted)' }}>
+                    <Users className="w-3 h-3" aria-hidden="true" />
+                    <span className="font-ibm-plex-mono text-[10px] uppercase tracking-widest">Attendees</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center -space-x-1.5" aria-hidden="true">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-5 h-5 rounded-full flex items-center justify-center border-2"
+                          style={{ backgroundColor: 'var(--cork-mustard)', borderColor: 'rgba(255,255,255,0.9)', opacity: 1 - i * 0.18 }}
+                        >
+                          <User className="w-2.5 h-2.5 text-white" />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="font-sans text-sm font-medium leading-snug" style={{ color: 'var(--cork-ink)' }}>
+                      {selectedEvent.attendees} attending
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  className="p-4 rounded-2xl border"
+                  style={{ borderColor: 'rgba(27,27,31,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1.5" style={{ color: 'var(--cork-muted)' }}>
+                    <Calendar className="w-3 h-3" aria-hidden="true" />
+                    <span className="font-ibm-plex-mono text-[10px] uppercase tracking-widest">Tickets</span>
+                  </div>
+                  <p className="font-sans text-sm font-medium leading-snug" style={{ color: 'var(--cork-ink)' }}>
+                    {selectedEvent.price}
+                  </p>
+                </div>
               </div>
 
               {/* Agenda */}
@@ -476,22 +564,33 @@ export default function EventsListPage() {
                     Speakers
                   </h3>
                   <div className="space-y-2">
-                    {selectedEvent.speakers.filter(Boolean).map((s, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-3 p-3 rounded-xl border"
-                        style={{ borderColor: 'rgba(27,27,31,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}
-                      >
+                    {selectedEvent.speakers.filter(Boolean).map((s, idx) => {
+                      const photo = getSpeakerPhoto(s);
+                      return (
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-space-grotesk font-bold text-xs"
-                          style={{ backgroundColor: 'var(--cork-mustard)', color: '#fff' }}
-                          aria-hidden="true"
+                          key={idx}
+                          className="flex items-center gap-3 p-3 rounded-xl border"
+                          style={{ borderColor: 'rgba(27,27,31,0.08)', backgroundColor: 'rgba(255,255,255,0.6)' }}
                         >
-                          {s.charAt(0)}
+                          {photo ? (
+                            <img
+                              src={photo}
+                              alt={s}
+                              className="w-8 h-8 rounded-full object-cover object-top shrink-0"
+                            />
+                          ) : (
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-space-grotesk font-bold text-xs"
+                              style={{ backgroundColor: 'var(--cork-mustard)', color: '#fff' }}
+                              aria-hidden="true"
+                            >
+                              {s.charAt(0)}
+                            </div>
+                          )}
+                          <span className="font-sans text-sm" style={{ color: 'var(--cork-ink)' }}>{s}</span>
                         </div>
-                        <span className="font-sans text-sm" style={{ color: 'var(--cork-ink)' }}>{s}</span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

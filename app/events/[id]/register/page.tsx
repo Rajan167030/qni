@@ -7,6 +7,7 @@ import { ArrowLeft, CheckCircle2, User, Mail, Phone, Building2, GraduationCap, A
 import { getEvents, EventItem } from '@/lib/events-store';
 import { saveRegistration } from '@/lib/submissions-store';
 import { saveUserIdentity, generateToken } from '@/lib/user-identity';
+import { EventPass } from '@/components/events/event-pass';
 
 export default function EventRegisterPage({ params }: { params: Promise<{ id: string }> }) {
   const [eventId, setEventId] = useState<string | null>(null);
@@ -86,20 +87,32 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+      <div className="min-h-screen bg-background flex items-center justify-center px-6 py-16">
         <div className="max-w-md w-full text-center">
-          <div className="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+          <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center mx-auto mb-5">
+            <CheckCircle2 className="w-8 h-8 text-emerald-500" />
           </div>
-          <h1 className="text-3xl font-display mb-3">You're Registered!</h1>
-          <p className="text-foreground/60 mb-2">{form.name}, your registration for</p>
-          <p className="font-semibold text-foreground mb-6">"{event?.title}"</p>
-          <p className="text-sm text-foreground/50 mb-2">A confirmation email will be sent to <strong>{form.email}</strong>. Check your inbox for event details and access links.</p>
+          <h1 className="text-3xl font-display mb-2">You're Registered!</h1>
+          <p className="text-sm text-foreground/50 mb-8">
+            A confirmation email with your pass was sent to <strong>{form.email}</strong>.
+          </p>
+
           {regToken && (
-            <p className="text-xs font-mono text-foreground/40 mb-8">
-              Your registration token: <span className="text-foreground/70">{regToken}</span>
-            </p>
+            <div className="mb-8">
+              <EventPass
+                data={{
+                  eventId: eventId || '',
+                  eventTitle: event?.title || 'Quantum Event',
+                  attendeeName: form.name,
+                  date: event?.month && event?.day ? `${event.month} ${event.day}, 2026` : undefined,
+                  time: event?.time,
+                  location: event?.location,
+                  token: regToken,
+                }}
+              />
+            </div>
           )}
+
           <div className="flex flex-col gap-3">
             <Link href="/dashboard" className="px-8 py-3 bg-foreground text-background rounded-xl font-medium hover:bg-foreground/90 transition-colors text-center">
               View My Dashboard
@@ -131,7 +144,7 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
           {/* Left: Event Summary Card */}
           <div className="lg:col-span-2">
             <div className="sticky top-28 rounded-3xl border border-foreground/15 bg-foreground/[0.02] p-8">
-              <div className="font-mono text-xs text-foreground/40 uppercase tracking-widest mb-1">{event?.category}</div>
+              <div className="font-mono text-xs text-foreground/60 uppercase tracking-widest mb-1">{event?.category}</div>
               <h2 className="font-display text-2xl text-foreground leading-tight mb-6">{event?.title}</h2>
               <div className="space-y-3 text-sm border-t border-foreground/10 pt-6">
                 <div className="flex items-center gap-3 text-foreground/60">
@@ -150,7 +163,7 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
 
               {/* What you get */}
               <div className="mt-8 pt-6 border-t border-foreground/10">
-                <p className="text-xs font-mono text-foreground/40 uppercase tracking-wider mb-4">Included with Registration</p>
+                <p className="text-xs font-mono font-semibold text-foreground/60 uppercase tracking-wider mb-4">Included with Registration</p>
                 <div className="space-y-2">
                   {['Event access & recording', 'Certificate of participation', 'QNexus community membership', 'Networking with researchers'].map((item) => (
                     <div key={item} className="flex items-center gap-2.5 text-sm text-foreground/70">
@@ -172,73 +185,73 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Personal Info */}
-              <div className="p-6 rounded-2xl border border-foreground/10 bg-foreground/[0.015] space-y-4">
-                <p className="text-xs font-mono text-foreground/40 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-6 rounded-2xl border border-foreground/15 bg-foreground/[0.03] space-y-4">
+                <p className="text-xs font-mono font-semibold text-foreground/60 uppercase tracking-wider flex items-center gap-2">
                   <User className="w-3.5 h-3.5" /> Personal Information
                 </p>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-mono text-foreground/50 mb-1.5">Full Name *</label>
+                    <label className="block text-xs font-mono font-medium text-foreground/75 mb-1.5">Full Name *</label>
                     <input
                       type="text" required
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                       placeholder="Your full name"
-                      className="w-full px-4 py-3 rounded-xl border border-foreground/15 bg-background text-foreground placeholder:text-foreground/30 text-sm focus:outline-none focus:border-foreground/40 transition-colors"
+                      className="w-full px-4 py-3 rounded-xl border border-foreground/25 bg-background text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:border-foreground/60 transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-mono text-foreground/50 mb-1.5">Email Address *</label>
+                    <label className="block text-xs font-mono font-medium text-foreground/75 mb-1.5">Email Address *</label>
                     <input
                       type="email" required
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
                       placeholder="you@example.com"
-                      className="w-full px-4 py-3 rounded-xl border border-foreground/15 bg-background text-foreground placeholder:text-foreground/30 text-sm focus:outline-none focus:border-foreground/40 transition-colors"
+                      className="w-full px-4 py-3 rounded-xl border border-foreground/25 bg-background text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:border-foreground/60 transition-colors"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-foreground/50 mb-1.5">Phone Number</label>
+                  <label className="block text-xs font-mono font-medium text-foreground/75 mb-1.5">Phone Number</label>
                   <input
                     type="tel"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder="+1 555 123 4567"
-                    className="w-full px-4 py-3 rounded-xl border border-foreground/15 bg-background text-foreground placeholder:text-foreground/30 text-sm focus:outline-none focus:border-foreground/40 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-foreground/25 bg-background text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:border-foreground/60 transition-colors"
                   />
                 </div>
               </div>
 
               {/* Professional Info */}
-              <div className="p-6 rounded-2xl border border-foreground/10 bg-foreground/[0.015] space-y-4">
-                <p className="text-xs font-mono text-foreground/40 uppercase tracking-wider flex items-center gap-2">
+              <div className="p-6 rounded-2xl border border-foreground/15 bg-foreground/[0.03] space-y-4">
+                <p className="text-xs font-mono font-semibold text-foreground/60 uppercase tracking-wider flex items-center gap-2">
                   <Building2 className="w-3.5 h-3.5" /> Professional Details
                 </p>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-mono text-foreground/50 mb-1.5">Organization / Institution</label>
+                    <label className="block text-xs font-mono font-medium text-foreground/75 mb-1.5">Organization / Institution</label>
                     <input
                       type="text"
                       value={form.organization}
                       onChange={(e) => setForm({ ...form, organization: e.target.value })}
                       placeholder="IIT, C-DAC, TCS, etc."
-                      className="w-full px-4 py-3 rounded-xl border border-foreground/15 bg-background text-foreground placeholder:text-foreground/30 text-sm focus:outline-none focus:border-foreground/40 transition-colors"
+                      className="w-full px-4 py-3 rounded-xl border border-foreground/25 bg-background text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:border-foreground/60 transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-mono text-foreground/50 mb-1.5">Your Role</label>
+                    <label className="block text-xs font-mono font-medium text-foreground/75 mb-1.5">Your Role</label>
                     <input
                       type="text"
                       value={form.role}
                       onChange={(e) => setForm({ ...form, role: e.target.value })}
                       placeholder="Student / Researcher / Engineer"
-                      className="w-full px-4 py-3 rounded-xl border border-foreground/15 bg-background text-foreground placeholder:text-foreground/30 text-sm focus:outline-none focus:border-foreground/40 transition-colors"
+                      className="w-full px-4 py-3 rounded-xl border border-foreground/25 bg-background text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:border-foreground/60 transition-colors"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-foreground/50 mb-1.5">Quantum Background</label>
+                  <label className="block text-xs font-mono font-medium text-foreground/75 mb-1.5">Quantum Background</label>
                   <div className="grid grid-cols-3 gap-2">
                     {['Beginner', 'Intermediate', 'Advanced'].map((level) => (
                       <button
@@ -247,7 +260,7 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
                         className={`py-2.5 rounded-xl text-sm font-medium border transition-all duration-200 ${
                           form.background === level
                             ? 'bg-foreground text-background border-foreground'
-                            : 'border-foreground/15 text-foreground/60 hover:border-foreground/30 hover:text-foreground'
+                            : 'border-foreground/25 text-foreground/70 hover:border-foreground/40 hover:text-foreground'
                         }`}
                       >
                         {level}
@@ -264,13 +277,13 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
                     <GraduationCap className="w-3.5 h-3.5" /> Hackathon Team Info
                   </p>
                   <div>
-                    <label className="block text-xs font-mono text-foreground/50 mb-1.5">Team Name *</label>
+                    <label className="block text-xs font-mono font-medium text-foreground/75 mb-1.5">Team Name *</label>
                     <input
                       type="text" required={eventId === '3'}
                       value={form.teamName}
                       onChange={(e) => setForm({ ...form, teamName: e.target.value })}
                       placeholder="Your team name"
-                      className="w-full px-4 py-3 rounded-xl border border-foreground/15 bg-background text-foreground placeholder:text-foreground/30 text-sm focus:outline-none focus:border-foreground/40 transition-colors"
+                      className="w-full px-4 py-3 rounded-xl border border-foreground/25 bg-background text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:border-foreground/60 transition-colors"
                     />
                   </div>
                 </div>
@@ -278,13 +291,13 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
 
               {/* Message */}
               <div>
-                <label className="block text-xs font-mono text-foreground/50 mb-1.5">Additional Message (Optional)</label>
+                <label className="block text-xs font-mono font-medium text-foreground/75 mb-1.5">Additional Message (Optional)</label>
                 <textarea
                   rows={3}
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   placeholder="Any specific questions or accessibility requirements..."
-                  className="w-full px-4 py-3 rounded-xl border border-foreground/15 bg-background text-foreground placeholder:text-foreground/30 text-sm focus:outline-none focus:border-foreground/40 transition-colors resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-foreground/25 bg-background text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:border-foreground/60 transition-colors resize-none"
                 />
               </div>
 
