@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Mail, Phone, ArrowRight, CheckCircle2, Globe2, Award, Sparkles, ShieldCheck, Cpu, ArrowLeft, Users } from 'lucide-react';
+import { Mail, Phone, ArrowRight, CheckCircle2, Globe2, Award, Sparkles, ShieldCheck, Cpu, ArrowLeft, Users, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import { saveJoin } from '@/lib/submissions-store';
@@ -92,6 +92,13 @@ export default function JoinPage() {
       setMemberToken(token);
 
       setIsSubmitted(true);
+
+      // Auto-join: send them straight into the WhatsApp community —
+      // no link to hunt for, WhatsApp just opens with the group ready to join.
+      const whatsappLink = settings?.whatsappGroupLink;
+      if (whatsappLink) {
+        window.open(whatsappLink, '_blank', 'noopener,noreferrer');
+      }
     } catch (error) {
       console.error('Error submitting form:', error);
     } finally {
@@ -169,10 +176,31 @@ export default function JoinPage() {
                       Thank you for joining QNexus. We've emailed a confirmation to <strong>{formData.email}</strong> — we'll be in touch soon with details on upcoming talks, workshops, and how to get involved.
                     </p>
                     {memberToken && (
-                      <p className="text-xs font-mono text-muted-foreground/70 mb-8">
+                      <p className="text-xs font-mono text-muted-foreground/70 mb-6">
                         Your member ID: <span className="text-foreground/70">{memberToken}</span>
                       </p>
                     )}
+
+                    {settings?.whatsappGroupLink && (
+                      <div className="w-full max-w-sm mb-8 p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 space-y-3">
+                        <p className="text-sm text-foreground font-medium flex items-center justify-center gap-2">
+                          <MessageCircle className="w-4 h-4 text-emerald-500" />
+                          Opening our WhatsApp community for you...
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          If it didn't open automatically, tap below to join.
+                        </p>
+                        <a
+                          href={settings.whatsappGroupLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
+                        >
+                          Join WhatsApp Community <ArrowRight className="w-4 h-4" />
+                        </a>
+                      </div>
+                    )}
+
                     <Button
                       onClick={() => setIsSubmitted(false)}
                       variant="outline"
@@ -430,9 +458,9 @@ export default function JoinPage() {
                     <Mail className="w-4 h-4 text-foreground/60 shrink-0" />
                     <span className="break-all">{settings?.mentorshipEmail || 'rajan.quantumnexusgobal@gmail.com'}</span>
                   </a>
-                  <a href={`tel:${settings?.phoneLink || '+918860573577'}`} className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors">
+                  <a href={`tel:${settings?.phoneLink || '+15743866580'}`} className="flex items-center gap-3 text-foreground hover:text-emerald-500 transition-colors">
                     <Phone className="w-4 h-4 text-foreground/60" />
-                    <span>{settings?.phoneDisplay || '+91 8860573577'}</span>
+                    <span>{settings?.phoneDisplay || '+1 574 386 6580'}</span>
                   </a>
                 </div>
               </div>

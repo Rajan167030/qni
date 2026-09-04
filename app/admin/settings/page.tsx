@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Save, Mail, Phone, Linkedin, Twitter, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Save, Mail, Phone, Linkedin, Twitter, Loader2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSettings, saveSettings, SiteSettings } from "@/lib/settings-store";
 
@@ -146,6 +146,20 @@ export default function AdminSettingsPage() {
                 type="url" name="twitter" value={formData.twitter} onChange={handleChange}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-xs font-mono text-foreground focus:outline-none focus:border-foreground/50 transition-colors"
               />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-mono uppercase text-muted-foreground mb-1">
+                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp Community Invite Link
+              </label>
+              <input
+                type="url" name="whatsappGroupLink" required value={formData.whatsappGroupLink} onChange={handleChange}
+                placeholder="https://chat.whatsapp.com/xxxxxxxxxxxxxxxx"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-xs font-mono text-foreground focus:outline-none focus:border-foreground/50 transition-colors"
+              />
+              <p className="text-[11px] text-muted-foreground font-mono mt-1.5">
+                Anyone who joins the community or registers for an event is auto-redirected here to join the group in one tap.
+              </p>
             </div>
 
             <Button

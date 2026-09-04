@@ -7,6 +7,7 @@ export interface SiteSettings {
   phoneLink: string;    // e.g. "+15551234567" — used in tel: links
   linkedin: string;
   twitter: string;
+  whatsappGroupLink: string; // e.g. "https://chat.whatsapp.com/xxxxxxx" — auto-opened after registration/join
   updatedAt?: string;
 }
 
@@ -15,10 +16,11 @@ const STORAGE_KEY = 'qni_site_settings_v1';
 const DEFAULT_SETTINGS: SiteSettings = {
   generalEmail: 'rajan.quantumnexusgobal@gmail.com',
   mentorshipEmail: 'rajan.quantumnexusgobal@gmail.com',
-  phoneDisplay: '+91 8860573577',
-  phoneLink: '+918860573577',
+  phoneDisplay: '+1 574 386 6580',
+  phoneLink: '+15743866580',
   linkedin: 'https://www.linkedin.com/company/quantumnexusglobal/',
   twitter: 'https://twitter.com/qnexusglobal',
+  whatsappGroupLink: 'https://chat.whatsapp.com/your-group-invite',
 };
 
 function loadLocal(): SiteSettings {

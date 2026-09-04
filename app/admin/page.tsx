@@ -596,7 +596,8 @@ export default function AdminDashboardPage() {
       r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.eventTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.organization.toLowerCase().includes(searchQuery.toLowerCase())
+      r.organization.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (r.token || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredResearchApps = researchApps.filter(

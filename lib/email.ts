@@ -221,6 +221,7 @@ export async function sendEventRegistrationEmail(
     return false;
   }
 
+  const whatsappLink = process.env.WHATSAPP_LINK || 'https://chat.whatsapp.com/your-group-invite';
   const from = process.env.EMAIL_FROM!;
   const safeName = escapeHtml(name);
   const safeEventTitle = escapeHtml(eventTitle);
@@ -231,6 +232,25 @@ export async function sendEventRegistrationEmail(
   const dashboardLink = `https://www.quantumnexusglobal.org/dashboard?email=${encodeURIComponent(to)}`;
   const eventPageUrl = `https://www.quantumnexusglobal.org/events/${eventId || ''}`;
   const linkedInShareLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(eventPageUrl)}`;
+
+  // QR code = scannable, embedded proof of registration (name, event, pass ID) — works offline, no verify page required.
+  const qrCid = `pass-qr-${token}`;
+  let qrBuffer: Buffer | null = null;
+  try {
+    const QRCode = (await import('qrcode')).default;
+    const qrPayload = `QNexus Event Pass\nName: ${name}\nEvent: ${eventTitle}\nPass ID: ${token}`;
+    qrBuffer = await QRCode.toBuffer(qrPayload, {
+      type: 'png',
+      width: 240,
+      margin: 1,
+      color: { dark: '#0f172a', light: '#ffffff' },
+    });
+  } catch (err) {
+    console.warn('[Email] QR code generation failed:', err);
+  }
+  const qrImgTag = qrBuffer
+    ? `<img src="cid:${qrCid}" width="112" height="112" alt="Event Pass QR Code" style="display: block; width: 112px; height: 112px; border: 1px solid #cbd5e1; border-radius: 8px; margin: 0 auto 6px;" />`
+    : '';
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -283,28 +303,55 @@ export async function sendEventRegistrationEmail(
                 </tr>
                 <tr>
                   <td style="padding: 20px;">
-                    <div style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">${safeName}</div>
-                    <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">${safeEventTitle}</div>
-
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="padding-bottom: 10px; font-size: 13px; color: #64748b; width: 90px;">Date</td>
-                        <td style="padding-bottom: 10px; font-size: 13px; color: #0f172a; font-weight: 600;">${safeDate}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding-bottom: 10px; font-size: 13px; color: #64748b;">Time</td>
-                        <td style="padding-bottom: 10px; font-size: 13px; color: #0f172a; font-weight: 600;">${safeTime}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding-bottom: 14px; font-size: 13px; color: #64748b;">Location</td>
-                        <td style="padding-bottom: 14px; font-size: 13px; color: #0f172a; font-weight: 600;">${safeLocation}</td>
+                        <td style="vertical-align: top;">
+                          <div style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">${safeName}</div>
+                          <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">${safeEventTitle}</div>
+
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                              <td style="padding-bottom: 10px; font-size: 13px; color: #64748b; width: 90px;">Date</td>
+                              <td style="padding-bottom: 10px; font-size: 13px; color: #0f172a; font-weight: 600;">${safeDate}</td>
+                            </tr>
+                            <tr>
+                              <td style="padding-bottom: 10px; font-size: 13px; color: #64748b;">Time</td>
+                              <td style="padding-bottom: 10px; font-size: 13px; color: #0f172a; font-weight: 600;">${safeTime}</td>
+                            </tr>
+                            <tr>
+                              <td style="padding-bottom: 14px; font-size: 13px; color: #64748b;">Location</td>
+                              <td style="padding-bottom: 14px; font-size: 13px; color: #0f172a; font-weight: 600;">${safeLocation}</td>
+                            </tr>
+                          </table>
+
+                          <div style="border-top: 1px dashed #cbd5e1; padding-top: 14px;">
+                            <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 4px;">Pass ID</div>
+                            <div style="font-size: 15px; font-weight: 700; letter-spacing: 0.5px; color: #0e7490; font-family: monospace;">${safeToken}</div>
+                          </div>
+                        </td>
+                        <td style="vertical-align: top; width: 128px; padding-left: 16px; text-align: center;">
+                          ${qrImgTag}
+                          <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8;">Scan to Verify</div>
+                        </td>
                       </tr>
                     </table>
+                  </td>
+                </tr>
+              </table>
 
-                    <div style="border-top: 1px dashed #cbd5e1; padding-top: 14px;">
-                      <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 4px;">Pass ID</div>
-                      <div style="font-size: 15px; font-weight: 700; letter-spacing: 0.5px; color: #0e7490; font-family: monospace;">${safeToken}</div>
+              <!-- WhatsApp Action Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 20px 24px;">
+                    <div style="font-size: 15px; font-weight: 600; color: #166534; margin-bottom: 4px;">
+                      You've been added to our WhatsApp community
                     </div>
+                    <div style="font-size: 13px; color: #15803d; line-height: 1.5; margin-bottom: 16px;">
+                      Tap below to join instantly — get reminders, joining links, and updates for this event straight from the group.
+                    </div>
+                    <a href="${whatsappLink}" target="_blank" style="display: inline-block; background-color: #16a34a; color: #ffffff; font-size: 13px; font-weight: 600; text-decoration: none; padding: 10px 20px; border-radius: 6px;">
+                      Join WhatsApp Community &rarr;
+                    </a>
                   </td>
                 </tr>
               </table>
@@ -361,6 +408,9 @@ Time: ${eventMeta.time || 'To be confirmed'}
 Location: ${eventMeta.location || 'Online'}
 Pass ID: ${token}
 
+You've been added to our WhatsApp community — join here:
+${whatsappLink}
+
 View your dashboard (all your registered & attended events):
 ${dashboardLink}
 
@@ -379,6 +429,9 @@ https://www.quantumnexusglobal.org`;
       subject: `Registration Confirmed: ${eventTitle}`,
       html,
       text,
+      attachments: qrBuffer
+        ? [{ filename: 'event-pass-qr.png', content: qrBuffer, cid: qrCid, contentDisposition: 'inline' }]
+        : [],
     });
     console.log(`[Email] Registration confirmation sent to ${to}`);
     return true;
@@ -928,6 +981,470 @@ Keep this password private. This access can be revoked by the admin at any time.
     return true;
   } catch (err) {
     console.error('[Email] Failed to send blog writer invite email:', err);
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// 6. Event Reminder Email → Automated, sent ~24h and ~1h before an event
+// ─────────────────────────────────────────────────────────────────
+export async function sendEventReminderEmail(
+  to: string,
+  name: string,
+  eventTitle: string,
+  eventMeta: { date?: string; time?: string; location?: string },
+  eventId: string | undefined,
+  window: '24h' | '1h'
+) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping event reminder — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM!;
+  const safeName = escapeHtml(name);
+  const safeEventTitle = escapeHtml(eventTitle);
+  const safeDate = escapeHtml(eventMeta.date || 'Today');
+  const safeTime = escapeHtml(eventMeta.time || 'To be confirmed');
+  const safeLocation = escapeHtml(eventMeta.location || 'Online');
+  const eventPageUrl = `https://www.quantumnexusglobal.org/events/${eventId || ''}`;
+
+  const isUrgent = window === '1h';
+  const accent = isUrgent ? '#dc2626' : '#0e7490';
+  const accentBg = isUrgent ? '#fef2f2' : '#ecfeff';
+  const accentBorder = isUrgent ? '#fecaca' : '#a5f3fc';
+  const badgeLabel = isUrgent ? 'Starting Soon' : 'Reminder';
+  const headline = isUrgent ? `Starting in about an hour` : `Your event is tomorrow`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${badgeLabel} — ${safeEventTitle}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <tr>
+            <td style="padding: 32px 36px 24px; border-bottom: 1px solid #f1f5f9;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <img src="https://www.quantumnexusglobal.org/logo-mark.png" alt="Quantum Nexus Global" width="140" style="display: block; max-width: 140px; height: auto;" />
+                  </td>
+                  <td align="right">
+                    <span style="display: inline-block; background-color: ${accentBg}; color: ${accent}; border: 1px solid ${accentBorder}; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 9999px;">
+                      ${badgeLabel}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px 36px 24px;">
+              <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 16px; line-height: 1.3;">
+                ${headline}, ${safeName}
+              </h1>
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 24px;">
+                <strong>${safeEventTitle}</strong> ${isUrgent ? 'starts soon — here are your details.' : 'is coming up tomorrow. Here\'s what you need to know.'}
+              </p>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid ${accentBorder}; border-radius: 10px; overflow: hidden; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 18px 20px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding-bottom: 8px; font-size: 13px; color: #64748b; width: 90px;">Date</td>
+                        <td style="padding-bottom: 8px; font-size: 13px; color: #0f172a; font-weight: 600;">${safeDate}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding-bottom: 8px; font-size: 13px; color: #64748b;">Time</td>
+                        <td style="padding-bottom: 8px; font-size: 13px; color: #0f172a; font-weight: 600;">${safeTime}</td>
+                      </tr>
+                      <tr>
+                        <td style="font-size: 13px; color: #64748b;">Location</td>
+                        <td style="font-size: 13px; color: #0f172a; font-weight: 600;">${safeLocation}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${eventPageUrl}" target="_blank" style="display: inline-block; background-color: ${accent}; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 8px;">
+                      View Event Details &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f8fafc; padding: 24px 36px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+                &copy; 2026 Quantum Nexus Global &middot; Advancing Quantum Computing
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `${headline}, ${name}!
+
+${eventTitle} — ${isUrgent ? 'starts soon' : 'is tomorrow'}.
+
+Date: ${eventMeta.date || 'Today'}
+Time: ${eventMeta.time || 'To be confirmed'}
+Location: ${eventMeta.location || 'Online'}
+
+Event details: ${eventPageUrl}
+
+— The Quantum Nexus Global Team`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Quantum Nexus Global" <${from}>`,
+      to,
+      subject: isUrgent ? `Starting Soon: ${eventTitle}` : `Reminder: ${eventTitle} is tomorrow`,
+      html,
+      text,
+    });
+    console.log(`[Email] ${window} reminder sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error('[Email] Failed to send event reminder:', err);
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// 7. Post-Event Thank You Email → Automated, sent the day after an event
+// ─────────────────────────────────────────────────────────────────
+export async function sendPostEventThankYouEmail(
+  to: string,
+  name: string,
+  eventTitle: string,
+  eventId?: string
+) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping thank-you email — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM!;
+  const safeName = escapeHtml(name);
+  const safeEventTitle = escapeHtml(eventTitle);
+  const eventsUrl = 'https://www.quantumnexusglobal.org/events';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thank you for attending — Quantum Nexus Global</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <tr>
+            <td style="padding: 32px 36px 24px; border-bottom: 1px solid #f1f5f9;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <img src="https://www.quantumnexusglobal.org/logo-mark.png" alt="Quantum Nexus Global" width="140" style="display: block; max-width: 140px; height: auto;" />
+                  </td>
+                  <td align="right">
+                    <span style="display: inline-block; background-color: #faf5ff; color: #7c3aed; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 9999px;">
+                      Thank You
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px 36px 24px;">
+              <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 16px; line-height: 1.3;">
+                Thanks for being there, ${safeName}
+              </h1>
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 18px;">
+                We hope <strong>${safeEventTitle}</strong> was worth your time. Sessions like this only work because people like you show up and engage — thank you.
+              </p>
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 28px;">
+                Got a minute? Just reply to this email with one honest thought on what was useful and what wasn't — we read every reply and use it to make the next session better.
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${eventsUrl}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 8px;">
+                      Browse Upcoming Events &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f8fafc; padding: 24px 36px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+                &copy; 2026 Quantum Nexus Global &middot; Advancing Quantum Computing
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Thanks for being there, ${name}!
+
+We hope "${eventTitle}" was worth your time. Sessions like this only work because people like you show up and engage — thank you.
+
+Got a minute? Just reply to this email with one honest thought on what was useful and what wasn't — we read every reply.
+
+Browse upcoming events: ${eventsUrl}
+
+— The Quantum Nexus Global Team`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Quantum Nexus Global" <${from}>`,
+      to,
+      replyTo: process.env.EMAIL_TO || from,
+      subject: `Thanks for joining ${eventTitle}!`,
+      html,
+      text,
+    });
+    console.log(`[Email] Post-event thank you sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error('[Email] Failed to send post-event thank you:', err);
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// 8. Community Welcome Drip → Automated, sent a few days after joining
+// ─────────────────────────────────────────────────────────────────
+export async function sendCommunityDripEmail(to: string, name: string, stage: 1 | 2) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping drip email — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM!;
+  const safeName = escapeHtml(name);
+  const whatsappLink = process.env.WHATSAPP_LINK || 'https://chat.whatsapp.com/your-group-invite';
+  const eventsUrl = 'https://www.quantumnexusglobal.org/events';
+
+  const subject = stage === 1
+    ? 'Getting the most out of QNexus'
+    : "Have you seen what's coming up at QNexus?";
+
+  const bodyHtml = stage === 1
+    ? `<p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 18px;">
+         A few days in — here's the fastest way to get real value out of the community:
+       </p>
+       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+         <tr><td style="vertical-align: top; width: 24px; font-size: 14px; color: #4338ca; font-weight: bold;">1.</td><td style="padding-bottom: 12px; font-size: 14px; line-height: 1.6; color: #475569;">Join the WhatsApp group for live announcements and discussions.</td></tr>
+         <tr><td style="vertical-align: top; width: 24px; font-size: 14px; color: #4338ca; font-weight: bold;">2.</td><td style="padding-bottom: 12px; font-size: 14px; line-height: 1.6; color: #475569;">Register for one upcoming talk or workshop — most are free and beginner-friendly.</td></tr>
+         <tr><td style="vertical-align: top; width: 24px; font-size: 14px; color: #4338ca; font-weight: bold;">3.</td><td style="font-size: 14px; line-height: 1.6; color: #475569;">Reply to this email if you want a specific topic covered — we plan sessions around real requests.</td></tr>
+       </table>
+       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+         <tr>
+           <td align="center" style="padding-bottom: 12px;">
+             <a href="${whatsappLink}" target="_blank" style="display: inline-block; background-color: #16a34a; color: #ffffff; font-size: 13px; font-weight: 600; text-decoration: none; padding: 10px 22px; border-radius: 8px;">Join WhatsApp Community &rarr;</a>
+           </td>
+         </tr>
+         <tr>
+           <td align="center">
+             <a href="${eventsUrl}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; font-size: 13px; font-weight: 600; text-decoration: none; padding: 10px 22px; border-radius: 8px;">Browse Events &rarr;</a>
+           </td>
+         </tr>
+       </table>`
+    : `<p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 18px;">
+         It's been about a week since you joined QNexus — we've got fresh sessions on the calendar and would love to see you at one.
+       </p>
+       <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 28px;">
+         Whether you're brand new to quantum or already deep into research, there's something on the events page worth a look.
+       </p>
+       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+         <tr>
+           <td align="center">
+             <a href="${eventsUrl}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 8px;">See What's Coming Up &rarr;</a>
+           </td>
+         </tr>
+       </table>`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${subject}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <tr>
+            <td style="padding: 32px 36px 24px; border-bottom: 1px solid #f1f5f9;">
+              <img src="https://www.quantumnexusglobal.org/logo-mark.png" alt="Quantum Nexus Global" width="140" style="display: block; max-width: 140px; height: auto;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px 36px 24px;">
+              <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 16px; line-height: 1.3;">
+                Hi ${safeName},
+              </h1>
+              ${bodyHtml}
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f8fafc; padding: 24px 36px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+                &copy; 2026 Quantum Nexus Global &middot; Advancing Quantum Computing
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hi ${name},
+
+${stage === 1
+    ? `A few days in — here's the fastest way to get value out of the community:\n1. Join the WhatsApp group: ${whatsappLink}\n2. Register for an upcoming talk or workshop: ${eventsUrl}\n3. Reply to this email if you want a specific topic covered.`
+    : `It's been about a week since you joined QNexus — we've got fresh sessions on the calendar.\n\nSee what's coming up: ${eventsUrl}`}
+
+— The Quantum Nexus Global Team`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Quantum Nexus Global" <${from}>`,
+      to,
+      subject,
+      html,
+      text,
+    });
+    console.log(`[Email] Drip stage ${stage} sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error('[Email] Failed to send drip email:', err);
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// 9. Re-engagement Email → Automated, sent to inactive members
+// ─────────────────────────────────────────────────────────────────
+export async function sendReengagementEmail(to: string, name: string) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping re-engagement email — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM!;
+  const safeName = escapeHtml(name);
+  const eventsUrl = 'https://www.quantumnexusglobal.org/events';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>We miss you — Quantum Nexus Global</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <tr>
+            <td style="padding: 32px 36px 24px; border-bottom: 1px solid #f1f5f9;">
+              <img src="https://www.quantumnexusglobal.org/logo-mark.png" alt="Quantum Nexus Global" width="140" style="display: block; max-width: 140px; height: auto;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px 36px 24px;">
+              <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 16px; line-height: 1.3;">
+                We miss you, ${safeName}
+              </h1>
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 18px;">
+                It's been a little while since you joined QNexus, and we noticed you haven't made it to a session yet. No pressure — just wanted to flag what's on right now in case something fits.
+              </p>
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 28px;">
+                Everything is free and built for people starting exactly where you are.
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${eventsUrl}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 8px;">
+                      See What's On &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f8fafc; padding: 24px 36px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+                &copy; 2026 Quantum Nexus Global &middot; Advancing Quantum Computing
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `We miss you, ${name}!
+
+It's been a little while since you joined QNexus, and we noticed you haven't made it to a session yet. No pressure — just wanted to flag what's on right now in case something fits.
+
+Everything is free and built for people starting exactly where you are.
+
+See what's on: ${eventsUrl}
+
+— The Quantum Nexus Global Team`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Quantum Nexus Global" <${from}>`,
+      to,
+      subject: 'We miss you at QNexus',
+      html,
+      text,
+    });
+    console.log(`[Email] Re-engagement email sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error('[Email] Failed to send re-engagement email:', err);
     return false;
   }
 }

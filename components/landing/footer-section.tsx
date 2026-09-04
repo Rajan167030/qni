@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   ArrowUpRight,
   ArrowUp,
@@ -48,6 +49,9 @@ const socialLinks = [
 const pillars = ["Learn", "Connect", "Build", "Grow"];
 
 export function FooterSection() {
+  const pathname = usePathname();
+  const isLandingPage = pathname === "/";
+
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
@@ -121,75 +125,77 @@ export function FooterSection() {
       <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/85 to-background pointer-events-none" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12">
-        {/* Top Newsletter Card */}
-        <div className="pt-16 lg:pt-20">
-          <div className="relative rounded-3xl border border-foreground/15 bg-foreground/[0.03] backdrop-blur-sm px-6 py-8 sm:px-10 sm:py-10 overflow-hidden">
-            <div className="absolute -top-16 -right-16 w-56 h-56 bg-foreground/5 blur-3xl rounded-full pointer-events-none" />
-            <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-              <div className="flex items-start gap-4">
-                <div className="hidden sm:flex w-12 h-12 rounded-2xl border border-foreground/15 bg-background items-center justify-center shrink-0">
-                  <Mail className="w-5 h-5 text-foreground/70" />
-                </div>
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-foreground/15 bg-background text-xs font-mono tracking-wider uppercase mb-3">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Quantum Dispatch</span>
+        {/* Top Newsletter Card — landing page only */}
+        {isLandingPage && (
+          <div className="pt-16 lg:pt-20">
+            <div className="relative rounded-3xl border border-foreground/15 bg-foreground/[0.03] backdrop-blur-sm px-6 py-8 sm:px-10 sm:py-10 overflow-hidden">
+              <div className="absolute -top-16 -right-16 w-56 h-56 bg-foreground/5 blur-3xl rounded-full pointer-events-none" />
+              <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+                <div className="flex items-start gap-4">
+                  <div className="hidden sm:flex w-12 h-12 rounded-2xl border border-foreground/15 bg-background items-center justify-center shrink-0">
+                    <Mail className="w-5 h-5 text-foreground/70" />
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-foreground">
-                    Never miss a free talk or workshop
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1.5 max-w-md">
-                    Event invitations, mentorship opportunities, and community updates — straight to your inbox.
-                  </p>
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-foreground/15 bg-background text-xs font-mono tracking-wider uppercase mb-3">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Quantum Dispatch</span>
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-foreground">
+                      Never miss a free talk or workshop
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1.5 max-w-md">
+                      Event invitations, mentorship opportunities, and community updates — straight to your inbox.
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="w-full lg:w-auto shrink-0 space-y-2">
-                <form onSubmit={handleSubscribe} className="flex items-center gap-2">
-                  <div className="relative flex-1 lg:w-72">
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
+                <div className="w-full lg:w-auto shrink-0 space-y-2">
+                  <form onSubmit={handleSubscribe} className="flex items-center gap-2">
+                    <div className="relative flex-1 lg:w-72">
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        disabled={isSubmitting || subscribed}
+                        className="w-full px-4 py-3 rounded-full border border-foreground/20 bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:border-foreground/50 transition-colors disabled:opacity-60"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      size="lg"
                       disabled={isSubmitting || subscribed}
-                      className="w-full px-4 py-3 rounded-full border border-foreground/20 bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:border-foreground/50 transition-colors disabled:opacity-60"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    size="lg"
-                    disabled={isSubmitting || subscribed}
-                    className="bg-foreground hover:bg-foreground/90 text-background rounded-full px-6 h-11 text-sm font-semibold shrink-0 disabled:opacity-70"
-                  >
-                    {isSubmitting ? (
-                      <span className="flex items-center gap-1.5">
-                        <Loader2 className="w-4 h-4 animate-spin" /> Sending...
-                      </span>
-                    ) : subscribed ? (
-                      <span className="flex items-center gap-1.5 text-emerald-400">
-                        <CheckCircle2 className="w-4 h-4" /> Done!
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5">
-                        Subscribe <Send className="w-3.5 h-3.5 ml-1" />
-                      </span>
-                    )}
-                  </Button>
-                </form>
-                {feedbackMsg && (
-                  <p className={`text-xs font-mono pl-2 ${subscribed ? 'text-emerald-500' : 'text-rose-400'}`}>
-                    {feedbackMsg}
-                  </p>
-                )}
+                      className="bg-foreground hover:bg-foreground/90 text-background rounded-full px-6 h-11 text-sm font-semibold shrink-0 disabled:opacity-70"
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center gap-1.5">
+                          <Loader2 className="w-4 h-4 animate-spin" /> Sending...
+                        </span>
+                      ) : subscribed ? (
+                        <span className="flex items-center gap-1.5 text-emerald-400">
+                          <CheckCircle2 className="w-4 h-4" /> Done!
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5">
+                          Subscribe <Send className="w-3.5 h-3.5 ml-1" />
+                        </span>
+                      )}
+                    </Button>
+                  </form>
+                  {feedbackMsg && (
+                    <p className={`text-xs font-mono pl-2 ${subscribed ? 'text-emerald-500' : 'text-rose-400'}`}>
+                      {feedbackMsg}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Main Footer Grid */}
-        <div className="pt-14 pb-12 lg:pt-16 lg:pb-16">
+        <div className={`pb-12 lg:pb-16 ${isLandingPage ? 'pt-14 lg:pt-16' : 'pt-16 lg:pt-20'}`}>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-10 lg:gap-12">
             {/* Brand Column */}
             <div className="col-span-2 space-y-6">

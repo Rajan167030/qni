@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, User, Mail, Phone, Building2, GraduationCap, ArrowRight } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, User, Mail, Phone, Building2, GraduationCap, ArrowRight, MessageCircle } from 'lucide-react';
 
 import { getEvents, EventItem } from '@/lib/events-store';
 import { saveRegistration } from '@/lib/submissions-store';
 import { saveUserIdentity, generateToken } from '@/lib/user-identity';
+import { getSettings, SiteSettings } from '@/lib/settings-store';
 import { EventPass } from '@/components/events/event-pass';
 
 export default function EventRegisterPage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,6 +17,7 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
   const [regToken, setRegToken] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [form, setForm] = useState({
     name: '', email: '', phone: '', organization: '', role: '', background: 'Beginner', teamName: '', message: '',
   });
@@ -30,6 +32,7 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
       }
     });
     setIsVisible(true);
+    getSettings().then(setSettings);
   }, [params]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,6 +86,12 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
 
     setIsSubmitting(false);
     setSubmitted(true);
+
+    // Auto-join: send them straight into the WhatsApp community —
+    // no link to hunt for, WhatsApp just opens with the group ready to join.
+    if (settings?.whatsappGroupLink) {
+      window.open(settings.whatsappGroupLink, '_blank', 'noopener,noreferrer');
+    }
   };
 
   if (submitted) {
@@ -110,6 +119,26 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
                   token: regToken,
                 }}
               />
+            </div>
+          )}
+
+          {settings?.whatsappGroupLink && (
+            <div className="mb-8 p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 space-y-3 text-center">
+              <p className="text-sm text-foreground font-medium flex items-center justify-center gap-2">
+                <MessageCircle className="w-4 h-4 text-emerald-500" />
+                Opening our WhatsApp community for you...
+              </p>
+              <p className="text-xs text-foreground/50">
+                If it didn't open automatically, tap below to join.
+              </p>
+              <a
+                href={settings.whatsappGroupLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
+              >
+                Join WhatsApp Community <ArrowRight className="w-4 h-4" />
+              </a>
             </div>
           )}
 
