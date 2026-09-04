@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, Calendar, Users, Clock, Linkedin } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Users, Clock, Linkedin, User } from 'lucide-react';
 
 import { EventItem, resolveEventStatus } from '@/lib/events-store';
 import { getLinkedInShareUrl } from '@/components/events/event-pass';
@@ -31,6 +31,7 @@ export function EventDetailClient({ event }: { event: EventItem | null }) {
   }
 
   const isUpcoming = resolveEventStatus(event) === 'upcoming';
+  const attendeeCount = parseInt(event.attendees?.replace(/\D/g, '') || '0', 10);
 
   return (
     <main className="min-h-screen bg-background">
@@ -89,8 +90,20 @@ export function EventDetailClient({ event }: { event: EventItem | null }) {
               <Users className="w-5 h-5 text-cyan-600 mt-1 flex-shrink-0" />
               <div>
                 <p className="text-xs font-mono text-foreground/40 uppercase tracking-wider mb-1">Attendees</p>
-                <p className="text-foreground font-medium">{event.attendees}</p>
-                <p className="text-sm text-foreground/60">Expected</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center -space-x-1.5" aria-hidden="true">
+                    {Array.from({ length: Math.min(Math.max(attendeeCount, 1), 3) }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-5 h-5 rounded-full flex items-center justify-center border-2 border-background bg-cyan-500"
+                        style={{ opacity: 1 - i * 0.18 }}
+                      >
+                        <User className="w-2.5 h-2.5 text-white" />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-foreground font-medium">{attendeeCount} attending</p>
+                </div>
               </div>
             </div>
 

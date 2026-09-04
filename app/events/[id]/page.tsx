@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ObjectId } from 'mongodb';
 import { getMongoDbDatabase } from '@/lib/mongodb';
+import { getAttendeeCount, combineAttendeeCount } from '@/lib/attendee-counts';
 import { EventItem } from '@/lib/events-store';
 import { EventDetailClient } from './EventDetailClient';
 
@@ -65,5 +66,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function EventDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const event = await getEventById(id);
+  if (event) {
+    const realCount = await getAttendeeCount(event.id);
+    event.attendees = String(combineAttendeeCount(event.attendees, realCount));
+  }
   return <EventDetailClient event={event} />;
 }
