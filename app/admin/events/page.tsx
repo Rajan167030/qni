@@ -362,7 +362,7 @@ export default function AdminEventsPage() {
 
               {/* Attendees + Status */}
               <div>
-                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Expected Attendees</label>
+                <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Attendees</label>
                 <input type="text" name="attendees" value={formData.attendees} onChange={handleChange}
                   placeholder="120 or 500+"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
