@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { X, Calendar, MapPin, Clock, Users, User, ArrowRight, ExternalLink, ChevronRight, Share2, Check } from "lucide-react";
 
-import { getEvents, EventItem, resolveEventStatus } from "@/lib/events-store";
+import { EventItem, resolveEventStatus } from "@/lib/events-store";
 import { getEventShareUrl } from "@/components/events/event-pass";
 
-export function EventsSection() {
-  const [eventsList, setEventsList] = useState<EventItem[]>([]);
+export function EventsSection({ initialEvents }: { initialEvents: EventItem[] }) {
+  const [eventsList, setEventsList] = useState<EventItem[]>(initialEvents);
   const [isVisible, setIsVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -33,10 +33,6 @@ export function EventsSection() {
       // ignore — clipboard unavailable
     }
   };
-
-  useEffect(() => {
-    getEvents().then(setEventsList);
-  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
