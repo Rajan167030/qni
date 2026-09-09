@@ -1448,3 +1448,82 @@ See what's on: ${eventsUrl}
     return false;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────
+// 11. Admin Broadcast → Manually composed message sent to a chosen
+//     audience from the admin dashboard. Subject/message are free text;
+//     blank-line-separated paragraphs are preserved as separate <p> tags.
+// ─────────────────────────────────────────────────────────────────
+export async function sendBroadcastEmail(to: string, subject: string, message: string) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping broadcast email — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM!;
+  const safeSubject = escapeHtml(subject);
+  const paragraphsHtml = message
+    .split(/\n\s*\n/)
+    .filter((p) => p.trim().length > 0)
+    .map(
+      (para) =>
+        `<p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 18px; white-space: pre-line;">${escapeHtml(para)}</p>`
+    )
+    .join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${safeSubject}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <tr>
+            <td style="padding: 32px 36px 24px; border-bottom: 1px solid #f1f5f9;">
+              <img src="https://www.quantumnexusglobal.org/logo-mark.png" alt="Quantum Nexus Global" width="140" style="display: block; max-width: 140px; height: auto;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px 36px 24px;">
+              <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 20px; line-height: 1.3;">
+                ${safeSubject}
+              </h1>
+              ${paragraphsHtml}
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f8fafc; padding: 24px 36px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+                &copy; 2026 Quantum Nexus Global &middot; Advancing Quantum Computing
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `${subject}\n\n${message}\n\n— The Quantum Nexus Global Team`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Quantum Nexus Global" <${from}>`,
+      to,
+      subject,
+      html,
+      text,
+    });
+    return true;
+  } catch (err) {
+    console.error(`[Email] Failed to send broadcast email to ${to}:`, err);
+    return false;
+  }
+}

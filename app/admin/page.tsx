@@ -899,6 +899,17 @@ export default function AdminDashboardPage() {
               </div>
               <Sparkles className="w-3.5 h-3.5" />
             </Link>
+
+            <Link
+              href="/admin/broadcast"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-rose-700 dark:text-rose-400 bg-rose-500/15 dark:bg-rose-500/10 hover:bg-rose-500/25 dark:hover:bg-rose-500/20 border border-rose-500/30 dark:border-rose-500/20 transition-all mt-1"
+            >
+              <div className="flex items-center gap-3">
+                <Send className="w-4 h-4" />
+                <span>+ Send Email Broadcast</span>
+              </div>
+              <Sparkles className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
           {/* Database Active Status Card */}
