@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Quote, Star, CheckCircle2, Linkedin, Twitter, Globe, ExternalLink, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Testimonial {
-  id: number;
+  id: number | string;
   author: string;
   signature: string;
   role: string;
@@ -20,6 +20,38 @@ interface Testimonial {
   twitter: string;
   website: string;
   featured?: boolean;
+  rating?: number;
+}
+
+interface FeedbackItem {
+  id: string;
+  name: string;
+  role?: string;
+  organization?: string;
+  message: string;
+  rating?: number;
+  photoUrl?: string;
+}
+
+function feedbackToTestimonial(fb: FeedbackItem): Testimonial {
+  return {
+    id: fb.id,
+    author: fb.name,
+    signature: fb.name,
+    role: fb.role || "Community Member",
+    company: fb.organization || "QNexus Community",
+    organization: fb.organization || "",
+    image: fb.photoUrl || "",
+    shortQuote: fb.message,
+    fullQuote: fb.message,
+    metric: "TESTIMONIAL",
+    stack: [fb.role, fb.organization].filter(Boolean).join(" · ") || "QNexus Community",
+    linkedin: "#",
+    twitter: "#",
+    website: "#",
+    featured: false,
+    rating: fb.rating,
+  };
 }
 
 const testimonials: Testimonial[] = [
@@ -129,6 +161,21 @@ const testimonials: Testimonial[] = [
 
 export function TestimonialsSection() {
   const [selectedPartner, setSelectedPartner] = useState<Testimonial | null>(null);
+  const [allTestimonials, setAllTestimonials] = useState<Testimonial[]>(testimonials);
+
+  useEffect(() => {
+    fetch("/api/feedback?status=approved")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          const real = (data.data as FeedbackItem[]).map(feedbackToTestimonial);
+          setAllTestimonials([...testimonials, ...real]);
+        }
+      })
+      .catch(() => {
+        // keep the default core-values cards if the API is unavailable
+      });
+  }, []);
 
   return (
     <section className="relative py-28 lg:py-36 bg-background text-foreground border-t border-foreground/10 overflow-hidden">
@@ -151,24 +198,34 @@ export function TestimonialsSection() {
         <div className="flex gap-6 marquee-slow whitespace-nowrap hover:[animation-play-state:paused] cursor-grab active:cursor-grabbing">
           {[...Array(3)].map((_, loopIdx) => (
             <div key={loopIdx} className="flex gap-6 shrink-0 items-stretch">
-              {testimonials.map((t) => (
+              {allTestimonials.map((t) => (
                 <div
                   key={`${loopIdx}-${t.id}`}
                   onClick={() => setSelectedPartner(t)}
                   className="w-[340px] md:w-[380px] h-[440px] shrink-0 rounded-3xl p-8 transition-all duration-300 cursor-pointer flex flex-col justify-between select-none relative text-white overflow-hidden shadow-2xl border border-white/20 hover:scale-[1.02] hover:border-white/40 group"
-                  style={{
-                    backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.88)), url(${t.image})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
+                  style={
+                    t.image
+                      ? {
+                          backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.88)), url(${t.image})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }
+                      : { background: "linear-gradient(135deg, #1e293b, #0f172a)" }
+                  }
                 >
                   {/* Top Avatar Circle */}
                   <div className="flex items-center justify-between mb-4 relative z-10">
-                    <img
-                      src={t.image}
-                      alt={t.author}
-                      className="w-12 h-12 rounded-full object-cover ring-2 ring-white/40 shadow-lg group-hover:scale-105 transition-transform"
-                    />
+                    {t.image ? (
+                      <img
+                        src={t.image}
+                        alt={t.author}
+                        className="w-12 h-12 rounded-full object-cover ring-2 ring-white/40 shadow-lg group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-white/15 ring-2 ring-white/40 shadow-lg flex items-center justify-center font-display font-bold text-white group-hover:scale-105 transition-transform">
+                        {t.author.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <span className="text-[11px] font-mono px-3 py-1 rounded-full font-semibold bg-white/20 text-white backdrop-blur-md border border-white/20">
                       {t.metric}
                     </span>
@@ -224,19 +281,33 @@ export function TestimonialsSection() {
 
             {/* Modal Header Banner */}
             <div className="relative h-48 sm:h-56 overflow-hidden">
-              <img
-                src={selectedPartner.image}
-                alt={selectedPartner.author}
-                className="w-full h-full object-cover object-center filter brightness-90"
-              />
+              {selectedPartner.image ? (
+                <img
+                  src={selectedPartner.image}
+                  alt={selectedPartner.author}
+                  className="w-full h-full object-cover object-center filter brightness-90"
+                />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg, #1e293b, #0f172a)" }}
+                >
+                  <span className="text-6xl font-display font-bold text-white/20">
+                    {selectedPartner.author.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
               <div className="absolute bottom-4 left-6 sm:left-8 flex items-center gap-2">
                 <span className="bg-foreground text-background font-mono text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> CORE VALUE
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  {selectedPartner.metric === "TESTIMONIAL" ? "TESTIMONIAL" : "CORE VALUE"}
                 </span>
-                <span className="bg-background/90 backdrop-blur-md text-foreground font-mono text-xs font-bold px-3 py-1 rounded-full border border-border shadow-md">
-                  {selectedPartner.metric}
-                </span>
+                {selectedPartner.rating && (
+                  <span className="bg-background/90 backdrop-blur-md text-foreground font-mono text-xs font-bold px-3 py-1 rounded-full border border-border shadow-md flex items-center gap-1">
+                    {selectedPartner.rating} <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                  </span>
+                )}
               </div>
             </div>
 
@@ -256,36 +327,44 @@ export function TestimonialsSection() {
                   </p>
                 </div>
 
-                {/* Social Links Buttons */}
-                <div className="flex items-center gap-2.5">
-                  <a
-                    href={selectedPartner.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs font-semibold shadow-md transition-transform hover:scale-105"
-                  >
-                    <Linkedin className="w-4 h-4" />
-                    <span>LinkedIn</span>
-                  </a>
-                  <a
-                    href={selectedPartner.twitter}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 rounded-full bg-foreground/10 hover:bg-foreground/20 text-foreground transition-transform hover:scale-105"
-                    title="Twitter / X Profile"
-                  >
-                    <Twitter className="w-4 h-4" />
-                  </a>
-                  <a
-                    href={selectedPartner.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 rounded-full bg-foreground/10 hover:bg-foreground/20 text-foreground transition-transform hover:scale-105"
-                    title="Organization Website"
-                  >
-                    <Globe className="w-4 h-4" />
-                  </a>
-                </div>
+                {/* Social Links Buttons — only shown when real links exist */}
+                {(selectedPartner.linkedin !== "#" || selectedPartner.twitter !== "#" || selectedPartner.website !== "#") && (
+                  <div className="flex items-center gap-2.5">
+                    {selectedPartner.linkedin !== "#" && (
+                      <a
+                        href={selectedPartner.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs font-semibold shadow-md transition-transform hover:scale-105"
+                      >
+                        <Linkedin className="w-4 h-4" />
+                        <span>LinkedIn</span>
+                      </a>
+                    )}
+                    {selectedPartner.twitter !== "#" && (
+                      <a
+                        href={selectedPartner.twitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2.5 rounded-full bg-foreground/10 hover:bg-foreground/20 text-foreground transition-transform hover:scale-105"
+                        title="Twitter / X Profile"
+                      >
+                        <Twitter className="w-4 h-4" />
+                      </a>
+                    )}
+                    {selectedPartner.website !== "#" && (
+                      <a
+                        href={selectedPartner.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2.5 rounded-full bg-foreground/10 hover:bg-foreground/20 text-foreground transition-transform hover:scale-105"
+                        title="Organization Website"
+                      >
+                        <Globe className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Full Testimonial Quote */}

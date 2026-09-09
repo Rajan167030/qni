@@ -902,11 +902,22 @@ export default function AdminDashboardPage() {
 
             <Link
               href="/admin/broadcast"
-              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-rose-700 dark:text-rose-400 bg-rose-500/15 dark:bg-rose-500/10 hover:bg-rose-500/25 dark:hover:bg-rose-500/20 border border-rose-500/30 dark:border-rose-500/20 transition-all mt-1"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-white bg-[#111318] hover:bg-black border border-black/40 shadow-md transition-all mt-1"
             >
               <div className="flex items-center gap-3">
                 <Send className="w-4 h-4" />
                 <span>+ Send Email Broadcast</span>
+              </div>
+              <Sparkles className="w-3.5 h-3.5 text-white/70" />
+            </Link>
+
+            <Link
+              href="/admin/feedback"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/15 dark:bg-amber-500/10 hover:bg-amber-500/25 dark:hover:bg-amber-500/20 border border-amber-500/30 dark:border-amber-500/20 transition-all mt-1"
+            >
+              <div className="flex items-center gap-3">
+                <Star className="w-4 h-4" />
+                <span>+ Feedback & Testimonials</span>
               </div>
               <Sparkles className="w-3.5 h-3.5" />
             </Link>

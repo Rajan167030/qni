@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getMongoDbDatabase } from '@/lib/mongodb';
+import { getAttendeeCountMap, combineAttendeeCount } from '@/lib/attendee-counts';
 
 /**
  * Event schema (MongoDB document)
@@ -24,7 +25,17 @@ export async function GET() {
     const db = await getMongoDbDatabase();
     if (!db) return NextResponse.json({ success: false, message: 'MongoDB not configured' }, { status: 400 });
     const events = await db.collection('events').find({}).sort({ eventDate: 1 }).toArray();
-    return NextResponse.json({ success: true, data: events });
+
+    // Merge in real registration counts so every page fetching events shows
+    // actual attendance, not just the admin-set seed number.
+    const ids = events.map((e: any) => e.id).filter(Boolean);
+    const countMap = await getAttendeeCountMap(ids);
+    const eventsWithRealCounts = events.map((e: any) => ({
+      ...e,
+      attendees: String(combineAttendeeCount(e.attendees, countMap[e.id] || 0)),
+    }));
+
+    return NextResponse.json({ success: true, data: eventsWithRealCounts });
   } catch (error: any) {
     console.error('Error fetching events:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
