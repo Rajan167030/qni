@@ -3,10 +3,18 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Upload, Loader2, Linkedin, Twitter, Facebook, MessageCircle, Mail, X } from "lucide-react";
+import {
+  ArrowLeft, Upload, Loader2, Linkedin, Twitter, Facebook, MessageCircle, Mail, X,
+  CheckCircle2, AlertTriangle, LogOut, Send,
+} from "lucide-react";
 import {
   getLinkedInIntentUrl, getTwitterIntentUrl, getWhatsAppIntentUrl, getFacebookIntentUrl,
 } from "@/lib/social-share";
+
+interface LinkedInStatus {
+  connected: boolean;
+  name?: string;
+}
 
 export default function AdminSocialPostPage() {
   const router = useRouter();
@@ -16,13 +24,48 @@ export default function AdminSocialPostPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [siteUrl, setSiteUrl] = useState("");
 
+  const [linkedInStatus, setLinkedInStatus] = useState<LinkedInStatus | null>(null);
+  const [linkedInBanner, setLinkedInBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [isPostingToLinkedIn, setIsPostingToLinkedIn] = useState(false);
+  const [linkedInPosted, setLinkedInPosted] = useState(false);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const auth = localStorage.getItem("qni_admin_authenticated");
       if (auth !== "true") router.push("/admin");
       setSiteUrl(window.location.origin);
+
+      const params = new URLSearchParams(window.location.search);
+      const li = params.get("linkedin");
+      if (li === "connected") {
+        setLinkedInBanner({ type: "success", message: "LinkedIn connected! You can now post directly." });
+        window.history.replaceState({}, "", "/admin/social-post");
+      } else if (li === "error") {
+        setLinkedInBanner({ type: "error", message: params.get("message") || "Failed to connect LinkedIn." });
+        window.history.replaceState({}, "", "/admin/social-post");
+      }
     }
   }, [router]);
+
+  const loadLinkedInStatus = async () => {
+    try {
+      const res = await fetch("/api/linkedin/status");
+      const data = await res.json();
+      if (data.success) setLinkedInStatus({ connected: data.connected, name: data.name });
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    loadLinkedInStatus();
+  }, []);
+
+  const handleDisconnectLinkedIn = async () => {
+    if (!confirm("Disconnect LinkedIn?")) return;
+    await fetch("/api/linkedin/status", { method: "DELETE" });
+    loadLinkedInStatus();
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,6 +86,30 @@ export default function AdminSocialPostPage() {
 
   const hasContent = title.trim().length > 0 && message.trim().length > 0;
 
+  const handlePostToLinkedIn = async () => {
+    if (!hasContent) return;
+    setIsPostingToLinkedIn(true);
+    setLinkedInPosted(false);
+    setLinkedInBanner(null);
+    try {
+      const res = await fetch("/api/linkedin/post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: `${title}\n\n${message}` }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLinkedInPosted(true);
+      } else {
+        setLinkedInBanner({ type: "error", message: data.error || "Failed to post to LinkedIn." });
+      }
+    } catch {
+      setLinkedInBanner({ type: "error", message: "Error connecting to the server." });
+    } finally {
+      setIsPostingToLinkedIn(false);
+    }
+  };
+
   // Stateless preview page — content lives entirely in the URL, nothing saved.
   // Title is metadata only (page heading / link preview title) — never
   // duplicated into the actual post text, so it doesn't show twice.
@@ -50,7 +117,7 @@ export default function AdminSocialPostPage() {
     ? `${siteUrl}/quick-post/view?${new URLSearchParams({ title, text: message, ...(imageUrl ? { image: imageUrl } : {}) }).toString()}`
     : "";
 
-  const linkedInUrl = viewUrl ? getLinkedInIntentUrl(viewUrl) : "";
+  const linkedInShareUrl = viewUrl ? getLinkedInIntentUrl(viewUrl) : "";
   const facebookUrl = viewUrl ? getFacebookIntentUrl(viewUrl) : "";
   // Only attach the preview link for X/WhatsApp when there's a photo to show —
   // otherwise it's just a stray dev URL tacked onto a plain text post.
@@ -80,11 +147,56 @@ export default function AdminSocialPostPage() {
       </header>
 
       <main className="max-w-[900px] mx-auto px-6 lg:px-12 py-8 space-y-6">
+        {linkedInBanner && (
+          <div className={`p-3.5 rounded-xl border text-sm flex items-center gap-2 ${
+            linkedInBanner.type === "success"
+              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+              : "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400"
+          }`}>
+            {linkedInBanner.type === "success" ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+            <span>{linkedInBanner.message}</span>
+          </div>
+        )}
+
+        {/* LinkedIn connection status */}
+        <div className="p-5 rounded-2xl border border-foreground/15 bg-foreground/[0.03] flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-[#0A66C2] flex items-center justify-center shrink-0">
+              <Linkedin className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                {linkedInStatus?.connected ? `Connected as ${linkedInStatus.name || "LinkedIn account"}` : "LinkedIn not connected"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {linkedInStatus?.connected
+                  ? "Posts go out natively — pure text, no link card."
+                  : "Connect once to post directly, with no attached link/card."}
+              </p>
+            </div>
+          </div>
+          {linkedInStatus?.connected ? (
+            <button
+              onClick={handleDisconnectLinkedIn}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-foreground/15 text-xs font-medium text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" /> Disconnect
+            </button>
+          ) : (
+            <a
+              href="/api/linkedin/auth"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0A66C2] hover:bg-[#004182] text-white text-xs font-semibold transition-colors"
+            >
+              <Linkedin className="w-3.5 h-3.5" /> Connect LinkedIn
+            </a>
+          )}
+        </div>
+
         <div className="border border-foreground/15 bg-foreground/[0.03] rounded-3xl p-6 lg:p-8 space-y-5">
           <div>
             <label className="block text-xs font-mono uppercase text-muted-foreground mb-1.5">Title *</label>
             <input
-              type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+              type="text" value={title} onChange={(e) => { setTitle(e.target.value); setLinkedInPosted(false); }}
               placeholder="e.g. New quantum session announced!"
               className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/25 bg-background text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-foreground/60 transition-colors"
             />
@@ -93,7 +205,7 @@ export default function AdminSocialPostPage() {
           <div>
             <label className="block text-xs font-mono uppercase text-muted-foreground mb-1.5">Message *</label>
             <textarea
-              rows={6} value={message} onChange={(e) => setMessage(e.target.value)}
+              rows={6} value={message} onChange={(e) => { setMessage(e.target.value); setLinkedInPosted(false); }}
               placeholder="What do you want to share?"
               className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/25 bg-background text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-foreground/60 transition-colors resize-none"
             />
@@ -118,17 +230,41 @@ export default function AdminSocialPostPage() {
                 <input type="file" accept="image/*" disabled={isUploading} onChange={handleFileUpload} className="hidden" />
               </label>
             )}
+            {imageUrl && linkedInStatus?.connected && (
+              <p className="text-[11px] text-muted-foreground mt-2">
+                Note: native LinkedIn posting (connected mode) is text-only for now — the photo will only show if you use the LinkedIn share-link button instead.
+              </p>
+            )}
           </div>
 
           <div className="pt-2 border-t border-foreground/10">
             <p className="text-xs font-mono uppercase text-muted-foreground mb-3">Share to</p>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-              <a
-                href={hasContent ? linkedInUrl : undefined} target="_blank" rel="noopener noreferrer" aria-disabled={!hasContent}
-                className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-white text-xs font-semibold transition-colors ${hasContent ? "bg-[#0A66C2] hover:bg-[#004182]" : "bg-[#0A66C2]/30 pointer-events-none"}`}
-              >
-                <Linkedin className="w-3.5 h-3.5" /> LinkedIn
-              </a>
+              {linkedInStatus?.connected ? (
+                <button
+                  onClick={handlePostToLinkedIn}
+                  disabled={!hasContent || isPostingToLinkedIn}
+                  className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-white text-xs font-semibold transition-colors ${
+                    hasContent ? "bg-[#0A66C2] hover:bg-[#004182]" : "bg-[#0A66C2]/30 pointer-events-none"
+                  }`}
+                >
+                  {isPostingToLinkedIn ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : linkedInPosted ? (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
+                  {linkedInPosted ? "Posted!" : "Post to LinkedIn"}
+                </button>
+              ) : (
+                <a
+                  href={hasContent ? linkedInShareUrl : undefined} target="_blank" rel="noopener noreferrer" aria-disabled={!hasContent}
+                  className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-white text-xs font-semibold transition-colors ${hasContent ? "bg-[#0A66C2] hover:bg-[#004182]" : "bg-[#0A66C2]/30 pointer-events-none"}`}
+                >
+                  <Linkedin className="w-3.5 h-3.5" /> LinkedIn
+                </a>
+              )}
               <a
                 href={hasContent ? twitterUrl : undefined} target="_blank" rel="noopener noreferrer" aria-disabled={!hasContent}
                 className={`flex items-center justify-center gap-1.5 py-3 rounded-xl text-white text-xs font-semibold transition-colors ${hasContent ? "bg-black hover:bg-black/80" : "bg-black/30 pointer-events-none"}`}
@@ -160,7 +296,7 @@ export default function AdminSocialPostPage() {
                 </span>
               )}
             </div>
-            {imageUrl && (
+            {imageUrl && !linkedInStatus?.connected && (
               <p className="text-[11px] text-muted-foreground mt-3">
                 LinkedIn/Facebook will show your photo as a preview card. X/WhatsApp send text only.
               </p>
