@@ -34,6 +34,7 @@ import {
   Copy,
   UserPlus,
   ShieldOff,
+  Share2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -918,6 +919,17 @@ export default function AdminDashboardPage() {
               <div className="flex items-center gap-3">
                 <Star className="w-4 h-4" />
                 <span>+ Feedback & Testimonials</span>
+              </div>
+              <Sparkles className="w-3.5 h-3.5" />
+            </Link>
+
+            <Link
+              href="/admin/social-post"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-purple-700 dark:text-purple-400 bg-purple-500/15 dark:bg-purple-500/10 hover:bg-purple-500/25 dark:hover:bg-purple-500/20 border border-purple-500/30 dark:border-purple-500/20 transition-all mt-1"
+            >
+              <div className="flex items-center gap-3">
+                <Share2 className="w-4 h-4" />
+                <span>+ Post to All Platforms</span>
               </div>
               <Sparkles className="w-3.5 h-3.5" />
             </Link>

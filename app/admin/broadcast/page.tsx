@@ -48,6 +48,16 @@ export default function AdminBroadcastPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const prefillSubject = params.get("subject");
+      const prefillMessage = params.get("message");
+      if (prefillSubject) setSubject(prefillSubject);
+      if (prefillMessage) setMessage(prefillMessage);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
       const auth = localStorage.getItem("qni_admin_authenticated");
       if (auth !== "true") {
         router.push("/admin");

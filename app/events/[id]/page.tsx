@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const pageUrl = `${SITE_URL}/events/${event.id}`;
 
   return {
-    title: `${event.title} — Quantum Nexus Global`,
+    title: event.title,
     description,
     openGraph: {
       title: event.title,
