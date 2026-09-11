@@ -8,12 +8,14 @@ export function getLinkedInIntentUrl(url: string): string {
   return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
 }
 
-export function getTwitterIntentUrl(text: string, url: string): string {
-  return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+export function getTwitterIntentUrl(text: string, url?: string): string {
+  const params = new URLSearchParams({ text });
+  if (url) params.set("url", url);
+  return `https://twitter.com/intent/tweet?${params.toString()}`;
 }
 
-export function getWhatsAppIntentUrl(text: string, url: string): string {
-  return `https://wa.me/?text=${encodeURIComponent(`${text}\n\n${url}`)}`;
+export function getWhatsAppIntentUrl(text: string, url?: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(url ? `${text}\n\n${url}` : text)}`;
 }
 
 export function getFacebookIntentUrl(url: string): string {

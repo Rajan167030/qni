@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Mail, Phone, Linkedin, Twitter, Send, CheckCircle2, Globe2, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Mail, Linkedin, Twitter, Send, CheckCircle2, Globe2, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveContact } from '@/lib/submissions-store';
 import { getSettings, SiteSettings } from '@/lib/settings-store';
@@ -88,12 +88,6 @@ export default function ContactPage() {
           title: 'Mentorship & Opportunities',
           content: settings.mentorshipEmail,
           link: `mailto:${settings.mentorshipEmail}`,
-        },
-        {
-          icon: Phone,
-          title: 'Direct Phone',
-          content: settings.phoneDisplay,
-          link: `tel:${settings.phoneLink}`,
         },
       ]
     : [];

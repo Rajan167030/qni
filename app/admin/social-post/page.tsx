@@ -42,18 +42,21 @@ export default function AdminSocialPostPage() {
   };
 
   const hasContent = title.trim().length > 0 && message.trim().length > 0;
-  const fullText = `${title}\n\n${message}`;
 
   // Stateless preview page — content lives entirely in the URL, nothing saved.
+  // Title is metadata only (page heading / link preview title) — never
+  // duplicated into the actual post text, so it doesn't show twice.
   const viewUrl = siteUrl
-    ? `${siteUrl}/quick-post/view?${new URLSearchParams({ text: fullText, ...(imageUrl ? { image: imageUrl } : {}) }).toString()}`
+    ? `${siteUrl}/quick-post/view?${new URLSearchParams({ title, text: message, ...(imageUrl ? { image: imageUrl } : {}) }).toString()}`
     : "";
 
   const linkedInUrl = viewUrl ? getLinkedInIntentUrl(viewUrl) : "";
   const facebookUrl = viewUrl ? getFacebookIntentUrl(viewUrl) : "";
-  const twitterUrl = getTwitterIntentUrl(fullText, viewUrl);
-  const whatsappUrl = getWhatsAppIntentUrl(fullText, viewUrl);
-  const emailUrl = `/admin/broadcast?subject=${encodeURIComponent(title)}&message=${encodeURIComponent(fullText)}`;
+  // Only attach the preview link for X/WhatsApp when there's a photo to show —
+  // otherwise it's just a stray dev URL tacked onto a plain text post.
+  const twitterUrl = getTwitterIntentUrl(message, imageUrl ? viewUrl : undefined);
+  const whatsappUrl = getWhatsAppIntentUrl(message, imageUrl ? viewUrl : undefined);
+  const emailUrl = `/admin/broadcast?subject=${encodeURIComponent(title)}&message=${encodeURIComponent(message)}`;
 
   return (
     <div className="min-h-screen bg-background text-foreground">

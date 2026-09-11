@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 
 interface ViewParams {
-  searchParams: Promise<{ text?: string; image?: string }>;
+  searchParams: Promise<{ title?: string; text?: string; image?: string }>;
 }
 
 export async function generateMetadata({ searchParams }: ViewParams): Promise<Metadata> {
-  const { text, image } = await searchParams;
-  const title = (text || 'Shared post').slice(0, 70);
+  const { title: rawTitle, text, image } = await searchParams;
+  const title = (rawTitle || text || 'Shared post').slice(0, 70);
   const description = text || '';
 
   return {
@@ -28,7 +28,7 @@ export async function generateMetadata({ searchParams }: ViewParams): Promise<Me
 }
 
 export default async function QuickPostViewPage({ searchParams }: ViewParams) {
-  const { text, image } = await searchParams;
+  const { title, text, image } = await searchParams;
 
   return (
     <main className="min-h-screen bg-[#f4f6f8] flex items-center justify-center p-6">
@@ -39,6 +39,9 @@ export default async function QuickPostViewPage({ searchParams }: ViewParams) {
           </div>
         )}
         <div className="p-6">
+          {/* Title is metadata only (email subject / link preview heading) —
+              never duplicated into the body text below. */}
+          {title && <h1 className="text-lg font-bold text-[#0f172a] mb-2">{title}</h1>}
           <p className="text-[15px] leading-relaxed text-[#1e293b] whitespace-pre-line">{text}</p>
         </div>
       </div>
