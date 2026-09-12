@@ -617,6 +617,22 @@ export default function AdminDashboardPage() {
       s.status.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Country distribution — Join Us applicants grouped by country, top 8 +
+  // an "Other" bucket for the long tail, sorted by count descending.
+  const countryData = (() => {
+    const counts: Record<string, number> = {};
+    joins.forEach((j) => {
+      const c = (j.country || 'Unknown').trim() || 'Unknown';
+      counts[c] = (counts[c] || 0) + 1;
+    });
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const top = sorted.slice(0, 8);
+    const restCount = sorted.slice(8).reduce((sum, [, c]) => sum + c, 0);
+    if (restCount > 0) top.push(['Other', restCount]);
+    return top.map(([country, count]) => ({ country, count }));
+  })();
+  const maxCountryCount = Math.max(...countryData.map((d) => d.count), 1);
+
   // IF NOT AUTHENTICATED -> SHOW ADMIN LOGIN SCREEN
   if (!isAuthenticated) {
     return (
@@ -933,6 +949,17 @@ export default function AdminDashboardPage() {
               </div>
               <Sparkles className="w-3.5 h-3.5" />
             </Link>
+
+            <Link
+              href="/admin/team-applications"
+              className="w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold text-cyan-700 dark:text-cyan-400 bg-cyan-500/15 dark:bg-cyan-500/10 hover:bg-cyan-500/25 dark:hover:bg-cyan-500/20 border border-cyan-500/30 dark:border-cyan-500/20 transition-all mt-1"
+            >
+              <div className="flex items-center gap-3">
+                <UserPlus className="w-4 h-4" />
+                <span>+ Team Applications</span>
+              </div>
+              <Sparkles className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
           {/* Database Active Status Card */}
@@ -1019,6 +1046,38 @@ export default function AdminDashboardPage() {
                     {blogs.filter((b) => b.status === 'Published').length} Published
                   </p>
                 </div>
+              </div>
+
+              {/* Country Distribution */}
+              <div className="p-6 sm:p-8 rounded-3xl border border-foreground/15 bg-background shadow-xl space-y-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-display text-xl font-bold text-foreground">Where Members Are From</h3>
+                    <p className="text-xs text-muted-foreground font-mono mt-0.5">Join Us applicants by country</p>
+                  </div>
+                  <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+
+                {countryData.length === 0 ? (
+                  <p className="text-xs font-mono text-muted-foreground text-center py-8">
+                    No country data yet — it'll fill in as Join Us applications come in.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {countryData.map(({ country, count }) => (
+                      <div key={country} className="flex items-center gap-3" title={`${country}: ${count}`}>
+                        <span className="w-28 sm:w-36 shrink-0 text-xs text-foreground/70 truncate">{country}</span>
+                        <div className="flex-1 h-6 rounded-md bg-foreground/5 overflow-hidden">
+                          <div
+                            className="h-full rounded-md bg-blue-600 dark:bg-blue-500 transition-all"
+                            style={{ width: `${Math.max((count / maxCountryCount) * 100, 3)}%` }}
+                          />
+                        </div>
+                        <span className="w-8 shrink-0 text-xs font-mono font-semibold text-foreground text-right">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Recent Activity Stream */}
