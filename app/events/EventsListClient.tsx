@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { X, Calendar, MapPin, Clock, ArrowRight, ExternalLink, ArrowLeft, ChevronRight, Users, User, Share2, Check } from 'lucide-react';
-import { EventItem, resolveEventStatus } from '@/lib/events-store';
+import { EventItem, resolveEventStatus, isRegistrationOpen, getRegistrationCloseHours } from '@/lib/events-store';
 import { getEventShareUrl } from '@/components/events/event-pass';
 import { getSpeakerPhoto } from '@/lib/speaker-photos';
 
@@ -596,7 +596,7 @@ export default function EventsListClient({ initialEvents }: { initialEvents: Eve
 
               {/* Register CTA */}
               <div className="pt-2 space-y-3">
-                {resolveEventStatus(selectedEvent) === 'upcoming' ? (
+                {isRegistrationOpen(selectedEvent) ? (
                   <Link href={`/events/${selectedEvent.id}/register`} tabIndex={-1}>
                     <button
                       className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-space-grotesk font-semibold text-sm transition-colors group focus-visible:outline-2 focus-visible:outline-[var(--cork-coral)]"
@@ -611,9 +611,9 @@ export default function EventsListClient({ initialEvents }: { initialEvents: Eve
                     className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-space-grotesk font-semibold text-sm cursor-not-allowed opacity-50"
                     style={{ backgroundColor: 'var(--cork-muted)', color: '#FAF7F0' }}
                     disabled
-                    aria-label="Registration closed — past event"
+                    aria-label={resolveEventStatus(selectedEvent) === 'past' ? 'Registration closed — past event' : 'Registration closed — cutoff reached'}
                   >
-                    Registration Closed
+                    {resolveEventStatus(selectedEvent) === 'past' ? 'Registration Closed' : `Registration Closed (${getRegistrationCloseHours(selectedEvent)}h cutoff)`}
                   </button>
                 )}
                 <button

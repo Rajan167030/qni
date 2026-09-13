@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, User, Mail, Phone, Building2, GraduationCap, ArrowRight, MessageCircle } from 'lucide-react';
 
-import { getEvents, EventItem } from '@/lib/events-store';
+import { getEvents, EventItem, isRegistrationOpen, resolveEventStatus } from '@/lib/events-store';
 import { saveRegistration } from '@/lib/submissions-store';
 import { saveUserIdentity, generateToken } from '@/lib/user-identity';
 import { getSettings, SiteSettings } from '@/lib/settings-store';
@@ -37,6 +37,7 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (event && !isRegistrationOpen(event)) return;
     setIsSubmitting(true);
     const title = event?.title || 'Quantum Event';
 
@@ -148,6 +149,30 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
             </Link>
             <Link href="/events" className="px-8 py-3 border border-foreground/15 rounded-xl text-foreground/60 hover:text-foreground transition-colors text-center text-sm">
               Browse More Events
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (event && !isRegistrationOpen(event)) {
+    const isPast = resolveEventStatus(event) === 'past';
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6 py-16">
+        <div className="max-w-md w-full text-center">
+          <h1 className="text-3xl font-display mb-2">Registration Closed</h1>
+          <p className="text-sm text-foreground/50 mb-8">
+            {isPast
+              ? `${event.title} has already taken place.`
+              : `Registration for ${event.title} has closed ahead of the event start.`}
+          </p>
+          <div className="flex flex-col gap-3">
+            <Link href={`/events/${event.id}`} className="px-8 py-3 bg-foreground text-background rounded-xl font-medium hover:bg-foreground/90 transition-colors text-center">
+              View Event Details
+            </Link>
+            <Link href="/events" className="px-8 py-3 border border-foreground/15 rounded-xl text-foreground/60 hover:text-foreground transition-colors text-center text-sm">
+              Browse Other Events
             </Link>
           </div>
         </div>

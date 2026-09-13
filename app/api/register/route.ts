@@ -2,10 +2,31 @@ import { NextResponse } from 'next/server';
 import { getMongoDbDatabase } from '@/lib/mongodb';
 import { saveServerSubmission, getServerSubmissions } from '@/lib/server-storage';
 import { sendEventRegistrationEmail, sendAdminNotification } from '@/lib/email';
+import { isRegistrationOpen } from '@/lib/events-store';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
+    // Re-check the registration cutoff server-side — the client-side check
+    // guides the UI, but it can be bypassed by calling this endpoint directly.
+    if (body.eventId) {
+      try {
+        const db = await getMongoDbDatabase();
+        if (db) {
+          const event = await db.collection('events').findOne({ id: body.eventId });
+          if (event && !isRegistrationOpen(event as any)) {
+            return NextResponse.json(
+              { success: false, error: 'Registration is closed for this event' },
+              { status: 403 }
+            );
+          }
+        }
+      } catch (dbErr) {
+        console.warn('[MongoDB Registration] deadline check warn:', dbErr);
+      }
+    }
+
     const regRecord = {
       ...body,
       id: body.id || `r-${Date.now()}`,

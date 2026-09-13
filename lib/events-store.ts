@@ -103,13 +103,46 @@ export function deleteEvent(id: string): void {
   persist(all);
 }
 
-/** Determine if event is upcoming or past based on eventDate field */
+/**
+ * Determine if event is upcoming or past.
+ * Once eventDate has passed, the event is always "past" — this is computed
+ * live off the clock, not the stored status, so it flips automatically and
+ * can't be left stuck on "upcoming" by an admin-set flag.
+ * The stored `status` is only consulted as a fallback for draft events that
+ * have no eventDate yet.
+ */
 export function resolveEventStatus(event: EventItem): 'upcoming' | 'past' {
-  if (event.status) return event.status;
   if (event.eventDate) {
-    return new Date(event.eventDate) >= new Date() ? 'upcoming' : 'past';
+    return new Date(event.eventDate).getTime() <= Date.now() ? 'past' : 'upcoming';
   }
+  if (event.status) return event.status;
   return 'upcoming';
+}
+
+const MS_PER_HOUR = 60 * 60 * 1000;
+
+/** Formats that involve a physical venue — used to widen the registration cutoff for hackathons. */
+function isOfflineFormat(badge?: string): boolean {
+  const b = (badge || '').toLowerCase();
+  return b === 'in person' || b === 'hybrid';
+}
+
+/**
+ * How many hours before the event start registration must close.
+ * Offline hackathons need more lead time (logistics, venue, team check-in),
+ * so they close 5h before; everything else closes 1h before.
+ */
+export function getRegistrationCloseHours(event: EventItem): number {
+  const isHackathon = (event.category || '').toLowerCase() === 'hackathon';
+  return isHackathon && isOfflineFormat(event.badge) ? 5 : 1;
+}
+
+/** Registration is open only while the event is still upcoming and outside its close window. */
+export function isRegistrationOpen(event: EventItem): boolean {
+  if (resolveEventStatus(event) === 'past') return false;
+  if (!event.eventDate) return true;
+  const closesAt = new Date(event.eventDate).getTime() - getRegistrationCloseHours(event) * MS_PER_HOUR;
+  return Date.now() < closesAt;
 }
 
 export function createBlankEvent(): EventItem {

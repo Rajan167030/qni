@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, MapPin, Calendar, Users, Clock, Linkedin, User } from 'lucide-react';
 
-import { EventItem, resolveEventStatus } from '@/lib/events-store';
+import { EventItem, resolveEventStatus, isRegistrationOpen } from '@/lib/events-store';
 import { getLinkedInShareUrl } from '@/components/events/event-pass';
 import { getSpeakerPhoto } from '@/lib/speaker-photos';
 
@@ -31,6 +31,7 @@ export function EventDetailClient({ event }: { event: EventItem | null }) {
   }
 
   const isUpcoming = resolveEventStatus(event) === 'upcoming';
+  const registrationOpen = isRegistrationOpen(event);
   const attendeeCount = parseInt(event.attendees?.replace(/\D/g, '') || '0', 10);
 
   return (
@@ -118,11 +119,21 @@ export function EventDetailClient({ event }: { event: EventItem | null }) {
 
           {/* CTA Buttons */}
           <div className="flex flex-wrap gap-4">
-            <Link href={`/events/${event.id}/register`}>
-              <button className="px-8 py-3.5 bg-foreground text-background rounded-xl font-medium hover:bg-foreground/90 transition-all duration-300 shadow-lg">
-                Register for Free
+            {registrationOpen ? (
+              <Link href={`/events/${event.id}/register`}>
+                <button className="px-8 py-3.5 bg-foreground text-background rounded-xl font-medium hover:bg-foreground/90 transition-all duration-300 shadow-lg">
+                  Register for Free
+                </button>
+              </Link>
+            ) : (
+              <button
+                className="px-8 py-3.5 bg-foreground/30 text-background rounded-xl font-medium cursor-not-allowed"
+                disabled
+                aria-label="Registration closed"
+              >
+                Registration Closed
               </button>
-            </Link>
+            )}
             <Link href="/events" className="px-8 py-3.5 border border-foreground/20 text-foreground rounded-xl font-medium hover:border-foreground/40 transition-all duration-300">
               Browse All Events
             </Link>
@@ -205,11 +216,21 @@ export function EventDetailClient({ event }: { event: EventItem | null }) {
                 <p className="text-foreground/70 text-sm mb-6">
                   Access live interactive notebook environments, cloud QPU hardware execution, and receive a verified certification upon completion.
                 </p>
-                <Link href={`/events/${event.id}/register`} className="block">
-                  <button className="w-full px-6 py-3.5 bg-foreground text-background rounded-xl font-semibold hover:bg-foreground/90 transition-all duration-300 mb-3 shadow-lg">
-                    Register for This Session
+                {registrationOpen ? (
+                  <Link href={`/events/${event.id}/register`} className="block">
+                    <button className="w-full px-6 py-3.5 bg-foreground text-background rounded-xl font-semibold hover:bg-foreground/90 transition-all duration-300 mb-3 shadow-lg">
+                      Register for This Session
+                    </button>
+                  </Link>
+                ) : (
+                  <button
+                    className="w-full px-6 py-3.5 bg-foreground/30 text-background rounded-xl font-semibold cursor-not-allowed mb-3"
+                    disabled
+                    aria-label="Registration closed"
+                  >
+                    Registration Closed
                   </button>
-                </Link>
+                )}
                 <Link href="/events" className="block text-center text-xs font-mono text-muted-foreground hover:text-foreground transition-colors">
                   Explore other sessions →
                 </Link>

@@ -24,7 +24,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getEvents, saveEvent, deleteEvent, createBlankEvent, EventItem } from "@/lib/events-store";
+import { getEvents, saveEvent, deleteEvent, createBlankEvent, EventItem, resolveEventStatus, isRegistrationOpen } from "@/lib/events-store";
 
 const CATEGORIES = ["Workshop", "Hackathon", "Seminar", "Panel", "Conference", "Webinar", "Reading Group"];
 const BADGES = ["In person", "Online", "Flagship", "Enterprise", "Hybrid"];
@@ -519,12 +519,21 @@ export default function AdminEventsPage() {
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full font-semibold ${
-                      ev.status === 'upcoming' 
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                      resolveEventStatus(ev) === 'upcoming'
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                         : 'bg-foreground/10 text-muted-foreground'
                     }`}>
-                      {ev.status || 'upcoming'}
+                      {resolveEventStatus(ev)}
                     </span>
+                    {resolveEventStatus(ev) === 'upcoming' && (
+                      <span className={`text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full font-semibold ${
+                        isRegistrationOpen(ev)
+                          ? 'bg-cyan-500/10 text-cyan-500 border border-cyan-500/20'
+                          : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                      }`}>
+                        {isRegistrationOpen(ev) ? 'reg open' : 'reg closed'}
+                      </span>
+                    )}
                     <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-foreground/10 text-foreground font-semibold">
                       {ev.category}
                     </span>

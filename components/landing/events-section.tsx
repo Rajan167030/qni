@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { X, Calendar, MapPin, Clock, Users, User, ArrowRight, ExternalLink, ChevronRight, Share2, Check } from "lucide-react";
 
-import { EventItem, resolveEventStatus } from "@/lib/events-store";
+import { EventItem, resolveEventStatus, isRegistrationOpen } from "@/lib/events-store";
 import { getEventShareUrl } from "@/components/events/event-pass";
 
 export function EventsSection({ initialEvents }: { initialEvents: EventItem[] }) {
@@ -322,12 +322,22 @@ export function EventsSection({ initialEvents }: { initialEvents: EventItem[] })
 
               {/* CTA Register Button */}
               <div className="pt-2 space-y-3">
-                <Link href={`/events/${selectedEvent.id}/register`}>
-                  <button className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-foreground text-background rounded-2xl font-semibold text-sm hover:bg-foreground/90 transition-colors group">
-                    Register for This Event
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                {isRegistrationOpen(selectedEvent) ? (
+                  <Link href={`/events/${selectedEvent.id}/register`}>
+                    <button className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-foreground text-background rounded-2xl font-semibold text-sm hover:bg-foreground/90 transition-colors group">
+                      Register for This Event
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  </Link>
+                ) : (
+                  <button
+                    className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-foreground/30 text-background rounded-2xl font-semibold text-sm cursor-not-allowed"
+                    disabled
+                    aria-label="Registration closed"
+                  >
+                    Registration Closed
                   </button>
-                </Link>
+                )}
                 <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border border-foreground/12 text-foreground/50 hover:text-foreground hover:border-foreground/25 text-sm font-medium transition-colors">
                   <ExternalLink className="w-3.5 h-3.5" />
                   Add to Calendar
