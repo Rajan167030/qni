@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getMongoDbDatabase } from '@/lib/mongodb';
 import { INITIAL_BLOG_POSTS } from '@/lib/blogs-store';
 
+const LEGACY_SEEDED_BLOG_IDS = ['blog-1', 'blog-2', 'blog-3', 'blog-4'];
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -20,11 +22,19 @@ export async function GET(request: Request) {
     const collection = db.collection('blogs');
 
     if (slug) {
-      const blog = await collection.findOne({ $or: [{ slug }, { id: slug }] });
+      const blog = await collection.findOne({
+        $and: [
+          { $or: [{ slug }, { id: slug }] },
+          { id: { $nin: LEGACY_SEEDED_BLOG_IDS } },
+        ],
+      });
       return NextResponse.json({ success: true, data: blog });
     }
 
-    const blogs = await collection.find({}).sort({ publishedAt: -1 }).toArray();
+    const blogs = await collection
+      .find({ id: { $nin: LEGACY_SEEDED_BLOG_IDS } })
+      .sort({ publishedAt: -1 })
+      .toArray();
     return NextResponse.json({ success: true, data: blogs });
   } catch (error: any) {
     console.error('Error in GET /api/blogs:', error);

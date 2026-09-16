@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { X, ArrowLeft, ZoomIn, Calendar, MapPin, Sparkles, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
+import { X, ArrowLeft, ZoomIn, Sparkles, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 
 export interface GalleryItem {
   id: string | number;
@@ -14,109 +14,6 @@ export interface GalleryItem {
   span?: string;
   featured?: boolean;
 }
-
-const defaultGalleryImages: GalleryItem[] = [
-  {
-    id: 'g-1',
-    src: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80',
-    alt: 'QNI National Hackathon 2025',
-    event: 'QNI National Hackathon 2025',
-    date: 'Sep 2025',
-    location: 'T-Hub, Hyderabad',
-    span: 'col-span-2 row-span-2',
-    featured: true,
-  },
-  {
-    id: 'g-2',
-    src: 'https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=600&auto=format&fit=crop&q=80',
-    alt: 'Quantum Workshop Bengaluru 2025',
-    event: 'Intro to Qiskit Workshop',
-    date: 'Jun 2025',
-    location: 'IISc, Bengaluru',
-    span: '',
-    featured: false,
-  },
-  {
-    id: 'g-3',
-    src: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=600&auto=format&fit=crop&q=80',
-    alt: 'Research Collaboration Session',
-    event: 'Research Collaboration Day',
-    date: 'May 2025',
-    location: 'IIT Madras',
-    span: '',
-    featured: false,
-  },
-  {
-    id: 'g-4',
-    src: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&auto=format&fit=crop&q=80',
-    alt: 'Mentor Panel Session',
-    event: 'Careers in Quantum Panel',
-    date: 'Apr 2025',
-    location: 'Online',
-    span: 'col-span-2',
-    featured: false,
-  },
-  {
-    id: 'g-5',
-    src: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=600&auto=format&fit=crop&q=80',
-    alt: 'QNI Summit 2024 Keynote',
-    event: 'QNI Summit 2024',
-    date: 'Dec 2024',
-    location: 'IIT Delhi',
-    span: '',
-    featured: false,
-  },
-  {
-    id: 'g-6',
-    src: 'https://images.unsplash.com/photo-1528901166007-3784c7dd3653?w=600&auto=format&fit=crop&q=80',
-    alt: 'Community Hackathon Awards',
-    event: 'Hackathon Awards Night',
-    date: 'Nov 2024',
-    location: 'T-Hub, Hyderabad',
-    span: '',
-    featured: false,
-  },
-  {
-    id: 'g-7',
-    src: 'https://images.unsplash.com/photo-1544531585-9847b68c8c86?w=800&auto=format&fit=crop&q=80',
-    alt: 'Team building workshop',
-    event: 'QNI Chapter Meet Delhi',
-    date: 'Oct 2024',
-    location: 'New Delhi',
-    span: 'col-span-2 row-span-2',
-    featured: true,
-  },
-  {
-    id: 'g-8',
-    src: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80',
-    alt: 'Presentation at conference',
-    event: 'Variational Algorithms Seminar',
-    date: 'Aug 2024',
-    location: 'Online',
-    span: '',
-    featured: false,
-  },
-  {
-    id: 'g-9',
-    src: 'https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?w=600&auto=format&fit=crop&q=80',
-    alt: 'Networking session at event',
-    event: 'Developer Networking Night',
-    date: 'Jul 2024',
-    location: 'Mumbai',
-    span: '',
-    featured: false,
-  },
-  {
-    id: 'g-10',
-    src: 'https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=800&auto=format&fit=crop&q=80',
-    alt: 'Research lab visit',
-    event: 'C-DAC Lab Tour',
-    date: 'Jun 2024',
-    location: 'Pune',
-    span: 'col-span-2',
-    featured: false,
-  },
-];
 
 interface Props {
   detectedImages: string[];
@@ -145,26 +42,20 @@ export default function GalleryPageClient({ detectedImages }: Props) {
 
   // Convert auto-detected folder images into Gallery Items
   const autoDetectedItems: GalleryItem[] = detectedImages.map((imgPath, idx) => {
-    const filename = imgPath.split('/').pop() || `Image ${idx + 1}`;
-    const cleanName = filename
-      .replace(/\.[^.]+$/, '')
-      .replace(/[-_]/g, ' ')
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-
     return {
       id: `auto-${idx}`,
       src: imgPath,
-      alt: cleanName,
-      event: cleanName,
-      date: 'Detected Event',
-      location: 'QNG Platform',
+      alt: '',
+      event: '',
+      date: '',
+      location: '',
       span: idx % 5 === 0 ? 'col-span-2 row-span-2' : idx % 3 === 0 ? 'col-span-2' : '',
       featured: idx % 5 === 0,
     };
   });
 
-  // Combine auto-detected local images with default online gallery items
-  const allImages = [...autoDetectedItems, ...defaultGalleryImages];
+  // Only show real images uploaded to the public gallery folder.
+  const allImages = autoDetectedItems;
   const lightboxImg = lightboxIndex !== null ? allImages[lightboxIndex] : null;
 
   const goNext = useCallback(() => {
@@ -251,17 +142,6 @@ export default function GalleryPageClient({ detectedImages }: Props) {
               {/* Hover Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
                 <ZoomIn className="absolute top-4 right-4 w-5 h-5 text-white/80" />
-                <p className="text-white font-semibold text-sm leading-snug">{img.event}</p>
-                <div className="flex items-center gap-3 mt-1">
-                  <span className="text-white/70 text-xs flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {img.date}
-                  </span>
-                  <span className="text-white/70 text-xs flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    {img.location}
-                  </span>
-                </div>
               </div>
               {img.featured && (
                 <div className="absolute top-3 left-3 px-2.5 py-1 bg-amber-500 text-black text-[10px] font-mono font-bold rounded-full shadow-md">
@@ -323,22 +203,6 @@ export default function GalleryPageClient({ detectedImages }: Props) {
               alt={lightboxImg.alt}
               className="rounded-2xl object-contain max-h-[75vh] w-full"
             />
-            <div className="mt-4 text-center">
-              <p className="text-white font-semibold text-lg">{lightboxImg.event}</p>
-              <div className="flex items-center justify-center gap-4 mt-1 text-white/60 text-sm">
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {lightboxImg.date}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5" />
-                  {lightboxImg.location}
-                </span>
-                <span className="text-white/40 font-mono text-xs">
-                  {(lightboxIndex ?? 0) + 1} / {allImages.length}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       )}

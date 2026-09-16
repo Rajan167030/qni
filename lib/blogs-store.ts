@@ -25,7 +25,9 @@ export interface BlogPost {
 
 const STORAGE_KEY = "qni_blog_posts";
 
-export const INITIAL_BLOG_POSTS: BlogPost[] = [
+// Blogs are created and published through the admin dashboard.
+export const INITIAL_BLOG_POSTS: BlogPost[] = [];
+/*
   {
     id: "blog-1",
     slug: "optimizing-vqe-algorithms-superconducting-qubits",
@@ -171,17 +173,22 @@ By embedding classical SMILES molecular descriptors into Hilbert space Hilbert v
 For medium-scale circuits, a hybrid combination of M3 matrix inversion readout mitigation with polynomial ZNE extrapolation yields optimal trade-offs between execution time and precision.`,
   },
 ];
+*/
+
+const LEGACY_SEEDED_BLOG_IDS = new Set(['blog-1', 'blog-2', 'blog-3', 'blog-4']);
 
 export function getBlogs(): BlogPost[] {
   if (typeof window === "undefined") return INITIAL_BLOG_POSTS;
   const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_BLOG_POSTS));
-    return INITIAL_BLOG_POSTS;
-  }
+  if (!saved) return INITIAL_BLOG_POSTS;
   try {
     const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_BLOG_POSTS;
+    if (!Array.isArray(parsed)) return INITIAL_BLOG_POSTS;
+    const cleaned = parsed.filter((blog) => !LEGACY_SEEDED_BLOG_IDS.has(blog.id));
+    if (cleaned.length !== parsed.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
     return INITIAL_BLOG_POSTS;
   }

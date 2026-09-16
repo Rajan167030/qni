@@ -2,106 +2,41 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ZoomIn, X, Calendar, MapPin } from "lucide-react";
+import { ArrowRight, ZoomIn, X } from "lucide-react";
 
 const galleryImages = [
   {
     id: 1,
-    src: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=900&auto=format&fit=crop&q=80",
-    alt: "QNI National Hackathon 2025",
-    event: "QNI National Hackathon 2025",
-    date: "Sep 2025",
-    location: "T-Hub, Hyderabad",
+    src: "/gallery/event-photo-01.jpg",
+    alt: "",
     cols: "col-span-2",
     rows: "row-span-2",
   },
   {
     id: 2,
-    src: "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=600&auto=format&fit=crop&q=80",
-    alt: "Qiskit Workshop Bengaluru",
-    event: "Intro to Qiskit Workshop",
-    date: "Jun 2025",
-    location: "IISC, Bengaluru",
+    src: "/gallery/event-photo-02.jpg",
+    alt: "",
     cols: "",
     rows: "",
   },
   {
     id: 3,
-    src: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=600&auto=format&fit=crop&q=80",
-    alt: "QNI Summit 2024 Keynote",
-    event: "QNI Summit 2024",
-    date: "Dec 2024",
-    location: "IIT Delhi",
+    src: "/gallery/event-photo-03.jpg",
+    alt: "",
     cols: "",
     rows: "",
   },
   {
     id: 4,
-    src: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80",
-    alt: "Mentor Panel Session",
-    event: "Careers in Quantum Panel",
-    date: "Apr 2025",
-    location: "Online",
+    src: "/gallery/event-photo-04.jpg",
+    alt: "",
     cols: "col-span-2",
     rows: "",
   },
   {
     id: 5,
-    src: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=600&auto=format&fit=crop&q=80",
-    alt: "Research Collaboration IIT Madras",
-    event: "Research Collaboration Day",
-    date: "May 2025",
-    location: "IIT Madras",
-    cols: "",
-    rows: "",
-  },
-  {
-    id: 6,
-    src: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80",
-    alt: "Workshop Presentation",
-    event: "Variational Algorithms Seminar",
-    date: "Aug 2024",
-    location: "Online",
-    cols: "",
-    rows: "",
-  },
-  {
-    id: 7,
-    src: "https://images.unsplash.com/photo-1528901166007-3784c7dd3653?w=600&auto=format&fit=crop&q=80",
-    alt: "Hackathon Awards Night",
-    event: "Hackathon Awards Night",
-    date: "Nov 2024",
-    location: "Hyderabad",
-    cols: "",
-    rows: "",
-  },
-  {
-    id: 8,
-    src: "https://images.unsplash.com/photo-1544531585-9847b68c8c86?w=900&auto=format&fit=crop&q=80",
-    alt: "Chapter Meet Delhi",
-    event: "QNI Chapter Meet Delhi",
-    date: "Oct 2024",
-    location: "New Delhi",
-    cols: "col-span-2",
-    rows: "row-span-2",
-  },
-  {
-    id: 9,
-    src: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=600&auto=format&fit=crop&q=80",
-    alt: "Annual Gathering",
-    event: "QNI Annual Gathering",
-    date: "Mar 2024",
-    location: "Bengaluru",
-    cols: "",
-    rows: "",
-  },
-  {
-    id: 10,
-    src: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=600&auto=format&fit=crop&q=80",
-    alt: "Quantum Hackathon 2024",
-    event: "Quantum Hackathon 2024",
-    date: "Feb 2024",
-    location: "Hyderabad",
+    src: "/gallery/event-photo-05.jpg",
+    alt: "",
     cols: "",
     rows: "",
   },
@@ -189,15 +124,6 @@ export function GallerySection() {
                   {/* Hover overlay content */}
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
                     <ZoomIn className="absolute top-3 right-3 w-4 h-4 text-white/70" />
-                    <p className="text-white font-semibold text-sm leading-tight whitespace-normal">{img.event}</p>
-                    <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-white/60 text-xs flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />{img.date}
-                      </span>
-                      <span className="text-white/60 text-xs flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />{img.location}
-                      </span>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -248,13 +174,6 @@ export function GallerySection() {
               alt={lightboxImg.alt}
               className="rounded-2xl object-contain max-h-[75vh] w-full"
             />
-            <div className="mt-4 text-center">
-              <p className="text-white font-semibold text-lg">{lightboxImg.event}</p>
-              <div className="flex items-center justify-center gap-4 mt-1.5 text-white/50 text-sm">
-                <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{lightboxImg.date}</span>
-                <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{lightboxImg.location}</span>
-              </div>
-            </div>
           </div>
         </div>
       )}
