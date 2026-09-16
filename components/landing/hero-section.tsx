@@ -137,9 +137,9 @@ export function HeroSection() {
               followMouse
               proximity={250}
               autoAnimate={false}
-              onClick={() => window.location.href = '/join'}
+              onClick={() => window.location.href = '/join-team'}
             >
-              Join Us
+              Join Team
               <ArrowRight className="w-4 h-4 ml-1" />
             </SpecularButton>
             <Button

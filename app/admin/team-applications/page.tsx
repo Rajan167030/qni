@@ -14,6 +14,9 @@ interface TeamApplication {
   email: string;
   phone?: string;
   role: string;
+  currentStatus?: string;
+  contributionAreas?: string[];
+  skills?: string;
   portfolioUrl?: string;
   availability?: string;
   message?: string;
@@ -163,6 +166,9 @@ export default function AdminTeamApplicationsPage() {
                     {item.availability && (
                       <p className="text-xs text-muted-foreground mt-0.5">Availability: {item.availability}</p>
                     )}
+                    {item.currentStatus && (
+                      <p className="text-xs text-muted-foreground mt-0.5">Current status: {item.currentStatus}</p>
+                    )}
                     {item.portfolioUrl && (
                       <a href={item.portfolioUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-cyan-600 dark:text-cyan-400 hover:underline mt-1">
                         <ExternalLink className="w-3 h-3" /> Portfolio / LinkedIn
@@ -211,6 +217,21 @@ export default function AdminTeamApplicationsPage() {
                 {item.message && (
                   <p className="text-sm text-foreground/80 leading-relaxed border-t border-foreground/10 pt-3">
                     {item.message}
+                  </p>
+                )}
+                {item.contributionAreas && item.contributionAreas.length > 0 && (
+                  <div className="border-t border-foreground/10 pt-3">
+                    <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-2">Contribution areas</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {item.contributionAreas.map((area) => (
+                        <span key={area} className="rounded-full bg-foreground/5 border border-foreground/10 px-2.5 py-1 text-xs text-foreground/70">{area}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {item.skills && (
+                  <p className="text-sm text-foreground/80 leading-relaxed border-t border-foreground/10 pt-3">
+                    <span className="font-semibold">Relevant skills:</span> {item.skills}
                   </p>
                 )}
               </div>

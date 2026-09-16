@@ -25,6 +25,49 @@ async function createTransporter() {
   }
 }
 
+export async function sendTeamApplicationEmail(to: string, name: string) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping team application email — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM!;
+  const safeName = escapeHtml(name);
+  const html = `<!DOCTYPE html>
+<html lang="en"><body style="margin:0;padding:32px 16px;background:#f4f6f8;font-family:Arial,sans-serif;color:#1e293b">
+  <table role="presentation" width="100%" style="max-width:580px;margin:auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px">
+    <tr><td style="padding:32px 36px">
+      <img src="https://www.quantumnexusglobal.org/logo-mark.png" alt="Quantum Nexus Global" width="140" style="display:block;margin-bottom:28px" />
+      <p style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#64748b">Team application received</p>
+      <h1 style="font-size:24px;color:#0f172a">Thank you, ${safeName}</h1>
+      <p style="font-size:15px;line-height:1.6;color:#475569">We received your application to join the Quantum Nexus Global team. Our team will review your responses and get back to you after the review.</p>
+      <p style="font-size:15px;line-height:1.6;color:#475569">Thank you for offering your time and skills to help grow the quantum community.</p>
+      <p style="font-size:14px;color:#64748b;margin-top:28px">— The Quantum Nexus Global Team</p>
+    </td></tr>
+  </table>
+</body></html>`;
+  const text = `Thank you, ${name}!
+
+We received your application to join the Quantum Nexus Global team. Our team will review your responses and get back to you after the review.
+
+— The Quantum Nexus Global Team`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Quantum Nexus Global" <${from}>`,
+      to,
+      subject: 'Your Quantum Nexus Global team application was received',
+      html,
+      text,
+    });
+    return true;
+  } catch (error) {
+    console.error('[Email] Failed to send team application email:', error);
+    return false;
+  }
+}
+
 function escapeHtml(str?: string | null): string {
   if (!str) return '';
   return String(str)

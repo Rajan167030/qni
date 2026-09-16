@@ -85,6 +85,12 @@ export default function CareersPage() {
             <p className="text-foreground/60 text-sm sm:text-base max-w-lg mx-auto">
               We're looking for people who want to contribute to the community — pick the area you'd like to help with and tell us a bit about yourself.
             </p>
+            <Link
+              href="/join-team"
+              className="mt-5 inline-flex items-center rounded-full border border-foreground/20 px-4 py-2 text-xs font-semibold text-foreground/70 transition hover:border-foreground/40 hover:text-foreground"
+            >
+              Open the detailed team application
+            </Link>
           </div>
 
           <div className="rounded-2xl sm:rounded-3xl border border-foreground/15 bg-background/80 backdrop-blur-xl p-5 sm:p-8 md:p-10 shadow-2xl">

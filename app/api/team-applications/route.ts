@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getMongoDbDatabase } from '@/lib/mongodb';
+import { sendTeamApplicationEmail } from '@/lib/email';
 
 /**
  * Applications to join the QNexus team (not the general community —
@@ -24,8 +25,15 @@ export async function POST(request: Request) {
     if (!db) return NextResponse.json({ success: false, message: 'MongoDB not configured' }, { status: 400 });
 
     const body = await request.json();
-    if (!body.fullName?.trim() || !body.email?.trim() || !body.role?.trim()) {
-      return NextResponse.json({ success: false, message: 'Name, email, and role are required.' }, { status: 400 });
+    if (!body.fullName?.trim() || !body.email?.trim() || (!body.currentStatus?.trim() && !body.role?.trim())) {
+      return NextResponse.json({ success: false, message: 'Full name, email, and current status are required.' }, { status: 400 });
+    }
+
+    const contributionAreas = Array.isArray(body.contributionAreas)
+      ? body.contributionAreas.map((area: unknown) => String(area).trim()).filter(Boolean)
+      : body.role?.trim() ? [String(body.role).trim()] : [];
+    if (contributionAreas.length === 0) {
+      return NextResponse.json({ success: false, message: 'Select at least one contribution area.' }, { status: 400 });
     }
 
     const doc = {
@@ -33,15 +41,21 @@ export async function POST(request: Request) {
       fullName: String(body.fullName).trim(),
       email: String(body.email).trim(),
       phone: body.phone ? String(body.phone).trim() : '',
-      role: String(body.role).trim(),
-      portfolioUrl: body.portfolioUrl ? String(body.portfolioUrl).trim() : '',
+      role: contributionAreas.join(', '),
+      currentStatus: body.currentStatus ? String(body.currentStatus).trim() : 'Not specified',
+      contributionAreas,
+      skills: body.skills ? String(body.skills).trim() : '',
       availability: body.availability ? String(body.availability).trim() : '',
-      message: body.message ? String(body.message).trim() : '',
+      portfolioUrl: body.portfolioUrl ? String(body.portfolioUrl).trim() : '',
+      message: body.skills ? String(body.skills).trim() : '',
       status: 'Pending' as const,
       createdAt: new Date(),
     };
 
     await db.collection('team_applications').insertOne(doc);
+    await sendTeamApplicationEmail(doc.email, doc.fullName).catch((emailError) => {
+      console.warn('[Email] Team application confirmation error:', emailError);
+    });
     return NextResponse.json({ success: true, data: doc }, { status: 201 });
   } catch (error: any) {
     console.error('Error saving team application:', error);
