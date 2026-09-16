@@ -17,8 +17,19 @@ import {
   BookOpen,
   ArrowRight,
   PenSquare,
+  Heart,
+  MessageCircle,
+  Send,
 } from 'lucide-react';
 import { getBlogBySlug, getBlogs, BlogPost } from '@/lib/blogs-store';
+import { getUserIdentity, UserIdentity } from '@/lib/user-identity';
+
+interface BlogComment {
+  id: string;
+  name: string;
+  content: string;
+  createdAt: string;
+}
 
 export default function SingleBlogPostPage() {
   const params = useParams();
@@ -29,10 +40,18 @@ export default function SingleBlogPostPage() {
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [identity, setIdentity] = useState<UserIdentity | null>(null);
+  const [comments, setComments] = useState<BlogComment[]>([]);
+  const [likes, setLikes] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [interactionMessage, setInteractionMessage] = useState('');
+  const [isInteracting, setIsInteracting] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
 
+    setIdentity(getUserIdentity());
     const found = getBlogBySlug(slug);
     if (found) {
       setPost(found);
@@ -40,7 +59,64 @@ export default function SingleBlogPostPage() {
       setRelatedPosts(all.slice(0, 3));
     }
     setIsLoading(false);
+
+    const interactionEmail = getUserIdentity()?.email;
+    const interactionQuery = new URLSearchParams({ slug });
+    if (interactionEmail) interactionQuery.set('email', interactionEmail);
+    fetch(`/api/blog-interactions?${interactionQuery.toString()}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          setComments(data.comments || []);
+          setLikes(data.likes || 0);
+          setLiked(Boolean(data.liked));
+        }
+      })
+      .catch(() => {});
   }, [slug]);
+
+  const handleLike = async () => {
+    if (!identity || isInteracting) return;
+    setIsInteracting(true);
+    setInteractionMessage('');
+    try {
+      const response = await fetch('/api/blog-interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'like', blogSlug: slug, email: identity.email, name: identity.name }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setLiked(data.liked);
+      setLikes(data.likes);
+    } catch (error: any) {
+      setInteractionMessage(error.message || 'Unable to update like.');
+    } finally {
+      setIsInteracting(false);
+    }
+  };
+
+  const handleComment = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!identity || !commentText.trim() || isInteracting) return;
+    setIsInteracting(true);
+    setInteractionMessage('');
+    try {
+      const response = await fetch('/api/blog-interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'comment', blogSlug: slug, email: identity.email, name: identity.name, content: commentText }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      setComments((current) => [data.comment, ...current]);
+      setCommentText('');
+    } catch (error: any) {
+      setInteractionMessage(error.message || 'Unable to post comment.');
+    } finally {
+      setIsInteracting(false);
+    }
+  };
 
   const handleShare = () => {
     if (typeof window !== 'undefined') {
@@ -269,6 +345,67 @@ export default function SingleBlogPostPage() {
                 Member of Quantum Nexus Global research and development team, focusing on hybrid quantum algorithm design and cloud infrastructure execution.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 lg:px-12 pb-20">
+        <div className="max-w-3xl mx-auto border-y border-foreground/10 py-10">
+          <div className="flex items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5" />
+              <h2 className="text-2xl font-display">Community Discussion</h2>
+            </div>
+            <button
+              type="button"
+              onClick={handleLike}
+              disabled={!identity || isInteracting}
+              title={identity ? 'Like this article' : 'Join the community or register for an event to like'}
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors ${liked ? 'border-rose-500/40 bg-rose-500/10 text-rose-500' : 'border-foreground/15 hover:bg-foreground/5'} disabled:cursor-not-allowed disabled:opacity-50`}
+            >
+              <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
+              {likes}
+            </button>
+          </div>
+
+          {identity ? (
+            <form onSubmit={handleComment} className="flex flex-col gap-3 mb-8">
+              <textarea
+                value={commentText}
+                onChange={(event) => setCommentText(event.target.value)}
+                maxLength={1000}
+                placeholder="Share your thoughts..."
+                className="min-h-28 w-full resize-y rounded-2xl border border-foreground/15 bg-foreground/5 px-4 py-3 text-sm outline-none focus:border-foreground/40"
+              />
+              <button
+                type="submit"
+                disabled={!commentText.trim() || isInteracting}
+                className="self-end inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" /> Post Comment
+              </button>
+            </form>
+          ) : (
+            <p className="mb-8 rounded-2xl border border-foreground/10 bg-foreground/5 px-4 py-3 text-sm text-muted-foreground">
+              Join the community or register for an event to like and comment on articles.
+            </p>
+          )}
+
+          {interactionMessage && <p className="mb-5 text-sm text-rose-500">{interactionMessage}</p>}
+          <div className="space-y-4">
+            {comments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No comments yet.</p>
+            ) : comments.map((comment) => (
+              <article key={comment.id} className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] p-4">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <span className="text-sm font-semibold">{comment.name}</span>
+                  <time className="text-xs text-muted-foreground" dateTime={comment.createdAt}>
+                    {new Date(comment.createdAt).toLocaleDateString()}
+                  </time>
+                </div>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{comment.content}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>

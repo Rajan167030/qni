@@ -9,6 +9,8 @@ interface SubmissionsData {
   research: any[];
   newsletter: any[];
   registrations: any[];
+  'blog-comments': any[];
+  'blog-likes': any[];
 }
 
 function getInitialData(): SubmissionsData {
@@ -18,6 +20,8 @@ function getInitialData(): SubmissionsData {
     research: [],
     newsletter: [],
     registrations: [],
+    'blog-comments': [],
+    'blog-likes': [],
   };
 }
 
@@ -51,7 +55,7 @@ export function writeServerStore(data: SubmissionsData): boolean {
 }
 
 export function saveServerSubmission(
-  type: 'joins' | 'contacts' | 'research' | 'newsletter' | 'registrations',
+  type: 'joins' | 'contacts' | 'research' | 'newsletter' | 'registrations' | 'blog-comments' | 'blog-likes',
   item: any
 ): any {
   const store = readServerStore();
@@ -84,7 +88,7 @@ export function saveServerSubmission(
 }
 
 export function getServerSubmissions(
-  type: 'joins' | 'contacts' | 'research' | 'newsletter' | 'registrations'
+  type: 'joins' | 'contacts' | 'research' | 'newsletter' | 'registrations' | 'blog-comments' | 'blog-likes'
 ): any[] {
   const store = readServerStore();
   return store[type] || [];
