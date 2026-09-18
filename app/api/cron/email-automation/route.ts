@@ -5,6 +5,7 @@ import {
   sendPostEventThankYouEmail,
   sendCommunityDripEmail,
   sendReengagementEmail,
+  sendNextEventRecommendationEmail,
 } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
@@ -45,6 +46,7 @@ export async function GET(request: Request) {
     drip1: 0,
     drip2: 0,
     reengagement: 0,
+    recommendations: 0,
     errors: [] as string[],
   };
 
@@ -128,6 +130,56 @@ export async function GET(request: Request) {
           results.thankYou++;
         } catch (err: any) {
           results.errors.push(`thank-you ${reg.email}: ${err.message}`);
+        }
+      }
+    }
+
+    // ── Next-event recommendation: after an event ends, recommend the
+    // nearest upcoming event once per attendee and recommended event.
+    const nextEvent = await db
+      .collection('events')
+      .findOne({ eventDate: { $ne: null, $gt: new Date(now) } }, { sort: { eventDate: 1 } });
+
+    if (nextEvent && results.recommendations < MAX_PER_CATEGORY) {
+      for (const event of pastEvents as any[]) {
+        if (results.recommendations >= MAX_PER_CATEGORY) break;
+        const regs = await db.collection('registrations').find({
+          eventId: event.id,
+          status: { $ne: 'Cancelled' },
+        }).limit(MAX_PER_CATEGORY).toArray();
+
+        for (const reg of regs as any[]) {
+          if (results.recommendations >= MAX_PER_CATEGORY || !reg.email || !reg.name) continue;
+          const email = String(reg.email).trim().toLowerCase();
+          const alreadySent = await db.collection('event_recommendations').findOne({
+            email,
+            sourceEventId: event.id,
+            recommendedEventId: nextEvent.id,
+          });
+          if (alreadySent) continue;
+
+          const nextEventDate = nextEvent.eventDate ? new Date(nextEvent.eventDate) : null;
+          const sent = await sendNextEventRecommendationEmail(
+            email,
+            String(reg.name),
+            event.title || reg.eventTitle || 'the event you joined',
+            nextEvent.title || 'Quantum Nexus Event',
+            String(nextEvent.id),
+            {
+              date: nextEventDate?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
+              time: nextEvent.time,
+              location: nextEvent.location,
+            }
+          );
+          if (sent) {
+            await db.collection('event_recommendations').insertOne({
+              email,
+              sourceEventId: event.id,
+              recommendedEventId: nextEvent.id,
+              sentAt: new Date(),
+            });
+            results.recommendations++;
+          }
         }
       }
     }

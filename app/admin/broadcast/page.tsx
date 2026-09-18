@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Send, Users, Mail, CalendarCheck, MessageSquare, GraduationCap,
-  Eye, Loader2, CheckCircle2, AlertTriangle,
+  Eye, Loader2, CheckCircle2, AlertTriangle, ImagePlus, Sparkles, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getEvents, EventItem } from "@/lib/events-store";
@@ -14,6 +14,7 @@ const AUDIENCES = [
   { key: "newsletter", label: "Newsletter Subscribers", icon: Mail, color: "emerald" },
   { key: "joins", label: "Join Applicants", icon: Users, color: "amber" },
   { key: "registrations", label: "Event Registrants", icon: CalendarCheck, color: "cyan" },
+  { key: "pastEventAttendees", label: "Past Event Attendees", icon: Users, color: "amber" },
   { key: "contacts", label: "Contact Inquiries", icon: MessageSquare, color: "purple" },
   { key: "research", label: "Research Applicants", icon: GraduationCap, color: "sky" },
 ] as const;
@@ -39,6 +40,8 @@ export default function AdminBroadcastPage() {
   const [eventId, setEventId] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [posterUrl, setPosterUrl] = useState("");
+  const [isUploadingPoster, setIsUploadingPoster] = useState(false);
 
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [preview, setPreview] = useState<PreviewResult | null>(null);
@@ -77,6 +80,36 @@ export default function AdminBroadcastPage() {
     );
   };
 
+  const applyRecommendationTemplate = () => {
+    const event = events.find((item) => item.id === eventId);
+    if (!event) return;
+    setSubject(`You're invited: ${event.title}`);
+    setMessage(`Hi {{name}},\n\nBecause you joined one of our past events, we thought this upcoming session would be a great fit for you.\n\n${event.title}\nDate: ${event.eventDate ? new Date(event.eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : `${event.month} ${event.day}`}\nTime: ${event.time || 'To be confirmed'}\nLocation: ${event.location || 'Online'}\n\nWe would love to see you there. Register here: https://www.quantumnexusglobal.org/events/${event.id}\n\nWarmly,\nThe Quantum Nexus Global Team`);
+    setPreview(null);
+    setResult(null);
+  };
+
+  const handlePosterUpload = async (file: File | undefined) => {
+    if (!file) return;
+    setIsUploadingPoster(true);
+    setErrorMsg("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await response.json();
+      if (!response.ok || !data.success || !data.url || !/^https?:\/\//i.test(data.url)) {
+        throw new Error("Poster upload needs a public image URL. Configure Cloudinary or paste the URL below.");
+      }
+      setPosterUrl(data.url);
+      setPreview(null);
+    } catch (error: any) {
+      setErrorMsg(error.message || "Poster upload failed.");
+    } finally {
+      setIsUploadingPoster(false);
+    }
+  };
+
   const runPreview = async () => {
     if (selectedAudiences.length === 0) return;
     setIsPreviewing(true);
@@ -88,7 +121,8 @@ export default function AdminBroadcastPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           audiences: selectedAudiences,
-          eventId: selectedAudiences.includes("registrations") ? eventId || undefined : undefined,
+          eventId: (selectedAudiences.includes("registrations") || selectedAudiences.includes("pastEventAttendees")) ? eventId || undefined : undefined,
+          posterUrl: posterUrl || undefined,
           dryRun: true,
         }),
       });
@@ -123,7 +157,8 @@ export default function AdminBroadcastPage() {
           subject,
           message,
           audiences: selectedAudiences,
-          eventId: selectedAudiences.includes("registrations") ? eventId || undefined : undefined,
+          eventId: (selectedAudiences.includes("registrations") || selectedAudiences.includes("pastEventAttendees")) ? eventId || undefined : undefined,
+          posterUrl: posterUrl || undefined,
         }),
       });
       const data = await res.json();
@@ -139,7 +174,8 @@ export default function AdminBroadcastPage() {
     }
   };
 
-  const canSend = selectedAudiences.length > 0 && subject.trim() && message.trim() && preview && preview.count > 0;
+  const needsTargetEvent = selectedAudiences.includes("pastEventAttendees");
+  const canSend = selectedAudiences.length > 0 && (!needsTargetEvent || Boolean(eventId)) && subject.trim() && message.trim() && preview && preview.count > 0;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -194,21 +230,26 @@ export default function AdminBroadcastPage() {
             })}
           </div>
 
-          {selectedAudiences.includes("registrations") && (
+          {(selectedAudiences.includes("registrations") || selectedAudiences.includes("pastEventAttendees")) && (
             <div>
               <label className="block text-xs font-mono uppercase text-muted-foreground mb-1.5">
-                Limit to a specific event (optional)
+                {selectedAudiences.includes("pastEventAttendees") ? "Upcoming event to recommend" : "Limit to a specific event (optional)"}
               </label>
               <select
                 value={eventId}
                 onChange={(e) => { setEventId(e.target.value); setPreview(null); }}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
               >
-                <option value="">All events (every registrant)</option>
-                {events.map((ev) => (
+                <option value="">{selectedAudiences.includes("pastEventAttendees") ? "Select the event to recommend" : "All events (every registrant)"}</option>
+                {events.filter((ev) => !ev.eventDate || new Date(ev.eventDate).getTime() > Date.now()).map((ev) => (
                   <option key={ev.id} value={ev.id}>{ev.title}</option>
                 ))}
               </select>
+              {selectedAudiences.includes("pastEventAttendees") && eventId && (
+                <button type="button" onClick={applyRecommendationTemplate} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-cyan-500/30 px-3 py-2 text-xs font-semibold text-cyan-700 hover:bg-cyan-500/10">
+                  <Sparkles className="h-3.5 w-3.5" /> Use recommendation template
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -243,6 +284,21 @@ export default function AdminBroadcastPage() {
               className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/25 bg-background text-sm text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-foreground/60 transition-colors resize-none"
             />
             <p className="text-[11px] text-muted-foreground mt-1.5">Separate paragraphs with a blank line — each will render as its own paragraph in the email.</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-mono uppercase text-muted-foreground mb-1.5">Event poster (optional)</label>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-foreground/20 px-3.5 py-2.5 text-sm font-medium hover:bg-foreground/5">
+                {isUploadingPoster ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                {isUploadingPoster ? "Uploading..." : "Upload poster"}
+                <input type="file" accept="image/*" className="sr-only" disabled={isUploadingPoster} onChange={(e) => handlePosterUpload(e.target.files?.[0])} />
+              </label>
+              <input type="url" value={posterUrl} onChange={(e) => { setPosterUrl(e.target.value); setPreview(null); }} placeholder="Or paste a public image URL" className="min-w-0 flex-1 rounded-xl border border-foreground/20 bg-background px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:border-foreground/60" />
+              {posterUrl && <button type="button" aria-label="Remove poster" onClick={() => setPosterUrl("")} className="rounded-full p-2 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"><X className="h-4 w-4" /></button>}
+            </div>
+            {posterUrl && <img src={posterUrl} alt="Poster preview" className="mt-3 max-h-48 w-auto rounded-xl border border-foreground/10 object-contain" />}
+            <p className="mt-1.5 text-[11px] text-muted-foreground">Email images need a public HTTPS URL. Uploaded images work when Cloudinary is configured.</p>
           </div>
         </div>
 

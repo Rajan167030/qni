@@ -6,7 +6,7 @@ import { sendBroadcastEmail } from '@/lib/email';
 // than the default serverless timeout.
 export const maxDuration = 300;
 
-type AudienceKey = 'newsletter' | 'joins' | 'registrations' | 'contacts' | 'research';
+type AudienceKey = 'newsletter' | 'joins' | 'registrations' | 'pastEventAttendees' | 'contacts' | 'research';
 
 interface Recipient {
   email: string;
@@ -48,6 +48,18 @@ async function collectRecipients(
     docs.forEach((d: any) => add(d.email, d.name));
   }
 
+  if (audiences.includes('pastEventAttendees')) {
+    const pastEvents = await db.collection('events').find({ eventDate: { $lt: new Date() } }, { projection: { id: 1 } }).toArray();
+    const pastEventIds = pastEvents.map((event: any) => event.id).filter(Boolean);
+    if (pastEventIds.length > 0) {
+      const docs = await db.collection('registrations').find({
+        eventId: { $in: pastEventIds },
+        status: { $ne: 'Cancelled' },
+      }).toArray();
+      docs.forEach((d: any) => add(d.email, d.name));
+    }
+  }
+
   if (audiences.includes('contacts')) {
     const docs = await db.collection('contacts').find({}).toArray();
     docs.forEach((d: any) => add(d.email, d.name));
@@ -68,16 +80,23 @@ function personalize(message: string, name?: string): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { subject, message, audiences, eventId, dryRun } = body as {
+    const { subject, message, audiences, eventId, posterUrl, dryRun } = body as {
       subject?: string;
       message?: string;
       audiences?: AudienceKey[];
       eventId?: string;
+      posterUrl?: string;
       dryRun?: boolean;
     };
 
     if (!Array.isArray(audiences) || audiences.length === 0) {
       return NextResponse.json({ success: false, message: 'Select at least one audience.' }, { status: 400 });
+    }
+    if (!dryRun && audiences.includes('pastEventAttendees') && !eventId) {
+      return NextResponse.json({ success: false, message: 'Select the upcoming event to recommend.' }, { status: 400 });
+    }
+    if (dryRun && audiences.includes('pastEventAttendees') && !eventId) {
+      return NextResponse.json({ success: false, message: 'Select the upcoming event to recommend.' }, { status: 400 });
     }
     if (!dryRun && (!subject?.trim() || !message?.trim())) {
       return NextResponse.json({ success: false, message: 'Subject and message are required.' }, { status: 400 });
@@ -103,7 +122,7 @@ export async function POST(request: Request) {
 
     for (const recipient of recipients) {
       try {
-        const ok = await sendBroadcastEmail(recipient.email, subject!.trim(), personalize(message!.trim(), recipient.name));
+        const ok = await sendBroadcastEmail(recipient.email, subject!.trim(), personalize(message!.trim(), recipient.name), posterUrl);
         if (ok) sent++;
         else errors.push(`${recipient.email}: send failed (email not configured or provider error)`);
       } catch (err: any) {
