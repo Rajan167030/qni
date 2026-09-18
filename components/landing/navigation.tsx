@@ -89,7 +89,7 @@ export function Navigation() {
             ))}
           </div>
 
-          {/* Desktop CTA - Join Team Button, or the visitor's name once identified */}
+          {/* Desktop CTA - Join Us button, or the visitor's name once identified */}
           <div className="hidden md:flex items-center gap-4">
             {identity ? (
               <div className="group relative flex items-center gap-2 pl-1.5 pr-2 py-1.5 rounded-full border border-foreground/15 bg-foreground/5 text-foreground">
@@ -109,7 +109,7 @@ export function Navigation() {
                 </button>
               </div>
             ) : (
-              <Link href="/join-team">
+              <Link href="/join">
                 <SpecularButton
                   size={isScrolled ? "sm" : "md"}
                   radius={18}
@@ -128,7 +128,7 @@ export function Navigation() {
                   proximity={250}
                   autoAnimate={false}
                 >
-                  <span>Join Team</span>
+                  <span>Join Us</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </SpecularButton>
               </Link>
@@ -239,11 +239,11 @@ export function Navigation() {
                   Ready to start?
                 </p>
                 <Link
-                  href="/join-team"
+                  href="/join"
                   className="w-full bg-foreground text-background rounded-full h-14 text-lg font-semibold flex items-center justify-center hover:bg-foreground/90 transition-all shadow-xl shadow-foreground/10"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Join Team
+                  Join Us
                 </Link>
               </>
             )}
