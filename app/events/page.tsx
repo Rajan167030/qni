@@ -3,9 +3,9 @@ import { getAttendeeCountMap, combineAttendeeCount } from '@/lib/attendee-counts
 import { EventItem } from '@/lib/events-store';
 import EventsListClient from './EventsListClient';
 
-// Cache the rendered page for 30s so repeat visits are served instantly
-// instead of round-tripping to MongoDB on every request (ISR).
-export const revalidate = 30;
+// Event data does not need second-level freshness. A ten-minute window keeps
+// the public page fast without repeatedly regenerating the page under traffic.
+export const revalidate = 600;
 
 async function fetchEvents(): Promise<EventItem[]> {
   try {
