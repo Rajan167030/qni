@@ -87,6 +87,7 @@ export default function AdminDashboardPage() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [newsletterSubs, setNewsletterSubs] = useState<NewsletterSubscriber[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRegistrationEvent, setSelectedRegistrationEvent] = useState('all');
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<{ type: 'contact' | 'join' | 'reg' | 'research' | 'blog' | 'newsletter'; data: any } | null>(null);
 
@@ -592,13 +593,18 @@ export default function AdminDashboardPage() {
       j.position.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const registrationEventOptions = Array.from(new Map(registrations.map((r) => [r.eventId, r.eventTitle])).entries());
+  const activeRegistrationEvent = selectedRegistrationEvent || registrationEventOptions[0]?.[0] || 'all';
+
   const filteredRegs = registrations.filter(
     (r) =>
-      r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.eventTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.organization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (r.token || '').toLowerCase().includes(searchQuery.toLowerCase())
+      (activeRegistrationEvent === 'all' || r.eventId === activeRegistrationEvent) && (
+        r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.eventTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.organization.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (r.token || '').toLowerCase().includes(searchQuery.toLowerCase())
+      )
   );
 
   const filteredResearchApps = researchApps.filter(
@@ -1303,9 +1309,22 @@ export default function AdminDashboardPage() {
                   <h3 className="font-display text-2xl font-bold text-foreground">Event Registrations</h3>
                   <p className="text-xs text-muted-foreground font-mono">Track participant seats for workshops & hackathons.</p>
                 </div>
-                <span className="text-xs font-mono text-muted-foreground">
-                  Showing {filteredRegs.length} of {registrations.length} entries
-                </span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <select
+                    value={activeRegistrationEvent}
+                    onChange={(e) => setSelectedRegistrationEvent(e.target.value)}
+                    className="text-xs font-mono px-3 py-2 rounded-lg bg-background border border-foreground/15 text-foreground focus:outline-none"
+                    aria-label="Filter registrations by event"
+                  >
+                    <option value="all">All Events</option>
+                    {registrationEventOptions.map(([eventId, eventTitle]) => (
+                      <option key={eventId} value={eventId}>{eventTitle}</option>
+                    ))}
+                  </select>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    Showing {filteredRegs.length} of {registrations.length} entries
+                  </span>
+                </div>
               </div>
 
               <div className="rounded-3xl border border-foreground/15 bg-background overflow-hidden shadow-xl">
