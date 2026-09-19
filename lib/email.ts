@@ -1187,41 +1187,6 @@ export async function sendPostEventThankYouEmail(
   }
 
 
-// Next-event recommendation -> sent once after an attendee's event has ended.
-export async function sendNextEventRecommendationEmail(
-  to: string,
-  name: string,
-  sourceEventTitle: string,
-  recommendedEventTitle: string,
-  eventId: string,
-  eventMeta: { date?: string; time?: string; location?: string }
-) {
-  const transporter = await createTransporter();
-  if (!transporter) {
-    console.warn('[Email] Skipping next-event recommendation — EMAIL_FROM/EMAIL_PASS not configured.');
-    return false;
-  }
-
-  const from = process.env.EMAIL_FROM!;
-  const safeName = escapeHtml(name);
-  const safeSourceEventTitle = escapeHtml(sourceEventTitle);
-  const safeEventTitle = escapeHtml(recommendedEventTitle);
-  const safeDate = escapeHtml(eventMeta.date || 'Coming soon');
-  const safeTime = escapeHtml(eventMeta.time || 'To be confirmed');
-  const safeLocation = escapeHtml(eventMeta.location || 'Online');
-  const eventPageUrl = `https://www.quantumnexusglobal.org/events/${encodeURIComponent(eventId)}`;
-  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Your next Quantum Nexus event</title></head><body style="margin:0;padding:32px 16px;background:#f4f6f8;font-family:Arial,sans-serif;color:#1e293b;"><table role="presentation" width="100%"><tr><td align="center"><table role="presentation" width="100%" style="max-width:580px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:36px;"><tr><td><p style="margin:0 0 12px;color:#0891b2;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;">Recommended for you</p><h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;">Keep exploring, ${safeName}</h1><p style="font-size:16px;line-height:1.6;color:#475569;">Because you joined <strong>${escapeHtml(eventTitle)}</strong>, we thought this upcoming event might be a good fit:</p><div style="margin:24px 0;padding:20px;border:1px solid #bae6fd;border-radius:10px;background:#ecfeff;"><h2 style="margin:0 0 14px;font-size:21px;">${safeEventTitle}</h2><p style="margin:7px 0;color:#475569;"><strong>Date:</strong> ${safeDate}</p><p style="margin:7px 0;color:#475569;"><strong>Time:</strong> ${safeTime}</p><p style="margin:7px 0;color:#475569;"><strong>Location:</strong> ${safeLocation}</p></div><a href="${eventPageUrl}" style="display:inline-block;padding:13px 22px;background:#0f172a;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">View event & register</a><p style="margin:28px 0 0;color:#64748b;font-size:13px;line-height:1.6;">We will keep sharing relevant Quantum Nexus events with you as the community grows.</p></td></tr></table></td></tr></table></body></html>`;
-  const text = `Recommended for you, ${name}\n\nBecause you joined ${sourceEventTitle}, we thought this upcoming event might be a good fit:\n\n${recommendedEventTitle}\nDate: ${eventMeta.date || 'Coming soon'}\nTime: ${eventMeta.time || 'To be confirmed'}\nLocation: ${eventMeta.location || 'Online'}\n\nView event and register: ${eventPageUrl}`;
-
-  try {
-    await transporter.sendMail({ from: `"Quantum Nexus Global" <${from}>`, to, subject: `Recommended next: ${recommendedEventTitle}`, html, text });
-    console.log(`[Email] Next-event recommendation sent to ${to}`);
-    return true;
-  } catch (err) {
-    console.error('[Email] Failed to send next-event recommendation:', err);
-    return false;
-  }
-}
   const from = process.env.EMAIL_FROM!;
   const safeName = escapeHtml(name);
   const safeEventTitle = escapeHtml(eventTitle);
@@ -1314,6 +1279,42 @@ Browse upcoming events: ${eventsUrl}
     return true;
   } catch (err) {
     console.error('[Email] Failed to send post-event thank you:', err);
+    return false;
+  }
+}
+
+// Next-event recommendation -> sent once after an attendee's event has ended.
+export async function sendNextEventRecommendationEmail(
+  to: string,
+  name: string,
+  sourceEventTitle: string,
+  recommendedEventTitle: string,
+  eventId: string,
+  eventMeta: { date?: string; time?: string; location?: string }
+) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping next-event recommendation — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM!;
+  const safeName = escapeHtml(name);
+  const safeSourceEventTitle = escapeHtml(sourceEventTitle);
+  const safeEventTitle = escapeHtml(recommendedEventTitle);
+  const safeDate = escapeHtml(eventMeta.date || 'Coming soon');
+  const safeTime = escapeHtml(eventMeta.time || 'To be confirmed');
+  const safeLocation = escapeHtml(eventMeta.location || 'Online');
+  const eventPageUrl = `https://www.quantumnexusglobal.org/events/${encodeURIComponent(eventId)}`;
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Your next Quantum Nexus event</title></head><body style="margin:0;padding:32px 16px;background:#f4f6f8;font-family:Arial,sans-serif;color:#1e293b;"><table role="presentation" width="100%"><tr><td align="center"><table role="presentation" width="100%" style="max-width:580px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:36px;"><tr><td><p style="margin:0 0 12px;color:#0891b2;font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;">Recommended for you</p><h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;">Keep exploring, ${safeName}</h1><p style="font-size:16px;line-height:1.6;color:#475569;">Because you joined <strong>${safeSourceEventTitle}</strong>, we thought this upcoming event might be a good fit:</p><div style="margin:24px 0;padding:20px;border:1px solid #bae6fd;border-radius:10px;background:#ecfeff;"><h2 style="margin:0 0 14px;font-size:21px;">${safeEventTitle}</h2><p style="margin:7px 0;color:#475569;"><strong>Date:</strong> ${safeDate}</p><p style="margin:7px 0;color:#475569;"><strong>Time:</strong> ${safeTime}</p><p style="margin:7px 0;color:#475569;"><strong>Location:</strong> ${safeLocation}</p></div><a href="${eventPageUrl}" style="display:inline-block;padding:13px 22px;background:#0f172a;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">View event & register</a><p style="margin:28px 0 0;color:#64748b;font-size:13px;line-height:1.6;">We will keep sharing relevant Quantum Nexus events with you as the community grows.</p></td></tr></table></td></tr></table></body></html>`;
+  const text = `Recommended for you, ${name}\n\nBecause you joined ${sourceEventTitle}, we thought this upcoming event might be a good fit:\n\n${recommendedEventTitle}\nDate: ${eventMeta.date || 'Coming soon'}\nTime: ${eventMeta.time || 'To be confirmed'}\nLocation: ${eventMeta.location || 'Online'}\n\nView event and register: ${eventPageUrl}`;
+
+  try {
+    await transporter.sendMail({ from: `"Quantum Nexus Global" <${from}>`, to, subject: `Recommended next: ${recommendedEventTitle}`, html, text });
+    console.log(`[Email] Next-event recommendation sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error('[Email] Failed to send next-event recommendation:', err);
     return false;
   }
 }
