@@ -256,7 +256,8 @@ export async function sendEventRegistrationEmail(
   eventTitle: string,
   eventMeta: { date?: string; time?: string; location?: string },
   token: string,
-  eventId?: string
+  eventId?: string,
+  zoomLink?: string
 ) {
   const transporter = await createTransporter();
   if (!transporter) {
@@ -382,6 +383,34 @@ export async function sendEventRegistrationEmail(
                 </tr>
               </table>
 
+              <!-- Zoom Meeting Link Box (only shown if event has a meeting link) -->
+              ${zoomLink ? `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 20px 24px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="vertical-align: middle; width: 32px; padding-right: 12px;">
+                          <div style="width: 32px; height: 32px; background-color: #2563eb; border-radius: 8px; text-align: center; line-height: 32px; font-size: 16px;">&#128249;</div>
+                        </td>
+                        <td style="vertical-align: middle;">
+                          <div style="font-size: 15px; font-weight: 700; color: #1d4ed8; margin-bottom: 2px;">Join via Zoom</div>
+                          <div style="font-size: 13px; color: #3b82f6; line-height: 1.4;">This is an online event. Use the link below to join on the day.</div>
+                        </td>
+                      </tr>
+                    </table>
+                    <div style="margin-top: 16px;">
+                      <a href="${escapeHtml(zoomLink)}" target="_blank" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 13px; font-weight: 700; text-decoration: none; padding: 11px 22px; border-radius: 6px; letter-spacing: 0.2px;">
+                        &#128249; Join Zoom Meeting &rarr;
+                      </a>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 11px; color: #6b7280; word-break: break-all;">
+                      Or copy the link: <span style="color: #2563eb;">${escapeHtml(zoomLink)}</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>` : ''}
+
               <!-- WhatsApp Action Box -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; margin-bottom: 24px;">
                 <tr>
@@ -450,7 +479,10 @@ Date: ${eventMeta.date || 'To be confirmed'}
 Time: ${eventMeta.time || 'To be confirmed'}
 Location: ${eventMeta.location || 'Online'}
 Pass ID: ${token}
-
+${zoomLink ? `
+Zoom Meeting Link (Join on the day):
+${zoomLink}
+` : ''}
 You've been added to our WhatsApp community — join here:
 ${whatsappLink}
 
@@ -957,9 +989,11 @@ https://www.quantumnexusglobal.org`;
 }
 
 // ─────────────────────────────────────────────────────────────────
-// 5. Blog Writer Invite Email → Sent when admin grants someone blog access
+import { generateWriterMagicToken } from '@/lib/blog-auth';
+
+// 5. Blog Writer Invite Email → Sent when admin grants someone blog access (1-Click Passwordless Link)
 // ─────────────────────────────────────────────────────────────────
-export async function sendBlogWriterInviteEmail(to: string, name: string, password: string) {
+export async function sendBlogWriterInviteEmail(to: string, name: string, password?: string) {
   const transporter = await createTransporter();
   if (!transporter) {
     console.warn('[Email] Skipping blog writer invite email — EMAIL_FROM/EMAIL_PASS not configured.');
@@ -969,74 +1003,107 @@ export async function sendBlogWriterInviteEmail(to: string, name: string, passwo
   const from = process.env.EMAIL_FROM!;
   const safeName = escapeHtml(name);
   const safeEmail = escapeHtml(to);
-  const safePassword = escapeHtml(password);
-  const portalUrl = 'https://www.quantumnexusglobal.org/team-portal';
+  const safePassword = escapeHtml(password || 'Vishruti@QNG2026');
+
+  // Generate 1-click passwordless access token (90 days valid)
+  const magicToken = generateWriterMagicToken({
+    id: `bw-${to}`,
+    email: to,
+    name,
+    role: 'Blog Writer & Content Contributor',
+  });
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.quantumnexusglobal.org';
+  const magicAccessLink = `${siteUrl}/api/blog-writers/magic-login?token=${encodeURIComponent(magicToken)}`;
+  const directPortalLink = `${siteUrl}/team-portal?token=${encodeURIComponent(magicToken)}`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>You've been given blog access — QNG</title>
+  <title>Your 1-Click Blog Writer Access — Quantum Nexus Global</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f6f8; padding: 32px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
           <tr>
-            <td style="padding: 32px 36px 24px; border-bottom: 1px solid #f1f5f9;">
-              <div style="font-size: 16px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; margin-bottom: 8px;">QNG</div>
-              <span style="display: inline-block; background-color: #faf5ff; color: #7c3aed; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 9999px;">
-                Blog Writer Access Granted
+            <td style="padding: 32px 36px 20px; border-bottom: 1px solid #f1f5f9; background: #faf5ff;">
+              <div style="font-size: 16px; font-weight: 800; color: #581c87; letter-spacing: -0.3px; margin-bottom: 6px;">QUANTUM NEXUS GLOBAL</div>
+              <span style="display: inline-block; background-color: #7c3aed; color: #ffffff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 9999px;">
+                ⚡ 1-Click Blog Writer Access • No Password Needed
               </span>
             </td>
           </tr>
           <tr>
-            <td style="padding: 32px 36px 8px;">
-              <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 16px; line-height: 1.3;">
-                Hi ${safeName}, you can now write for the QNG Blog
+            <td style="padding: 32px 36px 12px;">
+              <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 16px; line-height: 1.35;">
+                Hi ${safeName}, your Blog Writing Access is Ready!
               </h1>
-              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 20px;">
-                The QNG admin has given you access to the Team Writer Portal — you can write, edit, and publish blog articles directly to the QNG blog.
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 22px;">
+                The Quantum Nexus Global administration has authorized your account (<strong style="color: #0f172a;">${safeEmail}</strong>) to write, edit, and publish blogs directly to the official platform.
               </p>
 
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 24px;">
+              <!-- Highlighted No Password Box -->
+              <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 18px 20px; margin-bottom: 26px;">
+                <div style="font-size: 14px; font-weight: 700; color: #15803d; margin-bottom: 4px;">
+                  ✨ Instant Passwordless Access
+                </div>
+                <div style="font-size: 13px; color: #166534; line-height: 1.5;">
+                  You do <strong>NOT</strong> need to remember or enter any password. Simply click the button below to instantly sign in and start writing articles:
+                </div>
+              </div>
+
+              <!-- Big Direct Action Button -->
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${magicAccessLink}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 32px; border-radius: 10px; box-shadow: 0 4px 14px rgba(124,58,237,0.35);">
+                  ✍️ Open Writer Portal (1-Click Access) &rarr;
+                </a>
+              </div>
+
+              <!-- Direct Link Fallback -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 22px;">
                 <tr>
-                  <td style="padding: 20px 24px;">
-                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 14px;">
-                      Your Writer Portal Login
+                  <td style="padding: 18px 20px;">
+                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 8px;">
+                      Direct 1-Click Access Link
                     </div>
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="padding-bottom: 10px; font-size: 13px; color: #64748b; width: 110px;">Portal URL</td>
-                        <td style="padding-bottom: 10px; font-size: 13px; font-weight: 600;"><a href="${portalUrl}" style="color: #2563eb; text-decoration: none;">quantumnexusglobal.org/team-portal</a></td>
-                      </tr>
-                      <tr>
-                        <td style="padding-bottom: 10px; font-size: 13px; color: #64748b;">Email</td>
-                        <td style="padding-bottom: 10px; font-size: 13px; font-weight: 700; color: #0f172a; font-family: monospace;">${safeEmail}</td>
-                      </tr>
-                      <tr>
-                        <td style="font-size: 13px; color: #64748b;">Password</td>
-                        <td style="font-size: 13px; font-weight: 700; color: #0f172a; font-family: monospace;">${safePassword}</td>
-                      </tr>
-                    </table>
+                    <div style="font-size: 12px; font-family: monospace; word-break: break-all; color: #2563eb; background: #ffffff; padding: 10px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                      <a href="${magicAccessLink}" style="color: #2563eb; text-decoration: none;">${magicAccessLink}</a>
+                    </div>
+                    <div style="font-size: 11px; color: #94a3b8; margin-top: 8px;">
+                      Alternative direct link: <a href="${directPortalLink}" style="color: #7c3aed; text-decoration: underline;">${directPortalLink}</a>
+                    </div>
                   </td>
                 </tr>
               </table>
 
-              <a href="${portalUrl}" target="_blank" style="display: inline-block; background-color: #7c3aed; color: #ffffff; font-size: 13px; font-weight: 600; text-decoration: none; padding: 11px 22px; border-radius: 6px; margin-bottom: 20px;">
-                Open Writer Portal &rarr;
-              </a>
+              <!-- Account Summary -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; font-size: 13px; color: #64748b;">
+                <tr>
+                  <td style="padding: 6px 0; width: 140px;">Registered Email:</td>
+                  <td style="padding: 6px 0; font-weight: 700; color: #0f172a; font-family: monospace;">${safeEmail}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0;">Role:</td>
+                  <td style="padding: 6px 0; font-weight: 600; color: #0f172a;">Blog Writer & Content Contributor</td>
+                </tr>
+                <tr>
+                  <td style="padding: 6px 0;">Backup Password:</td>
+                  <td style="padding: 6px 0; font-weight: 600; color: #475569; font-family: monospace;">${safePassword} (only if prompted)</td>
+                </tr>
+              </table>
 
-              <p style="font-size: 13px; line-height: 1.6; color: #94a3b8; margin: 20px 0 0;">
-                Keep this password private. This access can be revoked by the admin at any time.
+              <p style="font-size: 12px; line-height: 1.6; color: #94a3b8; margin: 20px 0 0; border-top: 1px solid #f1f5f9; pt: 16px;">
+                All articles and contributions published by you are monitored, logged, and attributed under your name on Quantum Nexus Global.
               </p>
             </td>
           </tr>
           <tr>
-            <td style="background-color: #f8fafc; padding: 20px 36px; border-top: 1px solid #e2e8f0; text-align: center;">
-              <p style="font-size: 12px; color: #94a3b8; margin: 0;">&copy; 2026 QNG</p>
+            <td style="background-color: #f8fafc; padding: 18px 36px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="font-size: 12px; color: #94a3b8; margin: 0;">&copy; 2026 Quantum Nexus Global &bull; quantumnexusglobal.org</p>
             </td>
           </tr>
         </table>
@@ -1046,27 +1113,29 @@ export async function sendBlogWriterInviteEmail(to: string, name: string, passwo
 </body>
 </html>`;
 
-  const text = `Hi ${name}, you can now write for the QNG Blog
+  const text = `Hi ${name}, your 1-Click Blog Writing Access for Quantum Nexus Global is ready!
 
-The QNG admin has given you access to the Team Writer Portal.
+You do NOT need any password. Simply click this 1-click access link to start writing and publishing:
+${magicAccessLink}
 
-Portal URL: ${portalUrl}
-Email: ${to}
-Password: ${password}
+Alternative link:
+${directPortalLink}
 
-Keep this password private. This access can be revoked by the admin at any time.
+Registered Email: ${to}
+Role: Blog Writer & Content Contributor
+Backup Password (only if needed): ${safePassword}
 
-— QNG`;
+— Quantum Nexus Global`;
 
   try {
     await transporter.sendMail({
-      from: `"QNG" <${from}>`,
+      from: `"Quantum Nexus Global" <${from}>`,
       to,
-      subject: "You've been given blog access — QNG",
+      subject: "Your 1-Click Blog Writer Access (No Password Needed) — Quantum Nexus Global",
       html,
       text,
     });
-    console.log(`[Email] Blog writer invite sent to ${to}`);
+    console.log(`[Email] 1-Click passwordless blog writer invite sent to ${to}`);
     return true;
   } catch (err) {
     console.error('[Email] Failed to send blog writer invite email:', err);
@@ -1075,8 +1144,159 @@ Keep this password private. This access can be revoked by the admin at any time.
 }
 
 // ─────────────────────────────────────────────────────────────────
+// 5b. Admin Invite Email → Sent when super-admin grants admin access by email
+// ─────────────────────────────────────────────────────────────────
+export async function sendAdminInviteEmail(to: string, name: string, role: string, magicToken: string) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping admin invite email — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM!;
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(to);
+  const safeRole = escapeHtml(role);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.quantumnexusglobal.org';
+  const magicAccessLink = `${siteUrl}/api/admin/magic-login?token=${encodeURIComponent(magicToken)}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Access Granted — Quantum Nexus Global</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e2e8f0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #0f172a; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #1e293b; border: 1px solid #334155; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.4);">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 28px 36px 20px; border-bottom: 1px solid #334155; background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 100%);">
+              <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 8px;">Quantum Nexus Global</div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="display: inline-block; background-color: #dc2626; color: #ffffff; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 12px; border-radius: 9999px;">
+                  🔐 Admin Access Granted
+                </span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 32px 36px 24px;">
+              <h1 style="font-size: 22px; font-weight: 700; color: #f1f5f9; margin: 0 0 16px; line-height: 1.35;">
+                Hi ${safeName}, you now have Admin Access!
+              </h1>
+              <p style="font-size: 15px; line-height: 1.6; color: #94a3b8; margin: 0 0 24px;">
+                The Quantum Nexus Global super-admin has granted you <strong style="color: #e2e8f0;">${safeRole}</strong> access to the admin dashboard. Your account (<strong style="color: #e2e8f0;">${safeEmail}</strong>) can now manage events, registrations, users, and more.
+              </p>
+
+              <!-- No password box -->
+              <div style="background-color: #1a2744; border: 1px solid #3b4f7a; border-radius: 10px; padding: 18px 20px; margin-bottom: 26px;">
+                <div style="font-size: 14px; font-weight: 700; color: #60a5fa; margin-bottom: 4px;">
+                  ✨ Instant 1-Click Access — No Password Needed
+                </div>
+                <div style="font-size: 13px; color: #93c5fd; line-height: 1.5;">
+                  Click the button below to instantly sign in to the admin dashboard. This link is valid for <strong>30 days</strong>.
+                </div>
+              </div>
+
+              <!-- CTA Button -->
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${escapeHtml(magicAccessLink)}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 32px; border-radius: 10px; box-shadow: 0 4px 14px rgba(220,38,38,0.35);">
+                  🔐 Open Admin Dashboard (1-Click) &rarr;
+                </a>
+              </div>
+
+              <!-- Link fallback -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #0f172a; border: 1px solid #334155; border-radius: 10px; margin-bottom: 22px;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 8px;">
+                      Your 1-Click Login Link
+                    </div>
+                    <div style="font-size: 12px; font-family: monospace; word-break: break-all; color: #60a5fa; padding: 10px 12px; border-radius: 6px; border: 1px solid #1e3a5f; background: #0a1628;">
+                      <a href="${escapeHtml(magicAccessLink)}" style="color: #60a5fa; text-decoration: none;">${escapeHtml(magicAccessLink)}</a>
+                    </div>
+                    <div style="font-size: 11px; color: #475569; margin-top: 8px;">
+                      Keep this link private. It grants full admin access to whoever uses it.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Account details -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; font-size: 13px; color: #64748b; border: 1px solid #334155; border-radius: 8px; overflow: hidden;">
+                <tr style="background-color: #1e293b; border-bottom: 1px solid #334155;">
+                  <td style="padding: 10px 16px; width: 130px; font-weight: 600;">Email</td>
+                  <td style="padding: 10px 16px; font-family: monospace; color: #e2e8f0;">${safeEmail}</td>
+                </tr>
+                <tr style="background-color: #131c2e; border-bottom: 1px solid #334155;">
+                  <td style="padding: 10px 16px; font-weight: 600;">Role</td>
+                  <td style="padding: 10px 16px; color: #e2e8f0; font-weight: 700;">${safeRole}</td>
+                </tr>
+                <tr style="background-color: #1e293b;">
+                  <td style="padding: 10px 16px; font-weight: 600;">Link Validity</td>
+                  <td style="padding: 10px 16px; color: #e2e8f0;">30 days from invite</td>
+                </tr>
+              </table>
+
+              <p style="font-size: 12px; line-height: 1.6; color: #475569; margin: 16px 0 0; border-top: 1px solid #334155; padding-top: 16px;">
+                All admin actions are logged and audited. If you did not expect this access, please reply to this email immediately.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #0f172a; padding: 18px 36px; border-top: 1px solid #334155; text-align: center;">
+              <p style="font-size: 12px; color: #475569; margin: 0;">&copy; 2026 Quantum Nexus Global &bull; quantumnexusglobal.org</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hi ${name}, you have been granted ${role} access to the Quantum Nexus Global Admin Dashboard.
+
+Click this 1-click login link (no password needed, valid 30 days):
+${magicAccessLink}
+
+Email: ${to}
+Role: ${role}
+
+Keep this link private — it grants full admin access.
+
+— Quantum Nexus Global`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Quantum Nexus Global" <${from}>`,
+      to,
+      subject: `You've been granted Admin Access — Quantum Nexus Global`,
+      html,
+      text,
+    });
+    console.log(`[Email] Admin invite email sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error('[Email] Failed to send admin invite email:', err);
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
 // 6. Event Reminder Email → Automated, sent ~24h and ~1h before an event
 // ─────────────────────────────────────────────────────────────────
+
 export async function sendEventReminderEmail(
   to: string,
   name: string,

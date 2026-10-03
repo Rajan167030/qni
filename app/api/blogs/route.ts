@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getMongoDbDatabase } from '@/lib/mongodb';
 import { INITIAL_BLOG_POSTS } from '@/lib/blogs-store';
 import { getBlogSession, hasAdminSession } from '@/lib/blog-auth';
+import { recordWriterActivity, extractClientInfo } from '@/lib/writer-activity';
 
 async function canManageBlogs() {
   return Boolean((await getBlogSession()) || (await hasAdminSession()));
@@ -54,6 +55,14 @@ export async function POST(request: Request) {
     }
     const body = await request.json();
     const db = await getMongoDbDatabase();
+    const session = await getBlogSession();
+    const isAdmin = await hasAdminSession();
+    const { ip, userAgent } = extractClientInfo(request);
+
+    const isEdit = Boolean(body.id);
+    const authorEmail = session?.email || body.author?.email || (isAdmin ? 'admin@quantumnexusglobal.org' : 'contributor@qng');
+    const authorName = session?.name || body.author?.name || (isAdmin ? 'Administrator' : 'QNG Writer');
+    const authorRole = session?.role || body.author?.role || 'Guest Contributor';
 
     const newBlog = {
       id: body.id || `blog-${Date.now()}`,
@@ -63,7 +72,11 @@ export async function POST(request: Request) {
       content: body.content,
       category: body.category || 'Quantum Tech',
       coverImage: body.coverImage || 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80',
-      author: body.author || { name: 'QNG Team Member', role: 'Quantum Researcher' },
+      author: {
+        name: authorName,
+        role: authorRole,
+        email: authorEmail,
+      },
       readTime: body.readTime || '4 min read',
       publishedAt: body.publishedAt || new Date().toISOString(),
       status: body.status || 'Published',
@@ -79,6 +92,25 @@ export async function POST(request: Request) {
         { upsert: true }
       );
     }
+
+    // Record activity for writer activity tracker
+    await recordWriterActivity({
+      writerEmail: authorEmail,
+      writerName: authorName,
+      action: isEdit ? 'BLOG_UPDATE' : 'BLOG_CREATE',
+      actionLabel: `${isEdit ? 'Updated' : 'Created & published'} blog: "${newBlog.title}"`,
+      details: {
+        blogId: newBlog.id,
+        slug: newBlog.slug,
+        title: newBlog.title,
+        category: newBlog.category,
+        status: newBlog.status,
+        readTime: newBlog.readTime,
+        tags: newBlog.tags,
+      },
+      ip,
+      userAgent,
+    });
 
     return NextResponse.json({ success: true, data: newBlog }, { status: 201 });
   } catch (error: any) {
@@ -99,10 +131,30 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, message: 'Missing blog ID' }, { status: 400 });
     }
 
+    const session = await getBlogSession();
+    const isAdmin = await hasAdminSession();
+    const { ip, userAgent } = extractClientInfo(request);
+    const writerEmail = session?.email || (isAdmin ? 'admin@quantumnexusglobal.org' : 'unknown');
+    const writerName = session?.name || (isAdmin ? 'Administrator' : 'Writer');
+
     const db = await getMongoDbDatabase();
+    let blogTitle = id;
     if (db) {
+      const existing = await db.collection('blogs').findOne({ $or: [{ id }, { slug: id }] });
+      if (existing?.title) blogTitle = existing.title;
       await db.collection('blogs').deleteOne({ $or: [{ id }, { slug: id }] });
     }
+
+    // Record activity for writer deletion
+    await recordWriterActivity({
+      writerEmail,
+      writerName,
+      action: 'BLOG_DELETE',
+      actionLabel: `Deleted blog: "${blogTitle}"`,
+      details: { blogId: id, blogTitle },
+      ip,
+      userAgent,
+    });
 
     return NextResponse.json({ success: true, message: 'Blog deleted' });
   } catch (error: any) {

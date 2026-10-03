@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getBlogSession, hasAdminSession } from '@/lib/blog-auth';
+import { recordWriterActivity, extractClientInfo } from '@/lib/writer-activity';
 
 export async function POST(request: Request) {
   try {
-    if (!(await getBlogSession()) && !(await hasAdminSession())) {
+    const session = await getBlogSession();
+    const isAdmin = await hasAdminSession();
+    if (!session && !isAdmin) {
       return NextResponse.json({ success: false, error: 'Writer or admin authentication required.' }, { status: 401 });
     }
+    const { ip, userAgent } = extractClientInfo(request);
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
 
@@ -49,7 +53,18 @@ export async function POST(request: Request) {
         body: cloudinaryFormData,
       });
 
-      const data = await res.json();
+      const finalUrl = data.secure_url || `data:${file.type};base64,${buffer.toString('base64')}`;
+      if (session) {
+        await recordWriterActivity({
+          writerEmail: session.email,
+          writerName: session.name,
+          action: 'IMAGE_UPLOAD',
+          actionLabel: `Uploaded image: "${file.name}"`,
+          details: { fileName: file.name, fileSize: file.size, fileType: file.type, url: data.secure_url || 'Embedded data URL' },
+          ip,
+          userAgent,
+        });
+      }
 
       if (data.secure_url) {
         return NextResponse.json({
@@ -71,6 +86,17 @@ export async function POST(request: Request) {
 
     // Fallback if Cloudinary credentials are not set yet
     const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;
+    if (session) {
+      await recordWriterActivity({
+        writerEmail: session.email,
+        writerName: session.name,
+        action: 'IMAGE_UPLOAD',
+        actionLabel: `Uploaded image: "${file.name}"`,
+        details: { fileName: file.name, fileSize: file.size, fileType: file.type },
+        ip,
+        userAgent,
+      });
+    }
     return NextResponse.json({
       success: true,
       url: base64,

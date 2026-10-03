@@ -25,15 +25,37 @@ export function generateSimplePassword(length = 8): string {
   return out;
 }
 
+export const DEFAULT_WRITERS: BlogWriter[] = [
+  {
+    id: "bw-vishruti-0129",
+    name: "Vishruti",
+    email: "vishruti0129@gmail.com",
+    password: "Vishruti@QNG2026",
+    role: "Blog Writer & Content Contributor",
+    invitedAt: "2026-10-01T00:00:00.000Z",
+    status: "Active",
+  },
+];
+
 function loadWriters(): BlogWriter[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") return DEFAULT_WRITERS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) {
+      persist(DEFAULT_WRITERS);
+      return DEFAULT_WRITERS;
+    }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const list: BlogWriter[] = Array.isArray(parsed) ? parsed : [];
+    // Ensure default writer is present
+    for (const def of DEFAULT_WRITERS) {
+      if (!list.some((w) => w.email.toLowerCase() === def.email.toLowerCase())) {
+        list.unshift(def);
+      }
+    }
+    return list;
   } catch {
-    return [];
+    return DEFAULT_WRITERS;
   }
 }
 

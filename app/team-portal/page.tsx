@@ -84,18 +84,49 @@ export default function TeamPortalPage() {
     }
   };
 
-  // Check login on mount
+  // Check login on mount and handle 1-click magic access links
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const auth = sessionStorage.getItem('qni_team_authenticated');
-      const savedAuthor = sessionStorage.getItem('qni_team_author_name');
-      const savedRole = sessionStorage.getItem('qni_team_author_role');
-      if (auth === 'true') {
-        setIsAuthenticated(true);
-        if (savedAuthor) setAuthorName(savedAuthor);
-        if (savedRole) setAuthorRole(savedRole);
-      }
+    if (typeof window === 'undefined') return;
+
+    // 1. Check if user opened direct 1-click magic token link (?token=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    if (urlToken) {
+      window.location.href = `/api/blog-writers/magic-login?token=${encodeURIComponent(urlToken)}`;
+      return;
     }
+
+    // 2. Verify existing session via server cookie (/api/blog-writers/me)
+    fetch('/api/blog-writers/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.writer) {
+          setIsAuthenticated(true);
+          setAuthorName(data.writer.name);
+          setAuthorRole(data.writer.role);
+          setTeamEmail(data.writer.email);
+          sessionStorage.setItem('qni_team_authenticated', 'true');
+          sessionStorage.setItem('qni_team_author_name', data.writer.name);
+          sessionStorage.setItem('qni_team_author_role', data.writer.role);
+          sessionStorage.setItem('qni_team_author_email', data.writer.email);
+        } else {
+          // Fallback to sessionStorage
+          const auth = sessionStorage.getItem('qni_team_authenticated');
+          const savedAuthor = sessionStorage.getItem('qni_team_author_name');
+          const savedRole = sessionStorage.getItem('qni_team_author_role');
+          const savedEmail = sessionStorage.getItem('qni_team_author_email');
+          if (auth === 'true') {
+            setIsAuthenticated(true);
+            if (savedAuthor) setAuthorName(savedAuthor);
+            if (savedRole) setAuthorRole(savedRole);
+            if (savedEmail) setTeamEmail(savedEmail);
+          }
+        }
+      })
+      .catch(() => {
+        const auth = sessionStorage.getItem('qni_team_authenticated');
+        if (auth === 'true') setIsAuthenticated(true);
+      });
   }, []);
 
   // Load blogs
@@ -128,10 +159,12 @@ export default function TeamPortalPage() {
       if (response.ok && data.success) {
         setAuthorName(data.writer.name);
         setAuthorRole(data.writer.role);
+        setTeamEmail(data.writer.email);
         setIsAuthenticated(true);
         sessionStorage.setItem('qni_team_authenticated', 'true');
         sessionStorage.setItem('qni_team_author_name', data.writer.name);
         sessionStorage.setItem('qni_team_author_role', data.writer.role);
+        sessionStorage.setItem('qni_team_author_email', data.writer.email);
         return;
       }
       setLoginError(data.message || 'Invalid writer email or password.');
@@ -146,6 +179,7 @@ export default function TeamPortalPage() {
     sessionStorage.removeItem('qni_team_authenticated');
     sessionStorage.removeItem('qni_team_author_name');
     sessionStorage.removeItem('qni_team_author_role');
+    sessionStorage.removeItem('qni_team_author_email');
   };
 
   const handleSaveArticle = async (e: React.FormEvent) => {
@@ -328,12 +362,20 @@ export default function TeamPortalPage() {
         {/* Top Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 mb-8 border-b border-foreground/10">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono mb-2">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              Team Writer Portal
+            <div className="flex items-center gap-2 flex-wrap mb-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Team Writer Portal
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-mono">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                Activity Sync & Tracking Active
+              </span>
             </div>
             <h1 className="text-3xl font-display">Welcome, {authorName}</h1>
-            <p className="text-xs text-muted-foreground">{authorRole} • Quantum Nexus Global</p>
+            <p className="text-xs text-muted-foreground">
+              {authorRole} • <span className="font-mono text-foreground/80">{teamEmail || 'vishruti0129@gmail.com'}</span> • Quantum Nexus Global
+            </p>
           </div>
 
           <div className="flex items-center gap-3">

@@ -35,6 +35,12 @@ import {
   UserPlus,
   ShieldOff,
   Share2,
+  Activity,
+  Check,
+  ExternalLink,
+  Filter,
+  Clock,
+  ShieldAlert,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -79,7 +85,7 @@ export default function AdminDashboardPage() {
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'joins' | 'registrations' | 'research' | 'blogs' | 'newsletter'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'joins' | 'registrations' | 'research' | 'blogs' | 'newsletter' | 'writer-activity' | 'admin-access'>('overview');
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
   const [joins, setJoins] = useState<JoinSubmission[]>([]);
   const [registrations, setRegistrations] = useState<EventRegistration[]>([]);
@@ -105,6 +111,67 @@ export default function AdminDashboardPage() {
   const [writerForm, setWriterForm] = useState({ name: '', email: '', role: 'Guest Contributor' });
   const [writerInviting, setWriterInviting] = useState(false);
   const [writerInviteResult, setWriterInviteResult] = useState<{ message: string; password?: string } | null>(null);
+
+  // Admin access control state — super admin grants admin access by email
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [adminUsersLoading, setAdminUsersLoading] = useState(false);
+  const [showAdminInvite, setShowAdminInvite] = useState(false);
+  const [adminForm, setAdminForm] = useState({ name: '', email: '', role: 'Co-Admin' });
+  const [adminInviting, setAdminInviting] = useState(false);
+  const [adminInviteResult, setAdminInviteResult] = useState<{ message: string; success: boolean } | null>(null);
+
+  // Dedicated Writer Activity Tracker State (vishruti0129@gmail.com and all writers)
+  const [writerActivities, setWriterActivities] = useState<any[]>([]);
+  const [writerActivitiesLoading, setWriterActivitiesLoading] = useState(false);
+  const [targetWriterInfo, setTargetWriterInfo] = useState<any>(null);
+  const [activityFilterWriter, setActivityFilterWriter] = useState<string>('all');
+  const [activityFilterAction, setActivityFilterAction] = useState<string>('ALL');
+  const [activitySearchQuery, setActivitySearchQuery] = useState('');
+  const [inviteSending, setInviteSending] = useState(false);
+  const [inviteToast, setInviteToast] = useState<{ message: string; success: boolean } | null>(null);
+  const [copiedPass, setCopiedPass] = useState(false);
+
+  const loadWriterActivities = async () => {
+    setWriterActivitiesLoading(true);
+    try {
+      const res = await fetch('/api/admin/writer-activities');
+      const data = await res.json();
+      if (data.success) {
+        setWriterActivities(data.activities || []);
+        if (data.targetWriter) {
+          setTargetWriterInfo(data.targetWriter);
+        }
+      }
+    } catch (err) {
+      console.warn('Error loading writer activities:', err);
+    } finally {
+      setWriterActivitiesLoading(false);
+    }
+  };
+
+  const handleResendWriterInvite = async (email = 'vishruti0129@gmail.com') => {
+    setInviteSending(true);
+    setInviteToast(null);
+    try {
+      const res = await fetch('/api/admin/writer-activities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'send_invite', email }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setInviteToast({ message: data.message, success: true });
+        await loadWriterActivities();
+        await loadBlogWriters();
+      } else {
+        setInviteToast({ message: data.message || 'Failed to send invite email.', success: false });
+      }
+    } catch {
+      setInviteToast({ message: 'Error connecting to the server.', success: false });
+    } finally {
+      setInviteSending(false);
+    }
+  };
 
   const loadBlogWriters = async () => {
     setBlogWriters(getBlogWriters());
@@ -164,6 +231,73 @@ export default function AdminDashboardPage() {
     deleteBlogWriter(writer.id);
     await fetch(`/api/blog-writers?email=${encodeURIComponent(writer.email)}`, { method: 'DELETE' }).catch(() => {});
     loadBlogWriters();
+  };
+
+  // ── Admin Access Control ──────────────────────────────────────────
+  const loadAdminUsers = async () => {
+    setAdminUsersLoading(true);
+    try {
+      const res = await fetch('/api/admin-users');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setAdminUsers(data.data.filter((u: any) => u.status !== 'Revoked'));
+      }
+    } catch {
+      // API unavailable
+    } finally {
+      setAdminUsersLoading(false);
+    }
+  };
+
+  const handleInviteAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminInviting(true);
+    setAdminInviteResult(null);
+    try {
+      const res = await fetch('/api/admin-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(adminForm),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAdminInviteResult({
+          success: true,
+          message: data.emailSent
+            ? `✅ Admin invite sent to ${adminForm.email}. They can click the 1-click link in the email to access the dashboard.`
+            : `✅ Admin user added. Email could not be sent (SMTP not configured) — share this login link manually: /api/admin/magic-login?token=${data.magicToken}`,
+        });
+        setAdminForm({ name: '', email: '', role: 'Co-Admin' });
+        setShowAdminInvite(false);
+        await loadAdminUsers();
+      } else {
+        setAdminInviteResult({ success: false, message: data.message || 'Failed to send invite.' });
+      }
+    } catch {
+      setAdminInviteResult({ success: false, message: 'Error connecting to the server.' });
+    } finally {
+      setAdminInviting(false);
+    }
+  };
+
+  const handleRevokeAdmin = async (user: any) => {
+    if (!confirm(`Revoke admin access for ${user.name} (${user.email})?`)) return;
+    await fetch(`/api/admin-users?email=${encodeURIComponent(user.email)}`, { method: 'DELETE' }).catch(() => {});
+    await loadAdminUsers();
+  };
+
+  const handleResendAdminInvite = async (email: string) => {
+    try {
+      const res = await fetch('/api/admin-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resend_invite', email }),
+      });
+      const data = await res.json();
+      setAdminInviteResult({ success: data.success, message: data.message || (data.success ? 'Invite resent!' : 'Failed to resend.') });
+    } catch {
+      setAdminInviteResult({ success: false, message: 'Error connecting to server.' });
+    }
   };
 
   const handleBlogFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -436,6 +570,7 @@ export default function AdminDashboardPage() {
     if (isAuthenticated) {
       refreshData();
       loadBlogWriters();
+      loadWriterActivities();
     }
   }, [isAuthenticated]);
 
@@ -876,7 +1011,30 @@ export default function AdminDashboardPage() {
             </button>
 
             <button
-              onClick={() => setActiveTab('newsletter')}
+              onClick={() => {
+                setActiveTab('writer-activity');
+                loadWriterActivities();
+              }}
+              className={`w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === 'writer-activity'
+                  ? 'bg-foreground text-background shadow-md'
+                  : 'text-foreground/70 hover:bg-foreground/10 hover:text-foreground'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Activity className="w-4 h-4 text-violet-400" />
+                <span>Writer Activity</span>
+              </div>
+              <span className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-400 font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                Live
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('newsletter');
+              }}
               className={`w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === 'newsletter'
                   ? 'bg-foreground text-background shadow-md'
@@ -889,6 +1047,27 @@ export default function AdminDashboardPage() {
               </div>
               <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">
                 {newsletterSubs.length}
+              </span>
+            </button>
+
+            {/* Admin Access Control */}
+            <button
+              onClick={() => {
+                setActiveTab('admin-access');
+                loadAdminUsers();
+              }}
+              className={`w-full flex items-center justify-between p-3.5 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === 'admin-access'
+                  ? 'bg-foreground text-background shadow-md'
+                  : 'text-foreground/70 hover:bg-foreground/10 hover:text-foreground'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="w-4 h-4 text-rose-400" />
+                <span>Admin Access</span>
+              </div>
+              <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-bold">
+                {adminUsers.length}
               </span>
             </button>
 
@@ -1065,6 +1244,43 @@ export default function AdminDashboardPage() {
                   <p className="text-[10px] text-purple-400 font-mono">
                     {blogs.filter((b) => b.status === 'Published').length} Published
                   </p>
+                </div>
+              </div>
+
+              {/* Writer Activity Quick Tracker Banner */}
+              <div className="p-4 sm:p-5 rounded-3xl border border-violet-500/30 bg-violet-500/[0.04] backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-violet-500/20 text-violet-400 flex items-center justify-center font-bold">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-bold text-foreground">
+                        Writer Activity Tracking Active: <span className="text-violet-400">vishruti0129@gmail.com</span>
+                      </p>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Active Writer
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                      {writerActivities.filter((a) => a.writerEmail === 'vishruti0129@gmail.com').length} tracked events • Logins, draft edits, published blogs and image uploads are synced in real-time.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setActivityFilterWriter('vishruti0129@gmail.com');
+                      setActiveTab('writer-activity');
+                      loadWriterActivities();
+                    }}
+                    className="rounded-xl h-8 px-3 gap-1.5 text-xs text-violet-400 border-violet-500/30 hover:bg-violet-500/10"
+                  >
+                    View Activity Stream →
+                  </Button>
                 </div>
               </div>
 
@@ -1709,22 +1925,57 @@ export default function AdminDashboardPage() {
 
                 {blogWriters.length > 0 && (
                   <div className="space-y-2 pt-1">
-                    {blogWriters.map((w) => (
-                      <div key={w.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-foreground/10 bg-background">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-foreground truncate">{w.name} <span className="text-xs font-normal text-muted-foreground">({w.role})</span></p>
-                          <p className="text-xs text-muted-foreground font-mono truncate">{w.email}</p>
+                    {blogWriters.map((w) => {
+                      const isVishruti = w.email.toLowerCase() === 'vishruti0129@gmail.com';
+                      return (
+                        <div key={w.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border ${isVishruti ? 'border-violet-500/30 bg-violet-500/[0.04]' : 'border-foreground/10 bg-background'}`}>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-sm font-semibold text-foreground truncate">{w.name}</p>
+                              <span className="text-xs text-muted-foreground font-mono">({w.role})</span>
+                              {isVishruti && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-violet-500/20 text-violet-400 border border-violet-500/30">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                                  Target Writer • Live Monitored
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground font-mono truncate">{w.email}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setActivityFilterWriter(w.email);
+                                setActiveTab('writer-activity');
+                                loadWriterActivities();
+                              }}
+                              className="rounded-xl h-8 px-3 gap-1.5 text-xs text-violet-400 border-violet-500/30 hover:bg-violet-500/10"
+                            >
+                              <Activity className="w-3.5 h-3.5" /> Track Activity
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={inviteSending}
+                              onClick={() => handleResendWriterInvite(w.email)}
+                              className="rounded-xl h-8 px-3 gap-1.5 text-xs text-foreground/80 hover:bg-foreground/5"
+                            >
+                              <Send className="w-3.5 h-3.5" /> Resend Invite
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleRevokeWriter(w)}
+                              className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-xl h-8 px-3 gap-1 text-xs shrink-0"
+                            >
+                              <ShieldOff className="w-3.5 h-3.5" /> Revoke
+                            </Button>
+                          </div>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleRevokeWriter(w)}
-                          className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full h-8 px-3 gap-1 text-xs shrink-0"
-                        >
-                          <ShieldOff className="w-3.5 h-3.5" /> Revoke
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1953,6 +2204,596 @@ export default function AdminDashboardPage() {
                       )}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 8: WRITER ACTIVITY TRACKER */}
+          {activeTab === 'writer-activity' && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-foreground/10">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-display text-2xl font-bold text-foreground">Writer Activity & Audit Trail</h3>
+                    <span className="px-2.5 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20 text-xs font-mono font-bold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                      Live Monitoring
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-mono mt-1">
+                    Continuous monitoring of writer logins, draft creation, publishing, editing, and media uploads.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={loadWriterActivities}
+                    disabled={writerActivitiesLoading}
+                    variant="outline"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 hover:bg-foreground/5 transition-all h-9"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${writerActivitiesLoading ? 'animate-spin' : ''}`} />
+                    Refresh Logs
+                  </Button>
+                  <Link
+                    href="/team-portal"
+                    target="_blank"
+                    className="px-4 py-2 rounded-xl bg-foreground text-background text-xs font-semibold inline-flex items-center gap-1.5 hover:bg-foreground/90 transition-all h-9"
+                  >
+                    Team Portal <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Toast Feedback */}
+              {inviteToast && (
+                <div className={`p-4 rounded-2xl border text-xs flex items-center justify-between gap-3 ${inviteToast.success ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'}`}>
+                  <div className="flex items-center gap-2">
+                    {inviteToast.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <ShieldAlert className="w-4 h-4 shrink-0" />}
+                    <span>{inviteToast.message}</span>
+                  </div>
+                  <button onClick={() => setInviteToast(null)} className="p-1 hover:opacity-70">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* TARGET WRITER SPOTLIGHT: vishruti0129@gmail.com */}
+              <div className="border border-violet-500/30 bg-gradient-to-br from-violet-500/10 via-purple-500/[0.04] to-background rounded-3xl p-6 lg:p-8 shadow-xl space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-500/30 text-violet-400 flex items-center justify-center font-bold text-lg shrink-0">
+                      V
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-xl font-display font-bold text-foreground">Vishruti</h4>
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          Access Granted & Active
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-[11px] font-mono">
+                          Target Tracked Contributor
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground font-mono mt-1">
+                        vishruti0129@gmail.com • Role: Blog Writer & Content Contributor
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      size="sm"
+                      disabled={inviteSending}
+                      onClick={() => handleResendWriterInvite('vishruti0129@gmail.com')}
+                      className="rounded-xl h-9 px-4 gap-2 text-xs bg-violet-600 hover:bg-violet-700 text-white font-semibold shadow-md transition-all"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      {inviteSending ? 'Sending Credentials...' : 'Send / Resend Access Email'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setActivityFilterWriter(activityFilterWriter === 'vishruti0129@gmail.com' ? 'all' : 'vishruti0129@gmail.com');
+                      }}
+                      className={`rounded-xl h-9 px-3 gap-1.5 text-xs transition-all ${
+                        activityFilterWriter === 'vishruti0129@gmail.com'
+                          ? 'bg-violet-500 text-white border-violet-500'
+                          : 'border-violet-500/30 text-violet-400 hover:bg-violet-500/10'
+                      }`}
+                    >
+                      <Filter className="w-3.5 h-3.5" />
+                      {activityFilterWriter === 'vishruti0129@gmail.com' ? 'Showing Vishruti Only' : 'Filter Her Logs'}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Credentials & Access Info Box */}
+                <div className="grid sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-foreground/[0.03] border border-foreground/10 text-xs font-mono">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Writer Portal URL</span>
+                    <div className="flex items-center gap-2 text-foreground font-bold">
+                      <span className="truncate">/team-portal</span>
+                      <button
+                        onClick={() => {
+                          const url = `${window.location.origin}/team-portal`;
+                          navigator.clipboard.writeText(url);
+                          alert('Copied Portal URL to clipboard!');
+                        }}
+                        className="p-1 hover:text-foreground text-muted-foreground"
+                        title="Copy Portal Link"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Authorized Email</span>
+                    <div className="flex items-center gap-2 text-foreground font-bold">
+                      <span className="truncate">vishruti0129@gmail.com</span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText('vishruti0129@gmail.com');
+                          alert('Copied email to clipboard!');
+                        }}
+                        className="p-1 hover:text-foreground text-muted-foreground"
+                        title="Copy Email"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Login Password</span>
+                    <div className="flex items-center gap-2 text-foreground font-bold">
+                      <code className="px-2 py-0.5 rounded bg-foreground/10 font-mono text-emerald-400 font-bold">
+                        Vishruti@QNG2026
+                      </code>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText('Vishruti@QNG2026');
+                          setCopiedPass(true);
+                          setTimeout(() => setCopiedPass(false), 2000);
+                        }}
+                        className="p-1 hover:text-emerald-400 text-muted-foreground"
+                        title="Copy Password"
+                      >
+                        {copiedPass ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Micro Stat Cards for Vishruti */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-3.5 rounded-xl border border-foreground/10 bg-background/50 space-y-1">
+                    <span className="text-[10px] font-mono uppercase text-muted-foreground block">Tracked Events</span>
+                    <p className="text-xl font-bold font-display text-foreground">
+                      {writerActivities.filter((a) => a.writerEmail === 'vishruti0129@gmail.com').length}
+                    </p>
+                    <span className="text-[10px] text-violet-400 font-mono">Continuous sync</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl border border-foreground/10 bg-background/50 space-y-1">
+                    <span className="text-[10px] font-mono uppercase text-muted-foreground block">Blogs Published</span>
+                    <p className="text-xl font-bold font-display text-foreground">
+                      {writerActivities.filter((a) => a.writerEmail === 'vishruti0129@gmail.com' && a.action === 'BLOG_CREATE').length}
+                    </p>
+                    <span className="text-[10px] text-emerald-400 font-mono">Live on /blog</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl border border-foreground/10 bg-background/50 space-y-1">
+                    <span className="text-[10px] font-mono uppercase text-muted-foreground block">Portal Logins</span>
+                    <p className="text-xl font-bold font-display text-foreground">
+                      {writerActivities.filter((a) => a.writerEmail === 'vishruti0129@gmail.com' && a.action === 'LOGIN').length}
+                    </p>
+                    <span className="text-[10px] text-sky-400 font-mono">Sessions logged</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl border border-foreground/10 bg-background/50 space-y-1">
+                    <span className="text-[10px] font-mono uppercase text-muted-foreground block">Last Active</span>
+                    <p className="text-xs font-bold font-mono text-foreground truncate">
+                      {(() => {
+                        const lastAct = writerActivities.find((a) => a.writerEmail === 'vishruti0129@gmail.com');
+                        return lastAct ? new Date(lastAct.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : 'Ready for login';
+                      })()}
+                    </p>
+                    <span className="text-[10px] text-amber-400 font-mono">Status: Ready</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* FILTERS & SEARCH */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl border border-foreground/15 bg-background shadow-md">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-mono text-muted-foreground mr-1">Filter Writer:</span>
+                  <button
+                    onClick={() => setActivityFilterWriter('all')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                      activityFilterWriter === 'all'
+                        ? 'bg-foreground text-background shadow-sm'
+                        : 'bg-foreground/5 hover:bg-foreground/10 text-foreground'
+                    }`}
+                  >
+                    All Writers
+                  </button>
+                  <button
+                    onClick={() => setActivityFilterWriter('vishruti0129@gmail.com')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1.5 ${
+                      activityFilterWriter === 'vishruti0129@gmail.com'
+                        ? 'bg-violet-600 text-white shadow-sm'
+                        : 'bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/20'
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                    Vishruti
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-xs font-mono">
+                    <span className="text-muted-foreground">Action:</span>
+                    <select
+                      value={activityFilterAction}
+                      onChange={(e) => setActivityFilterAction(e.target.value)}
+                      className="px-3 py-1.5 rounded-xl bg-foreground/5 border border-foreground/10 text-xs font-mono text-foreground focus:outline-none"
+                    >
+                      <option value="ALL">All Actions</option>
+                      <option value="LOGIN">Logins</option>
+                      <option value="BLOG_CREATE">Blog Created</option>
+                      <option value="BLOG_UPDATE">Blog Updated</option>
+                      <option value="BLOG_DELETE">Blog Deleted</option>
+                      <option value="IMAGE_UPLOAD">Media Uploads</option>
+                      <option value="ACCESS_GRANTED">Access Granted</option>
+                      <option value="LOGOUT">Logouts</option>
+                    </select>
+                  </div>
+
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="Search activity..."
+                      value={activitySearchQuery}
+                      onChange={(e) => setActivitySearchQuery(e.target.value)}
+                      className="pl-8 pr-3 py-1.5 rounded-xl bg-foreground/5 border border-foreground/10 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground/30 w-44"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* ACTIVITY STREAM TABLE */}
+              <div className="rounded-3xl border border-foreground/15 bg-background overflow-hidden shadow-xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-foreground/5 text-xs font-mono uppercase tracking-wider text-muted-foreground border-b border-foreground/10">
+                      <tr>
+                        <th className="p-4">Timestamp</th>
+                        <th className="p-4">Action</th>
+                        <th className="p-4">Writer</th>
+                        <th className="p-4">Activity Description</th>
+                        <th className="p-4">Client / IP Details</th>
+                        <th className="p-4 text-right">Reference</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-foreground/10">
+                      {(() => {
+                        const filtered = writerActivities.filter((act) => {
+                          const matchesWriter =
+                            activityFilterWriter === 'all' ||
+                            act.writerEmail.toLowerCase() === activityFilterWriter.toLowerCase();
+                          const matchesAction =
+                            activityFilterAction === 'ALL' || act.action === activityFilterAction;
+                          const matchesSearch =
+                            !activitySearchQuery ||
+                            act.actionLabel.toLowerCase().includes(activitySearchQuery.toLowerCase()) ||
+                            act.writerEmail.toLowerCase().includes(activitySearchQuery.toLowerCase()) ||
+                            (act.details?.title && act.details.title.toLowerCase().includes(activitySearchQuery.toLowerCase()));
+                          return matchesWriter && matchesAction && matchesSearch;
+                        });
+
+                        if (filtered.length === 0) {
+                          return (
+                            <tr>
+                              <td colSpan={6} className="p-12 text-center text-xs font-mono text-muted-foreground space-y-2">
+                                <Activity className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                                <p className="font-semibold text-foreground">No activity records found.</p>
+                                <p>
+                                  When writers log in, draft, edit, or publish articles through the Team Writer Portal (<code className="px-1.5 py-0.5 rounded bg-foreground/10">/team-portal</code>), all actions stream here automatically.
+                                </p>
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return filtered.map((act) => {
+                          const isVishruti = act.writerEmail.toLowerCase() === 'vishruti0129@gmail.com';
+                          
+                          // Action badge color
+                          let badgeBg = 'bg-foreground/10 text-foreground border-foreground/20';
+                          if (act.action === 'LOGIN') badgeBg = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                          if (act.action === 'BLOG_CREATE') badgeBg = 'bg-violet-500/15 text-violet-400 border-violet-500/30';
+                          if (act.action === 'BLOG_UPDATE') badgeBg = 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+                          if (act.action === 'BLOG_DELETE') badgeBg = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+                          if (act.action === 'IMAGE_UPLOAD') badgeBg = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                          if (act.action === 'ACCESS_GRANTED') badgeBg = 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
+                          if (act.action === 'LOGOUT') badgeBg = 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20';
+
+                          return (
+                            <tr key={act.id} className={`hover:bg-foreground/[0.02] transition-colors ${isVishruti ? 'bg-violet-500/[0.02]' : ''}`}>
+                              <td className="p-4 font-mono text-xs text-muted-foreground whitespace-nowrap">
+                                <div className="flex flex-col">
+                                  <span className="text-foreground font-semibold">
+                                    {new Date(act.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {new Date(act.timestamp).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                  </span>
+                                </div>
+                              </td>
+
+                              <td className="p-4">
+                                <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold border inline-block ${badgeBg}`}>
+                                  {act.action}
+                                </span>
+                              </td>
+
+                              <td className="p-4">
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${isVishruti ? 'bg-violet-500/20 text-violet-400' : 'bg-foreground/10 text-foreground'}`}>
+                                    {act.writerName ? act.writerName[0]?.toUpperCase() : 'W'}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-semibold text-foreground truncate">
+                                      {act.writerName}
+                                      {isVishruti && (
+                                        <span className="ml-1.5 px-1.5 py-0.2 rounded text-[9px] font-mono bg-violet-500/20 text-violet-300">
+                                          Tracked
+                                        </span>
+                                      )}
+                                    </p>
+                                    <p className="text-[11px] text-muted-foreground font-mono truncate">{act.writerEmail}</p>
+                                  </div>
+                                </div>
+                              </td>
+
+                              <td className="p-4">
+                                <div className="space-y-1 max-w-md">
+                                  <p className="text-xs font-medium text-foreground">{act.actionLabel}</p>
+                                  {act.details?.category && (
+                                    <span className="inline-block px-2 py-0.5 rounded bg-foreground/5 text-[10px] font-mono text-muted-foreground">
+                                      Category: {act.details.category}
+                                    </span>
+                                  )}
+                                  {act.details?.status && (
+                                    <span className="inline-block ml-1 px-2 py-0.5 rounded bg-emerald-500/10 text-[10px] font-mono text-emerald-400">
+                                      {act.details.status}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+
+                              <td className="p-4 text-xs font-mono text-muted-foreground whitespace-nowrap">
+                                <div>
+                                  <p className="text-foreground/80">{act.ip || 'Local / Cloud'}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate max-w-[140px]" title={act.userAgent}>
+                                    {act.userAgent ? (act.userAgent.includes('Chrome') ? 'Chrome Browser' : act.userAgent.includes('Firefox') ? 'Firefox' : 'Browser Session') : 'Standard Web'}
+                                  </p>
+                                </div>
+                              </td>
+
+                              <td className="p-4 text-right">
+                                {act.details?.slug ? (
+                                  <Link
+                                    href={`/blog/${act.details.slug}`}
+                                    target="_blank"
+                                    className="p-1.5 rounded-lg hover:bg-foreground/10 text-xs text-violet-400 inline-flex items-center gap-1 font-mono"
+                                    title="View Live Blog"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" /> View
+                                  </Link>
+                                ) : (
+                                  <span className="text-[11px] font-mono text-muted-foreground">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* TAB: ADMIN ACCESS CONTROL */}
+          {activeTab === 'admin-access' && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-display font-bold text-foreground flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-rose-500" />
+                    Admin Access Control
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Grant or revoke admin dashboard access by email. Invited users get a 1-click magic link — no password needed.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => { setShowAdminInvite(!showAdminInvite); setAdminInviteResult(null); }}
+                  className="rounded-full gap-2 bg-rose-600 hover:bg-rose-700 text-white text-sm"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Grant Admin Access
+                </Button>
+              </div>
+
+              {/* Result Toast */}
+              {adminInviteResult && (
+                <div className={`flex items-start gap-3 p-4 rounded-2xl border text-sm ${
+                  adminInviteResult.success
+                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                    : 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400'
+                }`}>
+                  <span className="text-base">{adminInviteResult.success ? '✅' : '❌'}</span>
+                  <span className="break-all">{adminInviteResult.message}</span>
+                  <button onClick={() => setAdminInviteResult(null)} className="ml-auto shrink-0">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Invite Form */}
+              {showAdminInvite && (
+                <div className="p-6 rounded-2xl border border-rose-500/30 bg-rose-500/5 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <ShieldAlert className="w-4 h-4 text-rose-500" />
+                    <h3 className="font-semibold text-foreground text-sm">Invite New Admin</h3>
+                  </div>
+                  <form onSubmit={handleInviteAdmin} className="grid sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted-foreground mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={adminForm.name}
+                        onChange={(e) => setAdminForm(f => ({ ...f, name: e.target.value }))}
+                        placeholder="Rahul Sharma"
+                        className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:border-rose-500/60"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted-foreground mb-1">Email Address</label>
+                      <input
+                        type="email"
+                        required
+                        value={adminForm.email}
+                        onChange={(e) => setAdminForm(f => ({ ...f, email: e.target.value }))}
+                        placeholder="rahul@example.com"
+                        className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:border-rose-500/60"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted-foreground mb-1">Role</label>
+                      <select
+                        value={adminForm.role}
+                        onChange={(e) => setAdminForm(f => ({ ...f, role: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:border-rose-500/60"
+                      >
+                        <option>Co-Admin</option>
+                        <option>Event Manager</option>
+                        <option>Content Manager</option>
+                        <option>Operations Lead</option>
+                        <option>Finance Lead</option>
+                        <option>Community Manager</option>
+                      </select>
+                    </div>
+                    <div className="sm:col-span-3 flex gap-3 pt-1">
+                      <Button
+                        type="submit"
+                        disabled={adminInviting}
+                        className="rounded-full gap-2 bg-rose-600 hover:bg-rose-700 text-white"
+                      >
+                        {adminInviting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        {adminInviting ? 'Sending Invite...' : 'Send 1-Click Admin Invite'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setShowAdminInvite(false)}
+                        className="rounded-full text-muted-foreground"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Lock className="w-3 h-3" />
+                    A magic 1-click login link (valid 30 days) will be emailed. No password required.
+                  </p>
+                </div>
+              )}
+
+              {/* Active Admins List */}
+              <div className="rounded-2xl border border-border overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-foreground/5">
+                  <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-rose-500" />
+                    Active Admin Users
+                    <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-500">{adminUsers.length}</span>
+                  </h3>
+                  <Button variant="ghost" size="sm" onClick={loadAdminUsers} disabled={adminUsersLoading} className="rounded-full gap-1.5 text-xs">
+                    <RefreshCw className={`w-3.5 h-3.5 ${adminUsersLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+
+                {adminUsersLoading ? (
+                  <div className="flex items-center justify-center py-12 text-muted-foreground">
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading admin users...
+                  </div>
+                ) : adminUsers.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <ShieldCheck className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm">No additional admins yet.</p>
+                    <p className="text-xs mt-1">Use the button above to grant someone admin access.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {adminUsers.map((user) => (
+                      <div key={user.id || user.email} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 hover:bg-foreground/5 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-rose-500/15 text-rose-500 flex items-center justify-center font-bold text-sm flex-shrink-0">
+                            {(user.name || 'A')[0].toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-sm text-foreground">{user.name}</div>
+                            <div className="text-xs text-muted-foreground font-mono">{user.email}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                            {user.role || 'Co-Admin'}
+                          </span>
+                          <span className="text-xs text-muted-foreground font-mono">
+                            {user.invitedAt ? new Date(user.invitedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recently'}
+                          </span>
+                          <div className="flex items-center gap-2 ml-auto sm:ml-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleResendAdminInvite(user.email)}
+                              className="rounded-full gap-1.5 text-xs h-7"
+                            >
+                              <Send className="w-3 h-3" />
+                              Resend
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRevokeAdmin(user)}
+                              className="rounded-full gap-1.5 text-xs h-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
+                            >
+                              <ShieldOff className="w-3 h-3" />
+                              Revoke
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Info Box */}
+              <div className="p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold">Security Note</p>
+                  <p>Invited admins receive a 1-click magic login link valid for 30 days. They get full admin dashboard access. Revoke access anytime — revoked users cannot log in even with an old link.</p>
                 </div>
               </div>
             </div>

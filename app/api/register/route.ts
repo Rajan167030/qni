@@ -56,13 +56,31 @@ export async function POST(request: Request) {
       const formattedDate = regRecord.eventDate
         ? new Date(regRecord.eventDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
         : undefined;
+
+      // Fetch the event's Zoom/meeting link to include in the confirmation email
+      let eventMeetingLink: string | undefined;
+      if (regRecord.eventId) {
+        try {
+          const db = await getMongoDbDatabase();
+          if (db) {
+            const eventDoc = await db.collection('events').findOne({ id: regRecord.eventId });
+            if (eventDoc?.meetingLink) {
+              eventMeetingLink = eventDoc.meetingLink;
+            }
+          }
+        } catch (linkErr) {
+          console.warn('[Register] Could not fetch event meeting link:', linkErr);
+        }
+      }
+
       await sendEventRegistrationEmail(
         regRecord.email,
         regRecord.name,
         regRecord.eventTitle || 'Quantum Event',
         { date: formattedDate, time: regRecord.time, location: regRecord.location },
         regRecord.token || regRecord.id,
-        regRecord.eventId
+        regRecord.eventId,
+        eventMeetingLink
       ).catch((err) => {
         console.warn('[Email] Registration confirmation error:', err);
       });

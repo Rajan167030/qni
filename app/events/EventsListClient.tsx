@@ -140,8 +140,28 @@ export default function EventsListClient({ initialEvents }: { initialEvents: Eve
   };
 
   const filteredEvents = useMemo(() => {
-    if (filter === 'all') return allEvents;
-    return allEvents.filter(ev => resolveEventStatus(ev) === filter);
+    const base = filter === 'all' ? allEvents : allEvents.filter(ev => resolveEventStatus(ev) === filter);
+
+    // Always show upcoming events before past events.
+    // Within upcoming: soonest first. Within past: most recent first.
+    return [...base].sort((a, b) => {
+      const aStatus = resolveEventStatus(a);
+      const bStatus = resolveEventStatus(b);
+
+      // upcoming (0) before past (1)
+      if (aStatus !== bStatus) {
+        return aStatus === 'upcoming' ? -1 : 1;
+      }
+
+      const aTime = a.eventDate ? new Date(a.eventDate).getTime() : 0;
+      const bTime = b.eventDate ? new Date(b.eventDate).getTime() : 0;
+
+      if (aStatus === 'upcoming') {
+        return aTime - bTime; // soonest first
+      } else {
+        return bTime - aTime; // most recent past first
+      }
+    });
   }, [allEvents, filter]);
 
   return (
