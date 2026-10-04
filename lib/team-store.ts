@@ -12,7 +12,7 @@ export interface TeamMember {
   createdAt: string;
 }
 
-const STORAGE_KEY = 'qni_team_v1';
+const STORAGE_KEY = 'qni_team_v3';
 
 const DEFAULT_TEAM: TeamMember[] = [
   {
@@ -26,22 +26,12 @@ const DEFAULT_TEAM: TeamMember[] = [
     order: 1,
     createdAt: new Date().toISOString(),
   },
-  {
-    id: 'saurabh',
-    name: 'Saurabh',
-    role: '',
-    bio: 'Quantum algorithm researcher specializing in variational eigensolvers, circuit compilation, and pulse control.',
-    imageUrl: '/team/Saurabh.jpg',
-    linkedin: 'https://in.linkedin.com/in/saurabh-sharma-59910b18b',
-    twitter: 'https://twitter.com/saurabh_quantum',
-    order: 2,
-    createdAt: new Date().toISOString(),
-  },
+
   {
     id: 'rajan-jha',
     name: 'Rajan Jha',
-    role: '',
-    bio: 'Systems architect specializing in hybrid quantum-classical algorithms and pulse-level Qiskit optimization.',
+    role: 'Managing Director & Founding Member',
+    bio: 'Systems architect specializing in hybrid quantum-classical algorithms and pulse-level Qiskit optimization. A founding member and Managing Director of QNexus India, driving strategic vision and quantum community growth across the nation.',
     imageUrl: '/team/Rajan Jha.jpg',
     linkedin: 'https://in.linkedin.com/in/rajan-jha-4a921828a',
     twitter: 'https://twitter.com/rajanjha',

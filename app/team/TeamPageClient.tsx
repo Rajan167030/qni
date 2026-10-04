@@ -50,31 +50,53 @@ export default function TeamPageClient() {
 
   useEffect(() => {
     setIsVisible(true);
-    const localMembers = getTeamMembers();
+
+    // IDs of members that have been intentionally removed — block them
+    // from re-appearing via the backend even if they exist in MongoDB.
+    const REMOVED_IDS = new Set(["saurabh"]);
+
+    const localMembers = getTeamMembers().filter(
+      (m) => !REMOVED_IDS.has(m.id)
+    );
     setTeamMembers(localMembers);
 
-    // Merge in any admin-edited members synced to MongoDB so changes made
-    // through the admin dashboard are visible to every visitor.
+    // Merge backend (MongoDB) data with local DEFAULT_TEAM:
+    // - Local members always show as base (raw data)
+    // - Backend members with matching ID update/override the local entry
+    // - Backend-only members (added via admin) are appended
+    // - Removed members are always filtered out regardless of backend state
     fetch("/api/team")
       .then((res) => res.json())
       .then((data) => {
         if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-          const remote: TeamMember[] = data.data.map((m: any) => ({
-            id: m.id || (m._id ? String(m._id) : Date.now().toString()),
-            name: m.name || "",
-            role: m.role || "",
-            bio: m.bio || "",
-            imageUrl: m.imageUrl || "",
-            linkedin: m.linkedin || "",
-            twitter: m.twitter || "",
-            order: typeof m.order === "number" ? m.order : 99,
-            createdAt: m.createdAt || new Date().toISOString(),
-          }));
+          const remote: TeamMember[] = data.data
+            .filter((m: any) => {
+              const id = m.id || (m._id ? String(m._id) : "");
+              return !REMOVED_IDS.has(id);
+            })
+            .map((m: any) => ({
+              id: m.id || (m._id ? String(m._id) : Date.now().toString()),
+              name: m.name || "",
+              role: m.role || "",
+              bio: m.bio || "",
+              imageUrl: m.imageUrl || "",
+              linkedin: m.linkedin || "",
+              twitter: m.twitter || "",
+              order: typeof m.order === "number" ? m.order : 99,
+              createdAt: m.createdAt || new Date().toISOString(),
+            }));
+
+          // Start from local (DEFAULT_TEAM) as base — backend updates or appends
           const merged = [...localMembers];
           remote.forEach((member) => {
             const index = merged.findIndex((existing) => existing.id === member.id);
-            if (index >= 0) merged[index] = member;
-            else merged.push(member);
+            if (index >= 0) {
+              // Backend data updates local entry (admin edits take priority)
+              merged[index] = member;
+            } else {
+              // Brand new member added via admin dashboard — append
+              merged.push(member);
+            }
           });
           setTeamMembers(merged.sort((a, b) => a.order - b.order));
         }
