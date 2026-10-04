@@ -1878,3 +1878,145 @@ export async function sendBroadcastEmail(to: string, subject: string, message: s
     return false;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────
+// 12. Manual Event Reminder → Sent from admin broadcast page to every
+//     registrant of upcoming events. Includes Zoom link if available.
+// ─────────────────────────────────────────────────────────────────
+export async function sendManualEventReminderEmail(
+  to: string,
+  name: string,
+  eventTitle: string,
+  eventDate: string | undefined,
+  eventTime: string | undefined,
+  eventLocation: string | undefined,
+  eventId: string,
+  eventPosterUrl?: string,
+  meetingLink?: string
+) {
+  const transporter = await createTransporter();
+  if (!transporter) {
+    console.warn('[Email] Skipping event reminder email — EMAIL_FROM/EMAIL_PASS not configured.');
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM!;
+  const safeName = escapeHtml(name);
+  const safeTitle = escapeHtml(eventTitle);
+  const safeDate = escapeHtml(eventDate || 'To be confirmed');
+  const safeTime = escapeHtml(eventTime || 'To be confirmed');
+  const safeLocation = escapeHtml(eventLocation || 'Online');
+  const eventUrl = `https://www.quantumnexusglobal.org/events/${encodeURIComponent(eventId)}`;
+  const safeMeetingLink = meetingLink && /^https?:\/\//i.test(meetingLink) ? meetingLink : '';
+  const safePosterUrl = eventPosterUrl && /^https?:\/\//i.test(eventPosterUrl) ? escapeHtml(eventPosterUrl) : '';
+  const posterHtml = safePosterUrl
+    ? `<img src="${safePosterUrl}" alt="Event poster" width="508" style="display:block;width:100%;max-width:508px;height:auto;margin:0 0 24px;border-radius:10px;" />`
+    : '';
+  const zoomButtonHtml = safeMeetingLink
+    ? `<tr>
+                        <td style="padding:14px 0 0;">
+                          <a href="${escapeHtml(safeMeetingLink)}" style="display:inline-block;background:#6366f1;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:12px 22px;border-radius:8px;">🎥 Join via Zoom →</a>
+                        </td>
+                      </tr>`
+    : '';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reminder: ${safeTitle}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#1e293b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f8;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+          <tr>
+            <td style="padding:32px 36px 24px;border-bottom:1px solid #f1f5f9;">
+              <img src="https://www.quantumnexusglobal.org/logo-mark.png" alt="Quantum Nexus Global" width="140" style="display:block;max-width:140px;height:auto;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 36px 28px;">
+              <p style="font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#6366f1;margin:0 0 12px;font-weight:600;">📅 Event Reminder</p>
+              <h1 style="font-size:22px;font-weight:700;color:#0f172a;margin:0 0 8px;line-height:1.3;">Don't forget, ${safeName}!</h1>
+              <p style="font-size:15px;line-height:1.6;color:#475569;margin:0 0 24px;">Your upcoming event is just around the corner. Here are the details:</p>
+              ${posterHtml}
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin:0 0 28px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <h2 style="font-size:18px;font-weight:700;color:#0f172a;margin:0 0 16px;">${safeTitle}</h2>
+                    <table role="presentation" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:5px 0;vertical-align:top;">
+                          <span style="font-size:14px;color:#94a3b8;width:80px;display:inline-block;">📅 Date</span>
+                          <span style="font-size:14px;color:#1e293b;font-weight:600;">${safeDate}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:5px 0;vertical-align:top;">
+                          <span style="font-size:14px;color:#94a3b8;width:80px;display:inline-block;">🕐 Time</span>
+                          <span style="font-size:14px;color:#1e293b;font-weight:600;">${safeTime}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:5px 0;vertical-align:top;">
+                          <span style="font-size:14px;color:#94a3b8;width:80px;display:inline-block;">📍 Location</span>
+                          <span style="font-size:14px;color:#1e293b;font-weight:600;">${safeLocation}</span>
+                        </td>
+                      </tr>
+                      ${zoomButtonHtml}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <p style="font-size:15px;line-height:1.6;color:#475569;margin:0 0 24px;">We're excited to have you join us. Click the button below to view full event details and any last-minute updates.</p>
+              <a href="${eventUrl}" style="display:inline-block;background:#6366f1;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 28px;border-radius:8px;">View Event Details →</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#f8fafc;padding:24px 36px;border-top:1px solid #e2e8f0;text-align:center;">
+              <p style="font-size:12px;color:#94a3b8;margin:0 0 4px;">You received this reminder because you registered for this event.</p>
+              <p style="font-size:12px;color:#94a3b8;margin:0;">© 2026 Quantum Nexus Global · Advancing Quantum Computing</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Reminder: ${eventTitle}
+
+Hi ${name},
+
+Your upcoming event is just around the corner!
+
+Event: ${eventTitle}
+Date: ${eventDate || 'To be confirmed'}
+Time: ${eventTime || 'To be confirmed'}
+Location: ${eventLocation || 'Online'}${safeMeetingLink ? `\nJoin Link: ${safeMeetingLink}` : ''}
+
+View full event details: ${eventUrl}
+
+We're looking forward to seeing you there!
+
+— The Quantum Nexus Global Team`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Quantum Nexus Global" <${from}>`,
+      to,
+      subject: `Reminder: ${eventTitle}`,
+      html,
+      text,
+    });
+    console.log(`[Email] Event reminder sent to ${to} for event ${eventId}`);
+    return true;
+  } catch (err) {
+    console.error(`[Email] Failed to send event reminder to ${to}:`, err);
+    return false;
+  }
+}

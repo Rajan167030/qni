@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Send, Users, Mail, CalendarCheck, MessageSquare, GraduationCap,
   Eye, Loader2, CheckCircle2, AlertTriangle, ImagePlus, Sparkles, X, PenSquare,
+  BellRing,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getEvents, EventItem } from "@/lib/events-store";
@@ -48,6 +49,26 @@ export default function AdminBroadcastPage() {
   const [isSending, setIsSending] = useState(false);
   const [result, setResult] = useState<SendResult | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // ── Reminder state ──────────────────────────────────────────────
+  interface ReminderPreview {
+    eventsCount: number;
+    totalRegistrants: number;
+    events: { id: string; title: string; date: string; registrantsCount: number; sample: string[] }[];
+  }
+  interface ReminderResult {
+    eventsCount: number;
+    totalSent: number;
+    totalFailed: number;
+    events: { eventId: string; title: string; sent: number; failed: number }[];
+    errors: string[];
+  }
+  const [reminderEventId, setReminderEventId] = useState("");
+  const [isReminderPreviewing, setIsReminderPreviewing] = useState(false);
+  const [reminderPreview, setReminderPreview] = useState<ReminderPreview | null>(null);
+  const [isSendingReminder, setIsSendingReminder] = useState(false);
+  const [reminderResult, setReminderResult] = useState<ReminderResult | null>(null);
+  const [reminderError, setReminderError] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -197,6 +218,59 @@ export default function AdminBroadcastPage() {
   const needsTargetEvent = selectedAudiences.includes("pastEventAttendees");
   const canSend = selectedAudiences.length > 0 && (!needsTargetEvent || Boolean(eventId)) && subject.trim() && message.trim() && preview && preview.count > 0;
 
+  const runReminderPreview = async () => {
+    setIsReminderPreviewing(true);
+    setReminderError("");
+    setReminderResult(null);
+    setReminderPreview(null);
+    try {
+      const res = await fetch("/api/admin/event-reminder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: reminderEventId || undefined, dryRun: true }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReminderPreview(data);
+      } else {
+        setReminderError(data.message || data.error || "Failed to preview reminder recipients.");
+      }
+    } catch {
+      setReminderError("Error connecting to the server.");
+    } finally {
+      setIsReminderPreviewing(false);
+    }
+  };
+
+  const handleSendReminders = async () => {
+    if (!reminderPreview || reminderPreview.totalRegistrants === 0) return;
+    const confirmed = confirm(
+      `Send event reminders to ${reminderPreview.totalRegistrants} registrant(s) across ${reminderPreview.eventsCount} upcoming event(s)? This cannot be undone.`
+    );
+    if (!confirmed) return;
+    setIsSendingReminder(true);
+    setReminderError("");
+    setReminderResult(null);
+    try {
+      const res = await fetch("/api/admin/event-reminder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: reminderEventId || undefined, dryRun: false }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReminderResult(data);
+        setReminderPreview(null);
+      } else {
+        setReminderError(data.message || data.error || "Failed to send reminders.");
+      }
+    } catch {
+      setReminderError("Error connecting to the server.");
+    } finally {
+      setIsSendingReminder(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-foreground/10 px-6 lg:px-12 py-4">
@@ -222,6 +296,125 @@ export default function AdminBroadcastPage() {
       </header>
 
       <main className="max-w-[900px] mx-auto px-6 lg:px-12 py-8 space-y-6">
+
+        {/* ── Event Reminder Section ── */}
+        <div className="border border-indigo-500/25 bg-indigo-500/[0.06] rounded-3xl p-6 lg:p-8 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-display font-bold mb-1 flex items-center gap-2">
+                <BellRing className="w-5 h-5 text-indigo-500" />
+                Send Event Reminders
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Automatically send a personalized reminder email to every registered user of all upcoming events.
+              </p>
+            </div>
+          </div>
+
+          {/* Optional: filter to a single event */}
+          <div>
+            <label className="block text-xs font-mono uppercase text-muted-foreground mb-1.5">
+              Filter by event (optional)
+            </label>
+            <select
+              value={reminderEventId}
+              onChange={(e) => { setReminderEventId(e.target.value); setReminderPreview(null); setReminderResult(null); }}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50"
+            >
+              <option value="">All upcoming events</option>
+              {events
+                .filter((ev) => !ev.eventDate || new Date(ev.eventDate).getTime() > Date.now())
+                .map((ev) => (
+                  <option key={ev.id} value={ev.id}>{ev.title}</option>
+                ))}
+            </select>
+          </div>
+
+          {/* Reminder action buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              id="btn-preview-reminders"
+              type="button"
+              variant="outline"
+              onClick={runReminderPreview}
+              disabled={isReminderPreviewing || isSendingReminder}
+              className="rounded-xl gap-2"
+            >
+              {isReminderPreviewing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+              Preview Recipients
+            </Button>
+
+            <Button
+              id="btn-send-reminders"
+              type="button"
+              onClick={handleSendReminders}
+              disabled={!reminderPreview || reminderPreview.totalRegistrants === 0 || isSendingReminder || isReminderPreviewing}
+              className="rounded-xl gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              {isSendingReminder ? <Loader2 className="w-4 h-4 animate-spin" /> : <BellRing className="w-4 h-4" />}
+              {isSendingReminder ? "Sending Reminders..." : "Send Reminders"}
+            </Button>
+          </div>
+
+          {/* Reminder error */}
+          {reminderError && (
+            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>{reminderError}</span>
+            </div>
+          )}
+
+          {/* Reminder preview */}
+          {reminderPreview && !reminderResult && (
+            <div className="p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.04] text-sm space-y-3">
+              <p className="font-semibold text-foreground">
+                {reminderPreview.totalRegistrants} registrant{reminderPreview.totalRegistrants !== 1 ? "s" : ""} across {reminderPreview.eventsCount} upcoming event{reminderPreview.eventsCount !== 1 ? "s" : ""} will receive a reminder.
+              </p>
+              <div className="space-y-2">
+                {reminderPreview.events.map((ev) => (
+                  <div key={ev.id} className="rounded-lg border border-foreground/10 bg-foreground/[0.02] px-3 py-2">
+                    <p className="text-xs font-semibold text-foreground mb-0.5">{ev.title}</p>
+                    <p className="text-xs text-muted-foreground font-mono">
+                      {ev.registrantsCount} registrant{ev.registrantsCount !== 1 ? "s" : ""}
+                      {ev.sample.length > 0 && ` — e.g. ${ev.sample.join(", ")}${ev.registrantsCount > ev.sample.length ? ", …" : ""}`}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {reminderPreview.totalRegistrants === 0 && (
+                <p className="text-xs text-muted-foreground">No registrants found for upcoming events.</p>
+              )}
+            </div>
+          )}
+
+          {/* Reminder send result */}
+          {reminderResult && (
+            <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-sm space-y-3">
+              <p className="font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                Sent {reminderResult.totalSent} reminder{reminderResult.totalSent !== 1 ? "s" : ""} across {reminderResult.eventsCount} event{reminderResult.eventsCount !== 1 ? "s" : ""}.
+              </p>
+              <div className="space-y-2">
+                {reminderResult.events.map((ev) => (
+                  <div key={ev.eventId} className="rounded-lg border border-foreground/10 bg-foreground/[0.02] px-3 py-2">
+                    <p className="text-xs font-semibold text-foreground mb-0.5">{ev.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      ✓ {ev.sent} sent{ev.failed > 0 ? ` · ✗ ${ev.failed} failed` : ""}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {reminderResult.totalFailed > 0 && (
+                <div className="text-xs text-rose-600 dark:text-rose-400">
+                  <p className="font-medium mb-1">{reminderResult.totalFailed} failed:</p>
+                  <ul className="space-y-0.5 font-mono">
+                    {reminderResult.errors.map((e, i) => <li key={i}>{e}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="border border-cyan-500/25 bg-cyan-500/[0.06] rounded-3xl p-6 lg:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-lg font-display font-bold mb-1">Saved Draft</h2>
