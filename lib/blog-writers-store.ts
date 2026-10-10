@@ -35,6 +35,24 @@ export const DEFAULT_WRITERS: BlogWriter[] = [
     invitedAt: "2026-10-01T00:00:00.000Z",
     status: "Active",
   },
+  {
+    id: "bw-ankit-verma",
+    name: "Ankit Verma",
+    email: "ankitverma@gmail.com",
+    password: "Ankit@QNG2026",
+    role: "Quantum AI Engineer & Content Contributor",
+    invitedAt: "2026-10-01T00:00:00.000Z",
+    status: "Active",
+  },
+  {
+    id: "bw-ankit-qng",
+    name: "Ankit Verma",
+    email: "ankit@qnexusindia.com",
+    password: "Ankit@QNG2026",
+    role: "Quantum AI Engineer & Content Contributor",
+    invitedAt: "2026-10-01T00:00:00.000Z",
+    status: "Active",
+  },
 ];
 
 function loadWriters(): BlogWriter[] {

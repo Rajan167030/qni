@@ -4,12 +4,30 @@ import { INITIAL_BLOG_POSTS } from '@/lib/blogs-store';
 import { getBlogSession, hasAdminSession } from '@/lib/blog-auth';
 import { recordWriterActivity, extractClientInfo } from '@/lib/writer-activity';
 import { readLocalBlogs, saveLocalBlog, deleteLocalBlog } from '@/lib/server-blogs-storage';
+import { DEFAULT_WRITERS } from '@/lib/blog-writers-store';
 
-async function canManageBlogs() {
-  return Boolean((await getBlogSession()) || (await hasAdminSession()));
+async function canManageBlogs(authorEmail?: string) {
+  const session = await getBlogSession();
+  const isAdmin = await hasAdminSession();
+  if (session || isAdmin) return true;
+
+  if (authorEmail) {
+    const normalizedEmail = String(authorEmail).toLowerCase().trim();
+    if (normalizedEmail) {
+      const db = await getMongoDbDatabase();
+      if (db) {
+        const found = await db.collection('blog_writers').findOne({ email: normalizedEmail, status: 'Active' });
+        if (found) return true;
+      }
+      const match = DEFAULT_WRITERS.find(
+        (w) => w.email.toLowerCase() === normalizedEmail && w.status === 'Active'
+      );
+      if (match) return true;
+    }
+  }
+
+  return false;
 }
-
-const LEGACY_SEEDED_BLOG_IDS = ['blog-1', 'blog-2', 'blog-3', 'blog-4'];
 
 export async function GET(request: Request) {
   try {
@@ -73,17 +91,20 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    if (!(await canManageBlogs())) {
-      return NextResponse.json({ success: false, message: 'Writer or admin authentication required.' }, { status: 401 });
-    }
     const body = await request.json();
-    const db = await getMongoDbDatabase();
     const session = await getBlogSession();
     const isAdmin = await hasAdminSession();
+    const authorEmail = session?.email || body.author?.email || body.email;
+
+    if (!(await canManageBlogs(authorEmail))) {
+      return NextResponse.json({ success: false, message: 'Writer or admin authentication required.' }, { status: 401 });
+    }
+
+    const db = await getMongoDbDatabase();
     const { ip, userAgent } = extractClientInfo(request);
 
     const isEdit = Boolean(body.id);
-    const authorEmail = session?.email || body.author?.email || (isAdmin ? 'admin@quantumnexusglobal.org' : 'contributor@qng');
+    const resolvedEmail = authorEmail || (isAdmin ? 'admin@quantumnexusglobal.org' : 'contributor@qng');
     const authorName = session?.name || body.author?.name || (isAdmin ? 'Administrator' : 'QNG Writer');
     const authorRole = session?.role || body.author?.role || 'Guest Contributor';
 
@@ -98,7 +119,7 @@ export async function POST(request: Request) {
       author: {
         name: authorName,
         role: authorRole,
-        email: authorEmail,
+        email: resolvedEmail,
       },
       readTime: body.readTime || '4 min read',
       publishedAt: body.publishedAt || new Date().toISOString(),
@@ -120,7 +141,7 @@ export async function POST(request: Request) {
 
     // Record activity for writer activity tracker
     await recordWriterActivity({
-      writerEmail: authorEmail,
+      writerEmail: resolvedEmail,
       writerName: authorName,
       action: isEdit ? 'BLOG_UPDATE' : 'BLOG_CREATE',
       actionLabel: `${isEdit ? 'Updated' : 'Created & published'} blog: "${newBlog.title}"`,
@@ -146,11 +167,13 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    if (!(await canManageBlogs())) {
-      return NextResponse.json({ success: false, message: 'Writer or admin authentication required.' }, { status: 401 });
-    }
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    const authorEmail = searchParams.get('email') || undefined;
+
+    if (!(await canManageBlogs(authorEmail))) {
+      return NextResponse.json({ success: false, message: 'Writer or admin authentication required.' }, { status: 401 });
+    }
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'Missing blog ID' }, { status: 400 });
@@ -159,7 +182,7 @@ export async function DELETE(request: Request) {
     const session = await getBlogSession();
     const isAdmin = await hasAdminSession();
     const { ip, userAgent } = extractClientInfo(request);
-    const writerEmail = session?.email || (isAdmin ? 'admin@quantumnexusglobal.org' : 'unknown');
+    const writerEmail = session?.email || authorEmail || (isAdmin ? 'admin@quantumnexusglobal.org' : 'unknown');
     const writerName = session?.name || (isAdmin ? 'Administrator' : 'Writer');
 
     deleteLocalBlog(id);

@@ -33,8 +33,26 @@ export const VISHRUTI_WRITER_CONFIG = {
   status: 'Active' as const,
 };
 
+export const DEFAULT_WRITER_CONFIGS = [
+  VISHRUTI_WRITER_CONFIG,
+  {
+    name: 'Ankit Verma',
+    email: 'ankitverma@gmail.com',
+    password: 'Ankit@QNG2026',
+    role: 'Quantum AI Engineer & Content Contributor',
+    status: 'Active' as const,
+  },
+  {
+    name: 'Ankit Verma',
+    email: 'ankit@qnexusindia.com',
+    password: 'Ankit@QNG2026',
+    role: 'Quantum AI Engineer & Content Contributor',
+    status: 'Active' as const,
+  },
+];
+
 /**
- * Ensure vishruti0129@gmail.com is present and Active in MongoDB blog_writers collection
+ * Ensure default writers (Vishruti, Ankit) are present and Active in MongoDB blog_writers collection
  */
 export async function ensureDefaultBlogWriters(db?: Db | null): Promise<void> {
   try {
@@ -42,45 +60,45 @@ export async function ensureDefaultBlogWriters(db?: Db | null): Promise<void> {
     if (!database) return;
 
     const writersColl = database.collection('blog_writers');
-    const existing = await writersColl.findOne({ email: VISHRUTI_WRITER_CONFIG.email });
-
-    if (!existing) {
-      await writersColl.insertOne({
-        ...VISHRUTI_WRITER_CONFIG,
-        invitedAt: new Date(),
-        status: 'Active',
-        notes: 'Pre-authorized blog writer access with continuous activity tracking',
-        createdAt: new Date(),
-      });
-
-      // Record first setup activity
-      await recordWriterActivity({
-        writerEmail: VISHRUTI_WRITER_CONFIG.email,
-        writerName: VISHRUTI_WRITER_CONFIG.name,
-        action: 'ACCESS_GRANTED',
-        actionLabel: 'Granted Blog Writer access to vishruti0129@gmail.com with live activity tracking',
-        details: {
-          role: VISHRUTI_WRITER_CONFIG.role,
+    
+    for (const writerCfg of DEFAULT_WRITER_CONFIGS) {
+      const existing = await writersColl.findOne({ email: writerCfg.email });
+      if (!existing) {
+        await writersColl.insertOne({
+          ...writerCfg,
+          invitedAt: new Date(),
           status: 'Active',
-        },
-      });
+          notes: 'Pre-authorized blog writer access with continuous activity tracking',
+          createdAt: new Date(),
+        });
 
-      // Attempt to send welcome email invite
-      try {
-        await sendBlogWriterInviteEmail(
-          VISHRUTI_WRITER_CONFIG.email,
-          VISHRUTI_WRITER_CONFIG.name,
-          VISHRUTI_WRITER_CONFIG.password
+        // Record first setup activity
+        await recordWriterActivity({
+          writerEmail: writerCfg.email,
+          writerName: writerCfg.name,
+          action: 'ACCESS_GRANTED',
+          actionLabel: `Granted Blog Writer access to ${writerCfg.email} with live activity tracking`,
+          details: {
+            role: writerCfg.role,
+            status: 'Active',
+          },
+        });
+        try {
+          await sendBlogWriterInviteEmail(
+            writerCfg.email,
+            writerCfg.name,
+            writerCfg.password
+          );
+        } catch (mailErr) {
+          console.warn('[Writer Activity] Auto-invite email notice:', mailErr);
+        }
+      } else if (existing && existing.status !== 'Active') {
+        // Ensure access is active
+        await writersColl.updateOne(
+          { email: writerCfg.email },
+          { $set: { status: 'Active', updatedAt: new Date() } }
         );
-      } catch (mailErr) {
-        console.warn('[Writer Activity] Auto-invite email notice:', mailErr);
       }
-    } else if (existing.status !== 'Active') {
-      // Ensure access is active
-      await writersColl.updateOne(
-        { email: VISHRUTI_WRITER_CONFIG.email },
-        { $set: { status: 'Active', updatedAt: new Date() } }
-      );
     }
   } catch (error) {
     console.error('[Writer Activity] Error ensuring default writers:', error);
