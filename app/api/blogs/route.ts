@@ -3,6 +3,7 @@ import { getMongoDbDatabase } from '@/lib/mongodb';
 import { INITIAL_BLOG_POSTS } from '@/lib/blogs-store';
 import { getBlogSession, hasAdminSession } from '@/lib/blog-auth';
 import { recordWriterActivity, extractClientInfo } from '@/lib/writer-activity';
+import { readLocalBlogs, saveLocalBlog, deleteLocalBlog } from '@/lib/server-blogs-storage';
 
 async function canManageBlogs() {
   return Boolean((await getBlogSession()) || (await hasAdminSession()));
@@ -15,33 +16,55 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
     const db = await getMongoDbDatabase();
+    const localBlogs = readLocalBlogs();
 
     if (!db) {
-      // Return initial fallback data if Mongo is not connected
+      // Return local stored data or fallback if Mongo is not connected
       if (slug) {
-        const found = INITIAL_BLOG_POSTS.find((b) => b.slug === slug || b.id === slug);
+        const found = localBlogs.find((b) => b.slug === slug || b.id === slug) || INITIAL_BLOG_POSTS.find((b) => b.slug === slug || b.id === slug);
         return NextResponse.json({ success: true, data: found || null, source: 'fallback' });
       }
-      return NextResponse.json({ success: true, data: INITIAL_BLOG_POSTS, source: 'fallback' });
+      const combinedFallback = [...localBlogs];
+      INITIAL_BLOG_POSTS.forEach((ib) => {
+        if (!combinedFallback.some((lb) => lb.id === ib.id || lb.slug === ib.slug)) {
+          combinedFallback.push(ib);
+        }
+      });
+      return NextResponse.json({ success: true, data: combinedFallback, source: 'fallback' });
     }
 
     const collection = db.collection('blogs');
 
     if (slug) {
-      const blog = await collection.findOne({
-        $and: [
-          { $or: [{ slug }, { id: slug }] },
-          { id: { $nin: LEGACY_SEEDED_BLOG_IDS } },
-        ],
+      let blog = await collection.findOne({
+        $or: [{ slug }, { id: slug }],
       });
+      if (!blog) {
+        blog = localBlogs.find((b) => b.slug === slug || b.id === slug) || INITIAL_BLOG_POSTS.find((b) => b.slug === slug || b.id === slug) || null;
+      }
       return NextResponse.json({ success: true, data: blog });
     }
 
-    const blogs = await collection
-      .find({ id: { $nin: LEGACY_SEEDED_BLOG_IDS } })
+    const blogsFromDb = await collection
+      .find({})
       .sort({ publishedAt: -1 })
       .toArray();
-    return NextResponse.json({ success: true, data: blogs });
+
+    // Merge mongo blogs with local file fallback blogs and initial blog posts
+    const merged = [...blogsFromDb];
+    localBlogs.forEach((lb) => {
+      if (!merged.some((mb: any) => mb.id === lb.id || mb.slug === lb.slug)) {
+        merged.push(lb as any);
+      }
+    });
+
+    INITIAL_BLOG_POSTS.forEach((ib) => {
+      if (!merged.some((mb: any) => mb.id === ib.id || mb.slug === ib.slug)) {
+        merged.push(ib as any);
+      }
+    });
+
+    return NextResponse.json({ success: true, data: merged });
   } catch (error: any) {
     console.error('Error in GET /api/blogs:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -84,6 +107,8 @@ export async function POST(request: Request) {
       tags: body.tags || ['Quantum'],
       createdAt: new Date(),
     };
+
+    saveLocalBlog(newBlog as any);
 
     if (db) {
       await db.collection('blogs').updateOne(
@@ -136,6 +161,8 @@ export async function DELETE(request: Request) {
     const { ip, userAgent } = extractClientInfo(request);
     const writerEmail = session?.email || (isAdmin ? 'admin@quantumnexusglobal.org' : 'unknown');
     const writerName = session?.name || (isAdmin ? 'Administrator' : 'Writer');
+
+    deleteLocalBlog(id);
 
     const db = await getMongoDbDatabase();
     let blogTitle = id;

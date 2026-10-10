@@ -27,7 +27,7 @@ import {
   FolderOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { BlogPost } from '@/lib/blogs-store';
+import { saveBlog, deleteBlog, BlogPost } from '@/lib/blogs-store';
 
 export default function TeamPortalPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -220,6 +220,12 @@ export default function TeamPortalPage() {
       alert('Unable to save this blog on the server.');
       return;
     }
+    const resultData = await response.json();
+    if (resultData.success && resultData.data) {
+      saveBlog(resultData.data);
+    } else {
+      saveBlog(blogPayload);
+    }
 
     setNotification(editingPostId ? 'Article updated successfully!' : 'New article published successfully!');
     setTimeout(() => setNotification(null), 4000);
@@ -259,6 +265,7 @@ export default function TeamPortalPage() {
 
   const handleDeleteClick = async (id: string) => {
     if (confirm('Are you sure you want to delete this article?')) {
+      deleteBlog(id);
       const response = await fetch(`/api/blogs?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
       if (!response.ok) {
         alert('Unable to delete this blog on the server.');

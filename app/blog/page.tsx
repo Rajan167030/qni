@@ -25,13 +25,38 @@ export default function BlogPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load from local store
-    const loaded = getBlogs();
-    setBlogs(loaded);
-    setIsLoading(false);
+    async function loadBlogs() {
+      try {
+        const local = getBlogs();
+        if (local.length > 0) {
+          setBlogs(local);
+        }
+
+        const res = await fetch('/api/blogs', { cache: 'no-store' });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          const serverBlogs: BlogPost[] = data.data;
+
+          // Merge server blogs with local blogs
+          const merged = [...serverBlogs];
+          local.forEach((lb) => {
+            if (!merged.some((sb) => sb.id === lb.id || sb.slug === lb.slug)) {
+              merged.push(lb);
+            }
+          });
+          setBlogs(merged);
+        }
+      } catch (err) {
+        console.error('Failed to fetch blogs from API:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadBlogs();
   }, []);
 
-  const categories = [
+  const defaultCategories = [
     'All',
     'Quantum Algorithms',
     'Quantum Infrastructure',
@@ -39,6 +64,11 @@ export default function BlogPage() {
     'NISQ Error Mitigation',
     'Quantum Tech',
   ];
+
+  // Dynamically include any additional categories from published blogs
+  const categories = Array.from(
+    new Set([...defaultCategories, ...blogs.map((b) => b.category).filter(Boolean)])
+  );
 
   // Filter published posts
   const publishedBlogs = blogs.filter((b) => b.status === 'Published');

@@ -52,13 +52,45 @@ export default function SingleBlogPostPage() {
     if (!slug) return;
 
     setIdentity(getUserIdentity());
-    const found = getBlogBySlug(slug);
-    if (found) {
-      setPost(found);
-      const all = getBlogs().filter((b) => b.status === 'Published' && b.id !== found.id);
-      setRelatedPosts(all.slice(0, 3));
+
+    async function loadPostData() {
+      try {
+        let currentPost = getBlogBySlug(slug);
+        let currentAll = getBlogs();
+
+        if (currentPost) {
+          setPost(currentPost);
+          const related = currentAll.filter(
+            (b) => b.status === 'Published' && b.id !== currentPost?.id && b.slug !== currentPost?.slug
+          );
+          setRelatedPosts(related.slice(0, 3));
+        }
+
+        const [resPost, resAll] = await Promise.allSettled([
+          fetch(`/api/blogs?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' }).then((r) => r.json()),
+          fetch('/api/blogs', { cache: 'no-store' }).then((r) => r.json()),
+        ]);
+
+        if (resPost.status === 'fulfilled' && resPost.value?.success && resPost.value?.data) {
+          currentPost = resPost.value.data;
+          setPost(currentPost);
+        }
+
+        if (resAll.status === 'fulfilled' && resAll.value?.success && Array.isArray(resAll.value?.data)) {
+          const allServer: BlogPost[] = resAll.value.data;
+          const related = allServer.filter(
+            (b) => b.status === 'Published' && b.id !== currentPost?.id && b.slug !== currentPost?.slug
+          );
+          setRelatedPosts(related.slice(0, 3));
+        }
+      } catch (err) {
+        console.error('Error fetching blog post from API:', err);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    setIsLoading(false);
+
+    loadPostData();
 
     const interactionEmail = getUserIdentity()?.email;
     const interactionQuery = new URLSearchParams({ slug });
