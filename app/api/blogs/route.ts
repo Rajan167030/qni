@@ -37,18 +37,12 @@ export async function GET(request: Request) {
     const localBlogs = readLocalBlogs();
 
     if (!db) {
-      // Return local stored data or fallback if Mongo is not connected
+      // Return local stored data if Mongo is not connected
       if (slug) {
-        const found = localBlogs.find((b) => b.slug === slug || b.id === slug) || INITIAL_BLOG_POSTS.find((b) => b.slug === slug || b.id === slug);
+        const found = localBlogs.find((b) => b.slug === slug || b.id === slug);
         return NextResponse.json({ success: true, data: found || null, source: 'fallback' });
       }
-      const combinedFallback = [...localBlogs];
-      INITIAL_BLOG_POSTS.forEach((ib) => {
-        if (!combinedFallback.some((lb) => lb.id === ib.id || lb.slug === ib.slug)) {
-          combinedFallback.push(ib);
-        }
-      });
-      return NextResponse.json({ success: true, data: combinedFallback, source: 'fallback' });
+      return NextResponse.json({ success: true, data: localBlogs, source: 'fallback' });
     }
 
     const collection = db.collection('blogs');
@@ -58,7 +52,7 @@ export async function GET(request: Request) {
         $or: [{ slug }, { id: slug }],
       });
       if (!blog) {
-        blog = localBlogs.find((b) => b.slug === slug || b.id === slug) || INITIAL_BLOG_POSTS.find((b) => b.slug === slug || b.id === slug) || null;
+        blog = (localBlogs.find((b) => b.slug === slug || b.id === slug) as any) || null;
       }
       return NextResponse.json({ success: true, data: blog });
     }
@@ -68,17 +62,11 @@ export async function GET(request: Request) {
       .sort({ publishedAt: -1 })
       .toArray();
 
-    // Merge mongo blogs with local file fallback blogs and initial blog posts
+    // Merge mongo blogs with local file fallback blogs
     const merged = [...blogsFromDb];
     localBlogs.forEach((lb) => {
       if (!merged.some((mb: any) => mb.id === lb.id || mb.slug === lb.slug)) {
         merged.push(lb as any);
-      }
-    });
-
-    INITIAL_BLOG_POSTS.forEach((ib) => {
-      if (!merged.some((mb: any) => mb.id === ib.id || mb.slug === ib.slug)) {
-        merged.push(ib as any);
       }
     });
 
