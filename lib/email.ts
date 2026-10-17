@@ -2020,3 +2020,55 @@ We're looking forward to seeing you there!
     return false;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Member sign-in code → Email OTP for blog likes, doubts and replies
+// ─────────────────────────────────────────────────────────────────
+export async function sendMemberOtpEmail(to: string, name: string, code: string) {
+  const transporter = await createTransporter();
+  if (!transporter) return false;
+  const from = process.env.EMAIL_FROM!;
+  // The name comes from a public form, so escape it before putting it in HTML.
+  const safeName = name.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+  const html = `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f6f7f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111827;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;padding:32px;">
+        <tr><td>
+          <p style="margin:0 0 16px;font-size:15px;">Hi ${safeName},</p>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;">Use this code to sign in to the Quantum Nexus Global blog community:</p>
+          <p style="margin:0 0 24px;text-align:center;font-size:32px;font-weight:700;letter-spacing:8px;font-family:'SFMono-Regular',Consolas,monospace;">${code}</p>
+          <p style="margin:0 0 8px;font-size:13px;color:#6b7280;line-height:1.6;">The code expires in 10 minutes. If you didn't request it, you can ignore this email.</p>
+          <p style="margin:24px 0 0;font-size:13px;color:#6b7280;">— Quantum Nexus Global</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hi ${name},
+
+Your Quantum Nexus Global sign-in code is: ${code}
+
+It expires in 10 minutes. If you didn't request it, you can ignore this email.
+
+— Quantum Nexus Global`;
+
+  try {
+    await transporter.sendMail({
+      from: `"Quantum Nexus Global" <${from}>`,
+      to,
+      subject: `${code} is your Quantum Nexus Global sign-in code`,
+      html,
+      text,
+    });
+    return true;
+  } catch (err) {
+    console.error('[Email] Failed to send member OTP email:', err);
+    return false;
+  }
+}
