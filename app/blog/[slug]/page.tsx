@@ -23,6 +23,12 @@ import {
 } from 'lucide-react';
 import { getBlogBySlug, getBlogs, BlogPost } from '@/lib/blogs-store';
 import { getUserIdentity, UserIdentity } from '@/lib/user-identity';
+import { ArticleContent } from '@/components/blog/article-content';
+
+function formatNames(names: string[]) {
+  if (names.length <= 1) return names[0] ?? '';
+  return `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
+}
 
 interface BlogComment {
   id: string;
@@ -188,6 +194,8 @@ export default function SingleBlogPostPage() {
     );
   }
 
+  const authors = post.authors && post.authors.length > 0 ? post.authors : [post.author];
+
   return (
     <main className="relative min-h-screen bg-background text-foreground overflow-x-hidden">
       <Navigation />
@@ -233,12 +241,21 @@ export default function SingleBlogPostPage() {
           {/* Author Card & Share Actions */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-y border-foreground/10">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-foreground/10 border border-foreground/10 flex items-center justify-center font-display text-lg uppercase font-semibold">
-                {post.author.name.charAt(0)}
+              <div className="flex -space-x-3">
+                {authors.slice(0, 4).map((a) => (
+                  <div
+                    key={a.name}
+                    className="w-12 h-12 rounded-full bg-foreground/10 border-2 border-background flex items-center justify-center font-display text-lg uppercase font-semibold"
+                  >
+                    {a.name.charAt(0)}
+                  </div>
+                ))}
               </div>
               <div>
-                <div className="text-base font-semibold">{post.author.name}</div>
-                <div className="text-xs text-muted-foreground">{post.author.role}</div>
+                <div className="text-base font-semibold">{formatNames(authors.map((a) => a.name))}</div>
+                <div className="text-xs text-muted-foreground">
+                  {authors.length === 1 ? post.author.role : `${authors.length} authors`}
+                </div>
               </div>
             </div>
 
@@ -271,76 +288,14 @@ export default function SingleBlogPostPage() {
 
       {/* Article Body Content */}
       <section className="px-6 lg:px-12 pb-20">
-        <div className="max-w-3xl mx-auto text-foreground/90 space-y-6 text-base lg:text-lg leading-relaxed font-sans">
-          {post.content.split('\n\n').map((paragraph, idx) => {
-            if (paragraph.startsWith('### ')) {
-              return (
-                <h3 key={idx} className="text-2xl font-display pt-6 pb-2 border-b border-foreground/10 text-foreground">
-                  {paragraph.replace('### ', '')}
-                </h3>
-              );
-            }
-            if (paragraph.startsWith('#### ')) {
-              return (
-                <h4 key={idx} className="text-xl font-display pt-4 text-foreground">
-                  {paragraph.replace('#### ', '')}
-                </h4>
-              );
-            }
-            if (paragraph.startsWith('> ')) {
-              return (
-                <blockquote
-                  key={idx}
-                  className="p-6 rounded-2xl bg-foreground/5 border-l-4 border-foreground italic my-6 text-foreground font-serif text-lg"
-                >
-                  {paragraph.replace('> ', '')}
-                </blockquote>
-              );
-            }
-            if (paragraph.startsWith('```')) {
-              const codeClean = paragraph.replace(/```[a-z]*/g, '').trim();
-              return (
-                <pre
-                  key={idx}
-                  className="p-5 rounded-2xl bg-foreground/90 text-background font-mono text-sm overflow-x-auto my-6"
-                >
-                  <code>{codeClean}</code>
-                </pre>
-              );
-            }
-            if (paragraph.startsWith('|')) {
-              // Simple markdown table renderer
-              const rows = paragraph.trim().split('\n').filter((r) => !r.includes(':---'));
-              return (
-                <div key={idx} className="overflow-x-auto my-6 border border-foreground/10 rounded-2xl">
-                  <table className="w-full text-left text-sm">
-                    <tbody>
-                      {rows.map((row, rIdx) => {
-                        const cells = row.split('|').filter((c) => c.trim() !== '');
-                        return (
-                          <tr
-                            key={rIdx}
-                            className={rIdx === 0 ? 'bg-foreground/10 font-bold' : 'border-t border-foreground/10'}
-                          >
-                            {cells.map((cell, cIdx) => (
-                              <td key={cIdx} className="p-3">
-                                {cell.trim()}
-                              </td>
-                            ))}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              );
-            }
-            return (
-              <p key={idx} className="text-muted-foreground leading-relaxed">
-                {paragraph}
-              </p>
-            );
-          })}
+        <div className="max-w-3xl mx-auto text-foreground/90 space-y-6 leading-relaxed font-sans">
+          <ArticleContent
+            content={post.content}
+            images={post.images}
+            references={post.references}
+            furtherReading={post.furtherReading}
+            showToc
+          />
 
           {/* Tags */}
           {post.tags && post.tags.length > 0 && (
@@ -362,21 +317,27 @@ export default function SingleBlogPostPage() {
             </div>
           )}
 
-          {/* Author Bio Box */}
-          <div className="p-8 rounded-3xl bg-foreground/5 border border-foreground/10 mt-12 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="w-16 h-16 rounded-full bg-foreground/10 border border-foreground/10 flex items-center justify-center font-display text-2xl uppercase shrink-0">
-              {post.author.name.charAt(0)}
-            </div>
-            <div>
-              <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-1">
-                Written by
+          {/* Author Bio Boxes */}
+          <div className="mt-12 space-y-4">
+            {authors.map((a) => (
+              <div
+                key={a.name}
+                className="p-8 rounded-3xl bg-foreground/5 border border-foreground/10 flex flex-col sm:flex-row items-center sm:items-start gap-6"
+              >
+                <div className="w-16 h-16 rounded-full bg-foreground/10 border border-foreground/10 flex items-center justify-center font-display text-2xl uppercase shrink-0">
+                  {a.name.charAt(0)}
+                </div>
+                <div>
+                  <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-1">
+                    Written by
+                  </div>
+                  <h3 className="text-xl font-display mb-1">{a.name}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {[a.role, a.affiliation].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-xl font-display mb-1">{post.author.name}</h3>
-              <p className="text-xs text-muted-foreground mb-3">{post.author.role}</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Member of Quantum Nexus Global research and development team, focusing on hybrid quantum algorithm design and cloud infrastructure execution.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>

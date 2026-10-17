@@ -28,6 +28,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { saveBlog, deleteBlog, BlogPost } from '@/lib/blogs-store';
+import {
+  RichArticleEditor,
+  emptyRichEditorValue,
+  richEditorValueFromPost,
+  type RichEditorValue,
+} from '@/components/blog/rich-article-editor';
 
 export default function TeamPortalPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -54,6 +60,9 @@ export default function TeamPortalPage() {
     status: 'Published' as 'Published' | 'Draft',
     tags: 'Quantum, Algorithms, Qiskit',
   });
+
+  const [rich, setRich] = useState<RichEditorValue>(emptyRichEditorValue());
+  const [saveErrors, setSaveErrors] = useState<string[]>([]);
 
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -184,7 +193,7 @@ export default function TeamPortalPage() {
 
   const handleSaveArticle = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.content) {
+    if (!formData.title || !rich.content.trim()) {
       alert('Please fill out title and content fields.');
       return;
     }
@@ -201,7 +210,13 @@ export default function TeamPortalPage() {
       excerpt: formData.excerpt,
       category: formData.category,
       coverImage: formData.coverImage,
-      content: formData.content,
+      content: rich.content,
+      images: rich.images,
+      references: rich.references,
+      furtherReading: rich.furtherReading,
+      coAuthors: rich.coAuthors,
+      seoTitle: rich.seoTitle,
+      seoDescription: rich.seoDescription,
       readTime: formData.readTime,
       status: formData.status,
       tags: tagList,
@@ -216,11 +231,12 @@ export default function TeamPortalPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(blogPayload),
     });
+    const resultData = await response.json().catch(() => ({}));
     if (!response.ok) {
-      alert('Unable to save this blog on the server.');
+      setSaveErrors(resultData.errors || [resultData.message || 'Unable to save this blog on the server.']);
       return;
     }
-    const resultData = await response.json();
+    setSaveErrors([]);
     if (resultData.success && resultData.data) {
       saveBlog(resultData.data);
     } else {
@@ -243,6 +259,7 @@ export default function TeamPortalPage() {
       status: 'Published',
       tags: 'Quantum, Algorithms',
     });
+    setRich(emptyRichEditorValue());
     setActiveTab('my-blogs');
     await refreshBlogs();
   };
@@ -260,6 +277,8 @@ export default function TeamPortalPage() {
       status: post.status === 'Archived' ? 'Draft' : post.status,
       tags: post.tags.join(', '),
     });
+    setRich(richEditorValueFromPost(post));
+    setSaveErrors([]);
     setActiveTab('create');
   };
 
@@ -449,6 +468,8 @@ export default function TeamPortalPage() {
                 status: 'Published',
                 tags: 'Quantum, Algorithms',
               });
+              setRich(emptyRichEditorValue());
+              setSaveErrors([]);
               setActiveTab('create');
             }}
             className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all inline-flex items-center gap-2 ${
@@ -712,19 +733,12 @@ export default function TeamPortalPage() {
               />
             </div>
 
-            <div>
-              <label className="text-xs font-mono uppercase text-muted-foreground block mb-2">
-                Article Body Content (Markdown supported) *
-              </label>
-              <textarea
-                rows={12}
-                placeholder="Write your article content here... Use ### for headings, > for quotes, and ``` for code blocks."
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                required
-                className="w-full p-4 bg-foreground/5 border border-foreground/10 rounded-xl text-sm font-mono text-foreground focus:outline-none focus:border-foreground/30 leading-relaxed"
-              />
-            </div>
+            <RichArticleEditor
+              value={rich}
+              onChange={(patch) => setRich((prev) => ({ ...prev, ...patch }))}
+              title={formData.title}
+              excerpt={formData.excerpt}
+            />
 
             <div>
               <label className="text-xs font-mono uppercase text-muted-foreground block mb-2">
@@ -738,6 +752,14 @@ export default function TeamPortalPage() {
                 className="w-full px-4 py-2.5 bg-foreground/5 border border-foreground/10 rounded-xl text-sm text-foreground focus:outline-none focus:border-foreground/30"
               />
             </div>
+
+            {saveErrors.length > 0 && (
+              <ul className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 space-y-1">
+                {saveErrors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            )}
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-foreground/10">
               <button

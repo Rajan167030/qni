@@ -5,6 +5,7 @@ import { getBlogSession, hasAdminSession } from '@/lib/blog-auth';
 import { recordWriterActivity, extractClientInfo } from '@/lib/writer-activity';
 import { readLocalBlogs, saveLocalBlog, deleteLocalBlog } from '@/lib/server-blogs-storage';
 import { DEFAULT_WRITERS } from '@/lib/blog-writers-store';
+import { BLOG_LIMITS, cleanText, normalizeRichFields } from '@/lib/blog-content';
 
 async function canManageBlogs(authorEmail?: string) {
   const session = await getBlogSession();
@@ -88,6 +89,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Writer or admin authentication required.' }, { status: 401 });
     }
 
+    const title = cleanText(body.title, 300).trim();
+    const content = cleanText(body.content, BLOG_LIMITS.maxContentChars);
+    const { fields: rich, errors } = normalizeRichFields(body);
+    if (!title) errors.unshift('Title is required.');
+    if (errors.length > 0) {
+      return NextResponse.json({ success: false, message: errors[0], errors }, { status: 400 });
+    }
+
     const db = await getMongoDbDatabase();
     const { ip, userAgent } = extractClientInfo(request);
 
@@ -96,19 +105,27 @@ export async function POST(request: Request) {
     const authorName = session?.name || body.author?.name || (isAdmin ? 'Administrator' : 'QNG Writer');
     const authorRole = session?.role || body.author?.role || 'Guest Contributor';
 
+    const primaryAuthor = {
+      name: authorName,
+      role: authorRole,
+      email: resolvedEmail,
+    };
+
     const newBlog = {
       id: body.id || `blog-${Date.now()}`,
-      slug: body.slug || body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-      title: body.title,
-      excerpt: body.excerpt,
-      content: body.content,
+      slug: body.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      title,
+      excerpt: cleanText(body.excerpt, 1000),
+      content,
       category: body.category || 'Quantum Tech',
       coverImage: body.coverImage || 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80',
-      author: {
-        name: authorName,
-        role: authorRole,
-        email: resolvedEmail,
-      },
+      author: primaryAuthor,
+      authors: [primaryAuthor, ...rich.coAuthors],
+      images: rich.images,
+      references: rich.references,
+      furtherReading: rich.furtherReading,
+      seoTitle: rich.seoTitle,
+      seoDescription: rich.seoDescription,
       readTime: body.readTime || '4 min read',
       publishedAt: body.publishedAt || new Date().toISOString(),
       status: body.status || 'Published',

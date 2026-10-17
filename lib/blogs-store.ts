@@ -1,13 +1,10 @@
 "use client";
 
-export interface BlogAuthor {
-  name: string;
-  role: string;
-  avatar?: string;
-  email?: string;
-}
+import type { BlogAuthor, BlogRichFields } from "./blog-content";
 
-export interface BlogPost {
+export type { BlogAuthor, BlogImage, BlogImageCredit, BlogReference, BlogRichFields } from "./blog-content";
+
+export interface BlogPost extends BlogRichFields {
   id: string;
   slug: string;
   title: string;
@@ -57,6 +54,12 @@ export function saveBlog(blogData: Omit<BlogPost, "id" | "publishedAt" | "slug">
   if (!slug) slug = `post-${Date.now()}`;
 
   const newPost: BlogPost = {
+    authors: blogData.authors,
+    images: blogData.images,
+    references: blogData.references,
+    furtherReading: blogData.furtherReading,
+    seoTitle: blogData.seoTitle,
+    seoDescription: blogData.seoDescription,
     id: blogData.id || `blog-${Date.now()}`,
     slug,
     title: blogData.title,

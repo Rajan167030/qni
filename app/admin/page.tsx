@@ -62,6 +62,12 @@ import {
 } from '@/lib/submissions-store';
 import { getBlogs, saveBlog, deleteBlog, BlogPost } from '@/lib/blogs-store';
 import { getBlogWriters, saveBlogWriter, deleteBlogWriter, BlogWriter } from '@/lib/blog-writers-store';
+import {
+  RichArticleEditor,
+  emptyRichEditorValue,
+  richEditorValueFromPost,
+  type RichEditorValue,
+} from '@/components/blog/rich-article-editor';
 
 const emptyBlogForm = () => ({
   title: '',
@@ -104,6 +110,8 @@ export default function AdminDashboardPage() {
   const [blogSaving, setBlogSaving] = useState(false);
   const [blogUploading, setBlogUploading] = useState(false);
   const [blogSaveSuccess, setBlogSaveSuccess] = useState('');
+  const [blogRich, setBlogRich] = useState<RichEditorValue>(emptyRichEditorValue());
+  const [blogSaveErrors, setBlogSaveErrors] = useState<string[]>([]);
 
   // Blog writer invite state — admin grants blog access to anyone by email
   const [blogWriters, setBlogWriters] = useState<BlogWriter[]>([]);
@@ -645,12 +653,16 @@ export default function AdminDashboardPage() {
       featured: blog.featured ?? false,
       tags: blog.tags.join(', '),
     });
+    setBlogRich(richEditorValueFromPost(blog));
+    setBlogSaveErrors([]);
     setShowBlogEditor(true);
   };
 
   const handleBlogCreate = () => {
     setEditingBlogId(null);
     setBlogFormData(emptyBlogForm());
+    setBlogRich(emptyRichEditorValue());
+    setBlogSaveErrors([]);
     setShowBlogEditor(true);
   };
 
@@ -663,7 +675,13 @@ export default function AdminDashboardPage() {
       id: editingBlogId || undefined,
       title: blogFormData.title,
       excerpt: blogFormData.excerpt,
-      content: blogFormData.content,
+      content: blogRich.content,
+      images: blogRich.images,
+      references: blogRich.references,
+      furtherReading: blogRich.furtherReading,
+      coAuthors: blogRich.coAuthors,
+      seoTitle: blogRich.seoTitle,
+      seoDescription: blogRich.seoDescription,
       category: blogFormData.category,
       coverImage: blogFormData.coverImage || 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80',
       author: { name: blogFormData.authorName, role: blogFormData.authorRole, email: blogFormData.authorEmail },
@@ -672,12 +690,26 @@ export default function AdminDashboardPage() {
       featured: blogFormData.featured,
       tags: tagsArray,
     };
-    const saved = saveBlog(blogPayload);
-    await fetch('/api/blogs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(saved),
-    }).catch(() => {});
+    try {
+      const res = await fetch('/api/blogs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(blogPayload),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || !result.success) {
+        setBlogSaveErrors(result.errors || [result.message || result.error || 'Unable to save this blog on the server.']);
+        setBlogSaving(false);
+        return;
+      }
+      saveBlog(result.data);
+    } catch {
+      setBlogSaveErrors(['Unable to reach the server. The post was not saved.']);
+      setBlogSaving(false);
+      return;
+    }
+    setBlogSaveErrors([]);
+    setBlogRich(emptyRichEditorValue());
     refreshData();
     setBlogSaveSuccess(editingBlogId ? 'Blog updated!' : 'Blog created & published!');
     setShowBlogEditor(false);
@@ -1841,9 +1873,12 @@ export default function AdminDashboardPage() {
                         placeholder="Brief description shown on blog listing..." className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm text-foreground focus:outline-none focus:border-foreground/50" />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="block text-xs font-mono uppercase text-muted-foreground mb-1">Content (Markdown) *</label>
-                      <textarea required rows={10} value={blogFormData.content} onChange={e => setBlogFormData(p => ({...p, content: e.target.value}))}
-                        placeholder="Write your blog content in Markdown..." className="w-full px-3.5 py-2.5 rounded-xl border border-foreground/15 bg-background text-sm font-mono text-foreground focus:outline-none focus:border-foreground/50" />
+                      <RichArticleEditor
+                        value={blogRich}
+                        onChange={(patch) => setBlogRich((prev) => ({ ...prev, ...patch }))}
+                        title={blogFormData.title}
+                        excerpt={blogFormData.excerpt}
+                      />
                     </div>
                     <div className="sm:col-span-2 flex items-center gap-3">
                       <label className="flex items-center gap-2 cursor-pointer text-sm">
@@ -1851,6 +1886,11 @@ export default function AdminDashboardPage() {
                         <span className="text-muted-foreground font-mono text-xs">Mark as Featured</span>
                       </label>
                     </div>
+                    {blogSaveErrors.length > 0 && (
+                      <ul className="sm:col-span-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 space-y-1">
+                        {blogSaveErrors.map((error) => <li key={error}>{error}</li>)}
+                      </ul>
+                    )}
                     <div className="sm:col-span-2 flex gap-3">
                       <Button type="submit" disabled={blogSaving} className="flex-1 h-11 rounded-xl bg-foreground text-background font-semibold text-sm">
                         {blogSaving ? 'Saving...' : editingBlogId ? 'Update Blog' : 'Publish Blog'}

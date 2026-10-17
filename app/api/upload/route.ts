@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getBlogSession, hasAdminSession } from '@/lib/blog-auth';
 import { recordWriterActivity, extractClientInfo } from '@/lib/writer-activity';
+import { IMAGE_RULES } from '@/lib/blog-content';
+import { sniffImage } from '@/lib/image-sniff';
+
+const MB = 1024 * 1024;
 
 export async function POST(request: Request) {
   try {
@@ -23,13 +27,49 @@ export async function POST(request: Request) {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET || process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
+    const hasCloudinary = Boolean(cloudName && ((apiKey && apiSecret) || uploadPreset));
+    const maxBytes = hasCloudinary ? IMAGE_RULES.maxBytes : IMAGE_RULES.maxInlineBytes;
+    if (file.size > maxBytes) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Image is ${(file.size / MB).toFixed(1)} MB; the limit is ${maxBytes / MB} MB${hasCloudinary ? '' : ' while Cloudinary is not configured'}.`,
+        },
+        { status: 413 }
+      );
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    const sniffed = sniffImage(buffer);
+    if (!sniffed) {
+      return NextResponse.json(
+        { success: false, error: `Unsupported image format. Allowed: ${IMAGE_RULES.extensions} (SVG is not accepted).` },
+        { status: 415 }
+      );
+    }
+    const { mime, width, height } = sniffed;
+    if (width && height) {
+      if (width > IMAGE_RULES.maxDimension || height > IMAGE_RULES.maxDimension) {
+        return NextResponse.json(
+          { success: false, error: `Image is ${width}×${height}px; maximum is ${IMAGE_RULES.maxDimension}px on each side.` },
+          { status: 400 }
+        );
+      }
+      if (width < IMAGE_RULES.minWidth) {
+        return NextResponse.json(
+          { success: false, error: `Image is ${width}px wide; minimum width is ${IMAGE_RULES.minWidth}px.` },
+          { status: 400 }
+        );
+      }
+    }
+    const dataUrl = `data:${mime};base64,${buffer.toString('base64')}`;
+
     // If Cloudinary credentials are configured
-    if (cloudName && ((apiKey && apiSecret) || uploadPreset)) {
+    if (hasCloudinary) {
       const cloudinaryFormData = new FormData();
-      const blob = new Blob([buffer], { type: file.type });
+      const blob = new Blob([buffer], { type: mime });
       cloudinaryFormData.append('file', blob, file.name);
 
       if (apiKey && apiSecret) {
@@ -53,7 +93,7 @@ export async function POST(request: Request) {
         body: cloudinaryFormData,
       });
 
-      const finalUrl = data.secure_url || `data:${file.type};base64,${buffer.toString('base64')}`;
+      const data = await res.json();
       if (session) {
         await recordWriterActivity({
           writerEmail: session.email,
@@ -71,21 +111,30 @@ export async function POST(request: Request) {
           success: true,
           url: data.secure_url,
           public_id: data.public_id,
+          width: data.width ?? width,
+          height: data.height ?? height,
         });
       } else {
         console.error('Cloudinary upload error response:', data);
-        // If Cloudinary returned an error, fallback to data URL
-        const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;
+        // If Cloudinary returned an error, fall back to a data URL, but only
+        // for files small enough to be stored inline in the post.
+        if (file.size > IMAGE_RULES.maxInlineBytes) {
+          return NextResponse.json(
+            { success: false, error: data.error?.message || 'Cloudinary upload failed.' },
+            { status: 502 }
+          );
+        }
         return NextResponse.json({
           success: true,
-          url: base64,
+          url: dataUrl,
+          width,
+          height,
           warning: data.error?.message || 'Cloudinary error, fallback to data URL',
         });
       }
     }
 
     // Fallback if Cloudinary credentials are not set yet
-    const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;
     if (session) {
       await recordWriterActivity({
         writerEmail: session.email,
@@ -99,7 +148,9 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({
       success: true,
-      url: base64,
+      url: dataUrl,
+      width,
+      height,
       note: 'Cloudinary not configured yet, image encoded as base64. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET to .env.local',
     });
   } catch (error: any) {
