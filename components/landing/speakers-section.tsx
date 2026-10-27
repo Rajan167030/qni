@@ -6,21 +6,6 @@ import Image from "next/image";
 
 const speakers = [
   {
-    id: "1",
-    name: "Emmanuel Umukoro",
-    role: "AI & Quantum Computing Researcher",
-    company: "University of North Dakota",
-    bio: "Bridging quantum computing and practical AI applications",
-    image: "/speakers/emmanuelumukoro.jpg",
-    fullBio: "Emmanuel is a researcher specializing in quantum algorithms and their intersection with machine learning, working to unlock next-generation computational capabilities.",
-    expertise: ["Quantum AI", "Research", "Machine Learning"],
-    social: {
-      twitter: "#",
-      linkedin: "https://www.linkedin.com/in/emmanuel-umukoro-415373127",
-      email: "#",
-    },
-  },
-  {
     id: "2",
     name: "Sergey Grigorovich",
     role: "Senior Research Scientist",
