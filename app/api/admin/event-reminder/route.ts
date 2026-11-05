@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     const jobs: ReminderJob[] = [];
     for (const event of upcomingEvents) {
-      const registrants = await db
+      const allRegistrants = await db
         .collection('registrations')
         .find({
           eventId: event.id,
@@ -42,6 +42,14 @@ export async function POST(request: Request) {
           email: { $exists: true, $ne: '' },
         })
         .toArray();
+      // Someone who registered twice has two records but should get one email.
+      const seen = new Set<string>();
+      const registrants = allRegistrants.filter((reg: any) => {
+        const email = String(reg.email).trim().toLowerCase();
+        if (seen.has(email)) return false;
+        seen.add(email);
+        return true;
+      });
       if (registrants.length > 0) {
         jobs.push({ event, registrants });
       }

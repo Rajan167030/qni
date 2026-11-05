@@ -14,6 +14,21 @@ const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 const MAX_PER_CATEGORY = 50;
 
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Someone who registered twice has two records; mark every record for that
+ * email + event so the next run doesn't send them the same email again.
+ */
+async function markSentForEmail(db: any, eventId: string, email: string, field: string) {
+  await db.collection('registrations').updateMany(
+    { eventId, email: { $regex: `^\\s*${escapeRegex(email)}\\s*$`, $options: 'i' } },
+    { $set: { [field]: new Date() } }
+  );
+}
+
 /**
  * Verifies the request came from Vercel Cron (or another trusted scheduler)
  * via the CRON_SECRET env var. If no secret is configured, the endpoint is
@@ -76,11 +91,15 @@ export async function GET(request: Request) {
           .limit(MAX_PER_CATEGORY - results.reminders24h)
           .toArray();
 
+        const seen = new Set<string>();
         for (const reg of regs as any[]) {
           if (!reg.email || !reg.name) continue;
+          const email = String(reg.email).trim().toLowerCase();
+          if (seen.has(email)) continue;
+          seen.add(email);
           try {
             await sendEventReminderEmail(reg.email, reg.name, event.title || reg.eventTitle, eventMeta, event.id, '24h');
-            await db.collection('registrations').updateOne({ _id: reg._id }, { $set: { reminder24hSentAt: new Date() } });
+            await markSentForEmail(db, event.id, email, 'reminder24hSentAt');
             results.reminders24h++;
           } catch (err: any) {
             results.errors.push(`24h reminder ${reg.email}: ${err.message}`);
@@ -95,11 +114,15 @@ export async function GET(request: Request) {
           .limit(MAX_PER_CATEGORY - results.reminders1h)
           .toArray();
 
+        const seen = new Set<string>();
         for (const reg of regs as any[]) {
           if (!reg.email || !reg.name) continue;
+          const email = String(reg.email).trim().toLowerCase();
+          if (seen.has(email)) continue;
+          seen.add(email);
           try {
             await sendEventReminderEmail(reg.email, reg.name, event.title || reg.eventTitle, eventMeta, event.id, '1h');
-            await db.collection('registrations').updateOne({ _id: reg._id }, { $set: { reminder1hSentAt: new Date() } });
+            await markSentForEmail(db, event.id, email, 'reminder1hSentAt');
             results.reminders1h++;
           } catch (err: any) {
             results.errors.push(`1h reminder ${reg.email}: ${err.message}`);
@@ -122,11 +145,15 @@ export async function GET(request: Request) {
         .limit(MAX_PER_CATEGORY - results.thankYou)
         .toArray();
 
+      const seen = new Set<string>();
       for (const reg of regs as any[]) {
         if (!reg.email || !reg.name) continue;
+        const email = String(reg.email).trim().toLowerCase();
+        if (seen.has(email)) continue;
+        seen.add(email);
         try {
           await sendPostEventThankYouEmail(reg.email, reg.name, event.title || reg.eventTitle, event.id);
-          await db.collection('registrations').updateOne({ _id: reg._id }, { $set: { thankYouSentAt: new Date() } });
+          await markSentForEmail(db, event.id, email, 'thankYouSentAt');
           results.thankYou++;
         } catch (err: any) {
           results.errors.push(`thank-you ${reg.email}: ${err.message}`);

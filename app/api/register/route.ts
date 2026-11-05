@@ -5,6 +5,30 @@ import { saveServerSubmission, getServerSubmissions, updateServerSubmissionStatu
 import { sendEventRegistrationEmail, sendEventCertificateEmail, sendAdminNotification } from '@/lib/email';
 import { isRegistrationOpen } from '@/lib/events-store';
 
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Looks for an earlier registration by the same email (any letter case) for the same event. */
+async function findExistingRegistration(eventId: unknown, email: string): Promise<any | null> {
+  const local = getServerSubmissions('registrations').find(
+    (r: any) => r.eventId === eventId && typeof r.email === 'string' && r.email.trim().toLowerCase() === email
+  );
+  if (local) return local;
+  try {
+    const db = await getMongoDbDatabase();
+    if (db) {
+      return await db.collection('registrations').findOne({
+        eventId,
+        email: { $regex: `^\\s*${escapeRegex(email)}\\s*$`, $options: 'i' },
+      });
+    }
+  } catch (dbErr) {
+    console.warn('[MongoDB Registration] duplicate check warn:', dbErr);
+  }
+  return null;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -28,30 +52,60 @@ export async function POST(request: Request) {
       }
     }
 
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
     const regRecord = {
       ...body,
+      email,
       id: body.id || `r-${Date.now()}`,
       createdAt: new Date().toISOString(),
       status: body.status || 'Confirmed',
     };
 
-    // 1. Save to Server Storage
-    saveServerSubmission('registrations', regRecord);
+    // 1. One registration per email per event. A repeat submit (double click,
+    // retry, registering again) returns the existing pass and sends no emails.
+    const existing = email ? await findExistingRegistration(regRecord.eventId, email) : null;
+    if (existing) {
+      return NextResponse.json({
+        success: true,
+        alreadyRegistered: true,
+        message: 'You are already registered for this event',
+        id: existing.id || String(existing._id),
+        data: { ...existing, _id: undefined },
+      });
+    }
 
-    // 2. Save to MongoDB
+    // 2. Save to MongoDB. The upsert is keyed on event + email so two requests
+    // arriving together still produce a single record and a single email.
     let insertedId = null;
+    let isNew = true;
     try {
       const db = await getMongoDbDatabase();
       if (db) {
-        const collection = db.collection('registrations');
-        const result = await collection.insertOne(regRecord);
-        insertedId = result.insertedId;
+        const result = await db
+          .collection('registrations')
+          .updateOne({ eventId: regRecord.eventId, email }, { $setOnInsert: regRecord }, { upsert: true });
+        insertedId = result.upsertedId;
+        isNew = result.upsertedCount === 1;
       }
     } catch (dbErr) {
       console.warn('[MongoDB Registration] DB write error:', dbErr);
     }
 
-    // 3. Send confirmation email to the registrant
+    if (!isNew) {
+      const winner = await findExistingRegistration(regRecord.eventId, email);
+      return NextResponse.json({
+        success: true,
+        alreadyRegistered: true,
+        message: 'You are already registered for this event',
+        id: winner?.id || regRecord.id,
+        data: winner ? { ...winner, _id: undefined } : regRecord,
+      });
+    }
+
+    // 3. Save to Server Storage
+    saveServerSubmission('registrations', regRecord);
+
+    // 4. Send confirmation email to the registrant
     if (regRecord.email && regRecord.name) {
       const formattedDate = regRecord.eventDate
         ? new Date(regRecord.eventDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
@@ -86,7 +140,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // 4. Notify admin of the new registration
+    // 5. Notify admin of the new registration
     if (regRecord.email && regRecord.name) {
       await sendAdminNotification({
         formType: 'Event Registration',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, User, Mail, Phone, Building2, GraduationCap, ArrowRight, MessageCircle } from 'lucide-react';
 
@@ -16,6 +16,9 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
   const [submitted, setSubmitted] = useState(false);
   const [regToken, setRegToken] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // A ref (not state) so a fast double click is blocked before React re-renders.
+  const submittingRef = useRef(false);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [form, setForm] = useState({
@@ -38,10 +41,12 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (event && !isRegistrationOpen(event)) return;
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
     const title = event?.title || 'Quantum Event';
 
-    const token = generateToken('QNI-EVT');
+    let token = generateToken('QNI-EVT');
 
     const regData = {
       eventId: eventId || '1',
@@ -59,18 +64,24 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
       location: event?.location,
     };
 
-    // Save to local store
-    saveRegistration(regData);
-
     // Save to MongoDB API + trigger confirmation email
     try {
-      await fetch('/api/register', {
+      const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(regData),
       });
+      const result = await response.json().catch(() => null);
+      if (result?.alreadyRegistered) {
+        // Show the pass they already have instead of creating a second one.
+        token = result.data?.token || result.id || token;
+        setAlreadyRegistered(true);
+      } else {
+        saveRegistration(regData);
+      }
     } catch (err) {
       console.warn('MongoDB register API warn:', err);
+      saveRegistration(regData);
     }
 
     // Identify this visitor on their own device — replaces the "Join Us" nav
@@ -102,9 +113,17 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
           <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 className="w-8 h-8 text-emerald-500" />
           </div>
-          <h1 className="text-3xl font-display mb-2">You're Registered!</h1>
+          <h1 className="text-3xl font-display mb-2">{alreadyRegistered ? "You're Already Registered" : "You're Registered!"}</h1>
           <p className="text-sm text-foreground/50 mb-8">
-            A confirmation email with your pass was sent to <strong>{form.email}</strong>.
+            {alreadyRegistered ? (
+              <>
+                <strong>{form.email}</strong> is already registered for this event. Your pass is below, and the confirmation email was sent earlier.
+              </>
+            ) : (
+              <>
+                A confirmation email with your pass was sent to <strong>{form.email}</strong>.
+              </>
+            )}
           </p>
 
           {regToken && (
@@ -358,10 +377,11 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-foreground text-background rounded-2xl font-semibold text-base hover:bg-foreground/90 transition-all duration-200 group"
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-foreground text-background rounded-2xl font-semibold text-base hover:bg-foreground/90 transition-all duration-200 group disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Confirm Registration
-                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                {isSubmitting ? 'Registering…' : 'Confirm Registration'}
+                {!isSubmitting && <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />}
               </button>
 
               <p className="text-xs text-center text-foreground/40 font-mono">
